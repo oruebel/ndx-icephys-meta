@@ -1,9 +1,139 @@
 groups:
-- neurodata_type_def: TetrodeSeries
-  neurodata_type_inc: ElectricalSeries
-  doc: An extension of ElectricalSeries to include information about the tetrode ID
-    for each time series.
-  attributes:
-  - name: trode_id
-    dtype: int
-    doc: The tetrode ID
+- neurodata_type_def: DynamicTableGrouping
+  neurodata_type_inc: DynamicTable
+  doc: An abstract, generic table with a ragged column of DynamicTableRegion references,
+    used to group rows of another DynamicTable together and associate metadata with
+    each set of rows. This allows for hierarchical organization of metadata through
+    grouping of rows. E.g., we may have a table LetterTable for describing letters
+    in the alphabet and a WordTable where each word (row) would reference the letters
+    in the LetterTable the word (row) consists of. This approach allows for metadata
+    on both the level of letters and words while avoiding duplication of metadata
+  datasets:
+  - name: references
+    neurodata_type_inc: DynamicTableRegion
+    doc: A reference to one or more rows in another DynamicTable
+  - name: references_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for subtable_references column.
+- neurodata_type_def: IntracellularRecordings
+  neurodata_type_inc: DynamicTable
+  doc: A table to group together a stimulus and response from a single electrode and
+    a single sweep. Each row in the table represents a single recording consisting
+    typically of a stimulus and a corresponding response.
+  datasets:
+  - name: stimulus
+    neurodata_type_inc: VectorData
+    dtype:
+    - name: idx_start
+      dtype: int32
+      doc: Start index into the TimeSeries 'data' and 'timestamp' datasets of the
+        referenced TimeSeries. The first dimension of those arrays is always time.
+    - name: count
+      dtype: int32
+      doc: Number of data samples available in this time series, during this epoch
+    - name: timeseries
+      dtype:
+        target_type: PatchClampSeries
+        reftype: object
+      doc: The TimeSeries that this index applies to
+    doc: Column storing the reference to the recorded stimulus for the recording (rows)
+  - name: response
+    neurodata_type_inc: VectorData
+    dtype:
+    - name: idx_start
+      dtype: int32
+      doc: Start index into the TimeSeries 'data' and 'timestamp' datasets of the
+        referenced TimeSeries. The first dimension of those arrays is always time.
+    - name: count
+      dtype: int32
+      doc: Number of data samples available in this time series, during this epoch
+    - name: timeseries
+      dtype:
+        target_type: PatchClampSeries
+        reftype: object
+      doc: The TimeSeries that this index applies to
+    doc: Column storing the reference to the recorded response for the recording (rows)
+  - name: electrode
+    neurodata_type_inc: VectorData
+    dtype:
+      target_type: IntracellularElectrode
+      reftype: object
+    doc: Column for storing the reference to the intracellular electrode
+- name: Sweeps
+  neurodata_type_inc: DynamicTable
+  doc: A table for grouping different intracellular recordings from the IntracellularRecordings
+    table together that were recorded simultaneously from different electrodes
+  datasets:
+  - name: recordings
+    neurodata_type_inc: DynamicTableRegion
+    doc: A reference to one or more rows in the IntracellularRecordings table.
+  - name: recordings_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the recordings column.
+    attributes:
+    - name: table
+      dtype:
+        target_type: IntracellularRecordings
+        reftype: object
+      doc: Reference to the IntracellularRecordings table that this table region applies
+        to. This specializes the attribute inherited from DynamicTableRegion to fix
+        the type of table that can be referenced here.
+- name: SweepSequences
+  neurodata_type_inc: DynamicTable
+  doc: A table for grouping different intracellular recording sweeps from the Sweeps
+    table together. This is typically used to group together sweeps where the a sequence
+    of stimuli of the same type with varying parameters have been presented in a sequence.
+  datasets:
+  - name: sweeps
+    neurodata_type_inc: DynamicTableRegion
+    doc: A reference to one or more rows in the Sweeps table.
+  - name: sweeps_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the sweeps column.
+    attributes:
+    - name: table
+      dtype:
+        target_type: Sweeps
+        reftype: object
+      doc: Reference to the Sweeps table that this table regionapplies to. This specializes
+        the attribute inherited from DynamicTableRegion to fix the type of table that
+        can be referenced here.
+- name: Runs
+  neurodata_type_inc: DynamicTable
+  doc: A table for grouping different intracellular recording sweep sequences together.With
+    each SweepSequence typically representing a particular type of stimulus, the Runs
+    table is typcially used to group sets of stimuli applied in sequence.
+  datasets:
+  - name: sweep_sequences
+    neurodata_type_inc: DynamicTableRegion
+    doc: A reference to one or more rows in the SweepSequences table.
+  - name: sweep_sequences_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the sweep_sequences column.
+    attributes:
+    - name: table
+      dtype:
+        target_type: SweepSequences
+        reftype: object
+      doc: Reference to the SweepSequences table that this table regionapplies to.
+        This specializes the attribute inherited from DynamicTableRegion to fix the
+        type of table that can be referenced here.
+- name: Conditions
+  neurodata_type_inc: DynamicTable
+  doc: A table for grouping different intracellular recording runs together that belong
+    to the same experimental conditions.
+  datasets:
+  - name: runs
+    neurodata_type_inc: DynamicTableRegion
+    doc: A reference to one or more rows in the Runs table.
+  - name: runs_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the runs column.
+    attributes:
+    - name: table
+      dtype:
+        target_type: Runs
+        reftype: object
+      doc: Reference to the Runs table that this table regionapplies to. This specializes
+        the attribute inherited from DynamicTableRegion to fix the type of table that
+        can be referenced here.

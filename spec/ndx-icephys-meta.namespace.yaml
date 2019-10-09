@@ -1,12 +1,27 @@
 namespaces:
-- author: ' Oliver Ruebel, Ryan Ly, Benjamin Dichter, Thomas Braun, Andrew Tritt'
-  contact: oruebel@lbl.gov
+- author:
+  - Oliver Ruebel
+  - Ryan Ly
+  - Benjamin Dichter
+  - Thomas Braun
+  - Andrew Tritt
+  contact:
+  - oruebel@lbl.gov
+  - rly@lbl.gov
+  - bdichter@lbl.gov
+  - None
+  - ajtritt@lbl.gov
   doc: 'Implement proposal for hierarchical metadata strucutre for intracellular electrophysiology
     data '
   name: ndx-icephys-meta
   schema:
   - namespace: core
     neurodata_types:
-    - ElectricalSeries
+    - DynamicTable
+    - DynamicTableRegion
+    - VectorData
+    - VectorIndex
+    - PatchClampSeries
+    - IntracellularElectrode
   - source: ndx-icephys-meta.extensions.yaml
   version: 0.1.0
