@@ -59,8 +59,9 @@ groups:
       target_type: IntracellularElectrode
       reftype: object
     doc: Column for storing the reference to the intracellular electrode
-- name: Sweeps
+- neurodata_type_def: Sweeps
   neurodata_type_inc: DynamicTable
+  name: Sweeps
   doc: A table for grouping different intracellular recordings from the IntracellularRecordings
     table together that were recorded simultaneously from different electrodes
   datasets:
@@ -78,8 +79,9 @@ groups:
       doc: Reference to the IntracellularRecordings table that this table region applies
         to. This specializes the attribute inherited from DynamicTableRegion to fix
         the type of table that can be referenced here.
-- name: SweepSequences
+- neurodata_type_def: SweepSequences
   neurodata_type_inc: DynamicTable
+  name: SweepSequences
   doc: A table for grouping different intracellular recording sweeps from the Sweeps
     table together. This is typically used to group together sweeps where the a sequence
     of stimuli of the same type with varying parameters have been presented in a sequence.
@@ -98,8 +100,9 @@ groups:
       doc: Reference to the Sweeps table that this table regionapplies to. This specializes
         the attribute inherited from DynamicTableRegion to fix the type of table that
         can be referenced here.
-- name: Runs
+- neurodata_type_def: Runs
   neurodata_type_inc: DynamicTable
+  name: Runs
   doc: A table for grouping different intracellular recording sweep sequences together.With
     each SweepSequence typically representing a particular type of stimulus, the Runs
     table is typcially used to group sets of stimuli applied in sequence.
@@ -118,8 +121,9 @@ groups:
       doc: Reference to the SweepSequences table that this table regionapplies to.
         This specializes the attribute inherited from DynamicTableRegion to fix the
         type of table that can be referenced here.
-- name: Conditions
+- neurodata_type_def: Conditions
   neurodata_type_inc: DynamicTable
+  name: Conditions
   doc: A table for grouping different intracellular recording runs together that belong
     to the same experimental conditions.
   datasets:

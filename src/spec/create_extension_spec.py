@@ -87,6 +87,7 @@ def main():
     # recorded at the same time and belong together
     sweeps_table_spec = NWBGroupSpec(
         name='Sweeps',
+        neurodata_type_def='Sweeps',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recordings from the '
             'IntracellularRecordings table together that were recorded simultaneously '
@@ -114,6 +115,7 @@ def main():
     # Create the SweepSequences table to group different Sweeps together
     sweepsequences_table_spec = NWBGroupSpec(
         name='SweepSequences',
+        neurodata_type_def='SweepSequences',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording sweeps from the '
             'Sweeps table together. This is typically used to group together sweeps '
@@ -142,6 +144,7 @@ def main():
     # Create the Runs table to group different SweepSequences together
     runs_table_spec = NWBGroupSpec(
         name='Runs',
+        neurodata_type_def='Runs',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording sweep sequences together.'
             'With each SweepSequence typically representing a particular type of stimulus, the '
@@ -169,6 +172,7 @@ def main():
     # Create Conditions tbale for grouping different Runs together
     conditions_table_spec = NWBGroupSpec(
         name='Conditions',
+        neurodata_type_def='Conditions',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording runs together that '
             'belong to the same experimental conditions.',
