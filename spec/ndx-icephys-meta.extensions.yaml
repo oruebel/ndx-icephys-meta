@@ -1,0 +1,9 @@
+groups:
+- neurodata_type_def: TetrodeSeries
+  neurodata_type_inc: ElectricalSeries
+  doc: An extension of ElectricalSeries to include information about the tetrode ID
+    for each time series.
+  attributes:
+  - name: trode_id
+    dtype: int
+    doc: The tetrode ID
