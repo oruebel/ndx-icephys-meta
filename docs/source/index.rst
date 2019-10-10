@@ -1,5 +1,5 @@
 Specification for the ndx-icephys-meta extension
-==================================
+================================================
 
 .. toctree::
     :numbered:
