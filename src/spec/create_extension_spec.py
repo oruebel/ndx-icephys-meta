@@ -26,26 +26,6 @@ def main():
                                               'None',
                                               'ajtritt@lbl.gov'])
 
-    # Create generic neurodata_type for hierarchical referencing of DynamicTables
-    dynamic_table_grouping_spec = NWBGroupSpec(
-        neurodata_type_def='DynamicTableGrouping',
-        neurodata_type_inc='DynamicTable',
-        doc='An abstract, generic table with a ragged column of DynamicTableRegion references, '
-            'used to group rows of another DynamicTable together and associate metadata with each '
-            'set of rows. This allows for hierarchical organization of metadata through grouping '
-            'of rows. E.g., we may have a table LetterTable for describing letters in the alphabet '
-            'and a WordTable where each word (row) would reference the letters in the LetterTable '
-            'the word (row) consists of. This approach allows for metadata on both the level of '
-            'letters and words while avoiding duplication of metadata',
-        datasets=[NWBDatasetSpec(name='references',
-                                 neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in another DynamicTable'),
-                  NWBDatasetSpec(name='references_index',
-                                 neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for subtable_references column.')]
-    )
-
-
     # Create a generic compound datatype for referencing a patch clamp series
     reference_timeseries_dtype = [
         NWBDtypeSpec(name='idx_start',
@@ -199,8 +179,7 @@ def main():
     # TODO need to modify /general/intracellular_ephys in NWB to support adding the new structure there
 
     # Add our new data types to this list
-    new_data_types = [dynamic_table_grouping_spec,
-                      icephys_recordings_table_spec,
+    new_data_types = [icephys_recordings_table_spec,
                       sweeps_table_spec,
                       sweepsequences_table_spec,
                       runs_table_spec,

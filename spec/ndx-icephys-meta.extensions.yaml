@@ -1,20 +1,4 @@
 groups:
-- neurodata_type_def: DynamicTableGrouping
-  neurodata_type_inc: DynamicTable
-  doc: An abstract, generic table with a ragged column of DynamicTableRegion references,
-    used to group rows of another DynamicTable together and associate metadata with
-    each set of rows. This allows for hierarchical organization of metadata through
-    grouping of rows. E.g., we may have a table LetterTable for describing letters
-    in the alphabet and a WordTable where each word (row) would reference the letters
-    in the LetterTable the word (row) consists of. This approach allows for metadata
-    on both the level of letters and words while avoiding duplication of metadata
-  datasets:
-  - name: references
-    neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in another DynamicTable
-  - name: references_index
-    neurodata_type_inc: VectorIndex
-    doc: Index dataset for subtable_references column.
 - neurodata_type_def: IntracellularRecordings
   neurodata_type_inc: DynamicTable
   doc: A table to group together a stimulus and response from a single electrode and
