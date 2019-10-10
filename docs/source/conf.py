@@ -50,7 +50,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'ndx-icephys-meta'
 copyright = '2019,  Oliver Ruebel, Ryan Ly, Benjamin Dichter, Thomas Braun, Andrew Tritt'
-author = ' Oliver Ruebel, Ryan Ly, Benjamin Dichter, Thomas Braun, Andrew Tritt'
+author = 'Oliver Ruebel, Ryan Ly, Benjamin Dichter, Thomas Braun, Andrew Tritt'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -142,7 +142,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'ndx-icephys-meta.tex', 'ndx-icephys-meta Documentation',
-     ' Oliver Ruebel, Ryan Ly, Benjamin Dichter, Thomas Braun, Andrew Tritt', 'manual'),
+     'O. Ruebel, R. Ly, B. Dichter, T. Braun, A. Tritt', 'manual'),
 ]
 
 
