@@ -52,9 +52,6 @@ groups:
   - name: recordings
     neurodata_type_inc: DynamicTableRegion
     doc: A reference to one or more rows in the IntracellularRecordings table.
-  - name: recordings_index
-    neurodata_type_inc: VectorIndex
-    doc: Index dataset for the recordings column.
     attributes:
     - name: table
       dtype:
@@ -63,6 +60,9 @@ groups:
       doc: Reference to the IntracellularRecordings table that this table region applies
         to. This specializes the attribute inherited from DynamicTableRegion to fix
         the type of table that can be referenced here.
+  - name: recordings_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the recordings column.
 - neurodata_type_def: SweepSequences
   neurodata_type_inc: DynamicTable
   name: SweepSequences
@@ -73,9 +73,6 @@ groups:
   - name: sweeps
     neurodata_type_inc: DynamicTableRegion
     doc: A reference to one or more rows in the Sweeps table.
-  - name: sweeps_index
-    neurodata_type_inc: VectorIndex
-    doc: Index dataset for the sweeps column.
     attributes:
     - name: table
       dtype:
@@ -84,6 +81,9 @@ groups:
       doc: Reference to the Sweeps table that this table regionapplies to. This specializes
         the attribute inherited from DynamicTableRegion to fix the type of table that
         can be referenced here.
+  - name: sweeps_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the sweeps column.
 - neurodata_type_def: Runs
   neurodata_type_inc: DynamicTable
   name: Runs
@@ -94,9 +94,6 @@ groups:
   - name: sweep_sequences
     neurodata_type_inc: DynamicTableRegion
     doc: A reference to one or more rows in the SweepSequences table.
-  - name: sweep_sequences_index
-    neurodata_type_inc: VectorIndex
-    doc: Index dataset for the sweep_sequences column.
     attributes:
     - name: table
       dtype:
@@ -105,6 +102,9 @@ groups:
       doc: Reference to the SweepSequences table that this table regionapplies to.
         This specializes the attribute inherited from DynamicTableRegion to fix the
         type of table that can be referenced here.
+  - name: sweep_sequences_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the sweep_sequences column.
 - neurodata_type_def: Conditions
   neurodata_type_inc: DynamicTable
   name: Conditions
@@ -114,9 +114,6 @@ groups:
   - name: runs
     neurodata_type_inc: DynamicTableRegion
     doc: A reference to one or more rows in the Runs table.
-  - name: runs_index
-    neurodata_type_inc: VectorIndex
-    doc: Index dataset for the runs column.
     attributes:
     - name: table
       dtype:
@@ -125,3 +122,6 @@ groups:
       doc: Reference to the Runs table that this table regionapplies to. This specializes
         the attribute inherited from DynamicTableRegion to fix the type of table that
         can be referenced here.
+  - name: runs_index
+    neurodata_type_inc: VectorIndex
+    doc: Index dataset for the runs column.

@@ -74,10 +74,7 @@ def main():
             'from different electrodes',
         datasets=[NWBDatasetSpec(name='recordings',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the IntracellularRecordings table.'),
-                  NWBDatasetSpec(name='recordings_index',
-                                 neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the recordings column.',
+                                 doc='A reference to one or more rows in the IntracellularRecordings table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
@@ -87,8 +84,10 @@ def main():
                                             'this table region applies to. This specializes the '
                                             'attribute inherited from DynamicTableRegion to fix '
                                             'the type of table that can be referenced here.'
-                                     )
-                                 ])
+                                     )]),
+                  NWBDatasetSpec(name='recordings_index',
+                                 neurodata_type_inc='VectorIndex',
+                                 doc='Index dataset for the recordings column.')
                   ]
         )
 
@@ -103,10 +102,7 @@ def main():
             'have been presented in a sequence.',
         datasets=[NWBDatasetSpec(name='sweeps',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the Sweeps table.'),
-                  NWBDatasetSpec(name='sweeps_index',
-                                 neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the sweeps column.',
+                                 doc='A reference to one or more rows in the Sweeps table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
@@ -117,7 +113,10 @@ def main():
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
-                                 ])
+                                 ]),
+                  NWBDatasetSpec(name='sweeps_index',
+                                 neurodata_type_inc='VectorIndex',
+                                 doc='Index dataset for the sweeps column.')
                   ]
         )
 
@@ -131,10 +130,7 @@ def main():
             'Runs table is typcially used to group sets of stimuli applied in sequence.',
         datasets=[NWBDatasetSpec(name='sweep_sequences',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the SweepSequences table.'),
-                  NWBDatasetSpec(name='sweep_sequences_index',
-                                 neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the sweep_sequences column.',
+                                 doc='A reference to one or more rows in the SweepSequences table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
@@ -145,7 +141,10 @@ def main():
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
-                                 ])
+                                 ]),
+                  NWBDatasetSpec(name='sweep_sequences_index',
+                                 neurodata_type_inc='VectorIndex',
+                                 doc='Index dataset for the sweep_sequences column.')
                   ]
         )
 
@@ -158,10 +157,7 @@ def main():
             'belong to the same experimental conditions.',
         datasets=[NWBDatasetSpec(name='runs',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the Runs table.'),
-                  NWBDatasetSpec(name='runs_index',
-                                 neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the runs column.',
+                                 doc='A reference to one or more rows in the Runs table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
@@ -172,7 +168,10 @@ def main():
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
-                                 ])
+                                 ]),
+                  NWBDatasetSpec(name='runs_index',
+                                 neurodata_type_inc='VectorIndex',
+                                 doc='Index dataset for the runs column.')
                   ]
         )
 
