@@ -48,7 +48,11 @@ def main():
         neurodata_type_inc='DynamicTable',
         doc='A table to group together a stimulus and response from a single electrode and a single sweep. '
             'Each row in the table represents a single recording consisting typically of a stimulus and a '
-            'corresponding response.',
+            'corresponding response. In some cases, however, only a stimulus or a response are recorded as'
+            'as part of an experiment. In this case both, the stimulus and resposne will point to the same'
+            'PatchClampSeries while the idx_start and count of the invalid column will be set to -1, thus,'
+            'indicating that no values have been recorded for the stimulus or response, respectively. Note,'
+            'a recording MUSt contain at least a stimulus or response.',
         datasets=[NWBDatasetSpec(name='stimulus',
                                  neurodata_type_inc='VectorData',
                                  doc='Column storing the reference to the recorded stimulus for the recording (rows)',
