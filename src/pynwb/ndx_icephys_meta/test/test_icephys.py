@@ -4,29 +4,38 @@ import numpy as np
 from datetime import datetime
 from dateutil.tz import tzlocal
 from pynwb.icephys import CurrentClampStimulusSeries, VoltageClampSeries
+from pynwb.testing import remove_test_file
+from hdmf.utils import docval, popargs
+from pynwb import NWBHDF5IO
 
 
 try:
-    from ndx_icephys_meta.icephys import *
+    from ndx_icephys_meta.icephys import IntracellularRecordings
 except ImportError:
-    import os, sys
+    # If we are running tests directly in the GitHub repo without installing the extension
+    import os
+    import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    from ndx_icephys_meta.icephys import *
+    from ndx_icephys_meta.icephys import IntracellularRecordings
+
 
 class IntracellularRecordingsTests(unittest.TestCase):
 
     def setUp(self):
         # Create an example nwbfile with a device, intracellular electrode, stimulus, and response
-        self.nwbfile = NWBFile('my first synthetic recording', 'EXAMPLE_ID', datetime.now(tzlocal()),
-                  experimenter='Dr. Bilbo Baggins',
-                  lab='Bag End Laboratory',
-                  institution='University of Middle Earth at the Shire',
-                  experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
-                  session_id='LONELYMTN')
+        self.nwbfile = NWBFile(
+            session_description='my first synthetic recording',
+            identifier='EXAMPLE_ID',
+            session_start_time=datetime.now(tzlocal()),
+            experimenter='Dr. Bilbo Baggins',
+            lab='Bag End Laboratory',
+            institution='University of Middle Earth at the Shire',
+            experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+            session_id='LONELYMTN')
         self.device = self.nwbfile.create_device(name='Heka ITC-1600')
         self.electrode = self.nwbfile.create_ic_electrode(name="elec0",
-                                                     description='a mock intracellular electrode',
-                                                     device=self.device)
+                                                          description='a mock intracellular electrode',
+                                                          device=self.device)
         self.stimulus = CurrentClampStimulusSeries(name="ccss",
                                                    data=[1, 2, 3, 4, 5],
                                                    starting_time=123.6,
@@ -47,16 +56,36 @@ class IntracellularRecordingsTests(unittest.TestCase):
                                            resistance_comp_correction=70.0,
                                            sweep_number=15)
         self.nwbfile.add_acquisition(self.response)
-
+        self.path = 'test_icephys_meta_intracellularrecording.h5'
 
     def tearDown(self):
-        pass
+        remove_test_file(self.path)
+
+    @docval({'name': 'ir',
+             'type': IntracellularRecordings,
+             'doc': 'Intracellular recording to be added to the file before write',
+             'default': None})
+    def __write_test_helper(self, **kwargs):
+        ir = popargs('ir', kwargs)
+        # For testing we'll add our IR table as a processing module and write the file to disk
+        test_module = self.nwbfile.create_processing_module(name='icephys_meta_module',
+                                                            description='icephys metadata module')
+        test_module.add(ir)
+        # Write our test file
+        with NWBHDF5IO(self.path, 'w') as io:
+            io.write(self.nwbfile)
+        # Test that we can read the file
+        with NWBHDF5IO(self.path, 'r') as io:
+            infile = io.read()
+            in_ir = infile.get_processing_module('icephys_meta_module').get('IntracellularRecordings')  # noqa F841
+            # TODO compare the data in ir with in_ir to make sure the data was written and read correctly
 
     def test_init(self):
         _ = IntracellularRecordings()
         self.assertTrue(True)
 
     def test_add_row(self):
+        # Add a row to our IR table
         ir = IntracellularRecordings()
         ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,
@@ -75,15 +104,8 @@ class IntracellularRecordingsTests(unittest.TestCase):
         self.assertIs(res[2][2], self.response)
         # Check the Intracellular electrode
         self.assertIs(res[3], self.electrode)
-
-        # For testing we'll add our IR table as a processing module and write the file to disk
-        # test_module = self.nwbfile.create_processing_module(name='icephys_meta_module',
-        #                                                     description='icephys metadata module')
-        # test_module.add(ir)
-        # # Write our test file
-        # from pynwb import NWBHDF5IO
-        # with NWBHDF5IO('icephys_example.nwb', 'w') as io:
-        #     io.write(self.nwbfile)
+        # test writing out ir table
+        self.__write_test_helper(ir)
 
     def test_add_row_no_response(self):
         ir = IntracellularRecordings()
@@ -101,9 +123,11 @@ class IntracellularRecordingsTests(unittest.TestCase):
         # Check the response
         self.assertEqual(res[2][0], -1)
         self.assertEqual(res[2][1], -1)
-        self.assertIsNone(res[2][2])
+        self.assertIs(res[2][2], self.stimulus)
         # Check the Intracellular electrode
         self.assertIs(res[3], self.electrode)
+        # test writing out ir table
+        self.__write_test_helper(ir)
 
     def test_add_row_index_out_of_range(self):
 
@@ -155,6 +179,12 @@ class IntracellularRecordingsTests(unittest.TestCase):
                              response=self.response,
                              id=10)
 
+    def test_add_row_no_stimulus_and_response(self):
+        with self.assertRaises(ValueError):
+            ir = IntracellularRecordings()
+            ir.add_recording(electrode=self.electrode,
+                             stimulus=None,
+                             response=None)
 
 
 if __name__ == '__main__':
