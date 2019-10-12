@@ -10,17 +10,19 @@ from pynwb import NWBHDF5IO
 
 
 try:
-    from ndx_icephys_meta.icephys import IntracellularRecordings
+    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
     import os
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    from ndx_icephys_meta.icephys import IntracellularRecordings
+    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps
 
 
-class IntracellularRecordingsTests(unittest.TestCase):
-
+class ICEphysMetaTestBase(unittest.TestCase):
+    """
+    Base helper class for setting up tests for the ndx-icephys-meta extension
+    """
     def setUp(self):
         # Create an example nwbfile with a device, intracellular electrode, stimulus, and response
         self.nwbfile = NWBFile(
@@ -64,21 +66,37 @@ class IntracellularRecordingsTests(unittest.TestCase):
     @docval({'name': 'ir',
              'type': IntracellularRecordings,
              'doc': 'Intracellular recording to be added to the file before write',
+             'default': None},
+            {'name': 'sw',
+             'type': Sweeps,
+             'doc': 'Sweeps table to be added to the file before write',
              'default': None})
-    def __write_test_helper(self, **kwargs):
-        ir = popargs('ir', kwargs)
+    def write_test_helper(self, **kwargs):
+        ir, sw = popargs('ir', 'sw', kwargs)
         # For testing we'll add our IR table as a processing module and write the file to disk
-        test_module = self.nwbfile.create_processing_module(name='icephys_meta_module',
-                                                            description='icephys metadata module')
-        test_module.add(ir)
+        if ir is not None or sw is not None:
+            test_module = self.nwbfile.create_processing_module(name='icephys_meta_module',
+                                                                description='icephys metadata module')
+            if ir is not None:
+                test_module.add(ir)
+            if sw is not None:
+                test_module.add(sw)
+
         # Write our test file
         with NWBHDF5IO(self.path, 'w') as io:
             io.write(self.nwbfile)
         # Test that we can read the file
         with NWBHDF5IO(self.path, 'r') as io:
             infile = io.read()
-            in_ir = infile.get_processing_module('icephys_meta_module').get('IntracellularRecordings')  # noqa F841
-            # TODO compare the data in ir with in_ir to make sure the data was written and read correctly
+            if ir is not None:
+                in_ir = infile.get_processing_module('icephys_meta_module').get('IntracellularRecordings')  # noqa F841
+                # TODO compare the data in ir with in_ir to make sure the data was written and read correctly
+            if sw is not None:
+                in_sw = infile.get_processing_module('icephys_meta_module').get('Sweeps')  # noqa F841
+                # TODO compare the data in sw with in_sw to make sure the data was written and read correctly
+
+
+class IntracellularRecordingsTests(ICEphysMetaTestBase):
 
     def test_init(self):
         _ = IntracellularRecordings()
@@ -105,7 +123,7 @@ class IntracellularRecordingsTests(unittest.TestCase):
         # Check the Intracellular electrode
         self.assertIs(res[3], self.electrode)
         # test writing out ir table
-        self.__write_test_helper(ir)
+        self.write_test_helper(ir)
 
     def test_add_row_no_response(self):
         ir = IntracellularRecordings()
@@ -127,7 +145,7 @@ class IntracellularRecordingsTests(unittest.TestCase):
         # Check the Intracellular electrode
         self.assertIs(res[3], self.electrode)
         # test writing out ir table
-        self.__write_test_helper(ir)
+        self.write_test_helper(ir)
 
     def test_add_row_index_out_of_range(self):
 
@@ -185,6 +203,24 @@ class IntracellularRecordingsTests(unittest.TestCase):
             ir.add_recording(electrode=self.electrode,
                              stimulus=None,
                              response=None)
+
+
+class SweepsTests(ICEphysMetaTestBase):
+
+    def test_init(self):
+        ir = IntracellularRecordings()
+        _ = Sweeps(intracellular_recordings=ir)
+        self.assertTrue(True)
+
+    def test_empty_write(self):
+        ir = IntracellularRecordings()
+        ir.add_recording(electrode=self.electrode,
+                         stimulus=self.stimulus,
+                         response=self.response,
+                         id=10)
+        sw = Sweeps(intracellular_recordings=ir)
+        sw.add_sweep(recordings=[0])
+        self.write_test_helper(ir=ir, sw=sw)
 
 
 if __name__ == '__main__':

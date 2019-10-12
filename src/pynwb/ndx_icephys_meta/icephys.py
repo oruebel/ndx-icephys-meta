@@ -1,7 +1,7 @@
 from pynwb import register_class
 from pynwb.icephys import PatchClampSeries, IntracellularElectrode
 from hdmf.common import DynamicTable
-from hdmf.utils import docval, popargs, call_docval_func, get_docval
+from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval
 
 
 @register_class('IntracellularRecordings', 'ndx-icephys-meta')
@@ -110,3 +110,56 @@ class IntracellularRecordings(DynamicTable):
                       'response': (response_start_index, response_index_count, response)}
         row_kwargs.update(kwargs)
         return super(IntracellularRecordings, self).add_row(**row_kwargs)
+
+
+@register_class('Sweeps', 'ndx-icephys-meta')
+class Sweeps(DynamicTable):
+    """
+    A table for grouping different intracellular recordings from the
+    IntracellularRecordings table together that were recorded simultaneously
+    from different electrodes.
+    """
+
+    __columns__ = (
+        {'name': 'recordings',
+         'description': 'Column with a references to one or more rows in the IntracellularRecordings table',
+         'required': True,
+         'index': True,
+         'table': True},
+    )
+
+    @docval({'name': 'intracellular_recordings',
+             'type': IntracellularRecordings,
+             'doc': 'the IntracellularRecordings table that the recordings column indexes'},
+            *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        self.__intracellular_recordings = popargs('intracellular_recordings', kwargs)
+        # Define defaultb name and description settings
+        kwargs['name'] = 'Sweeps'
+        kwargs['description'] = ('A table for grouping different intracellular recordings from the'
+                                 'IntracellularRecordings table together that were recorded simultaneously '
+                                 'from different electrodes.')
+        # Initialize the DynamicTable
+        call_docval_func(super(Sweeps, self).__init__, kwargs)
+        if self['recordings'].target.table is None:
+            self['recordings'].target.table = self.__intracellular_recordings
+
+    @docval({'name': 'recordings',
+             'type': 'array_data',
+             'doc': 'the indices of the recordings belonging to this sweep',
+             'default': None},
+            allow_extra=True)
+    def add_sweep(self, **kwargs):
+        """
+        Add a single Sweep consisting of one-or-more recordings and associated custom
+        Sweeps metadata to the table.
+
+        :returns: Result from DynamicTable.add_row(...) call
+
+        """
+        # Check recordings
+        recordings = getargs('recordings', kwargs)
+        if recordings is None:
+            kwargs['recordings'] = []
+        re = super(Sweeps, self).add_row(**kwargs)
+        return re
