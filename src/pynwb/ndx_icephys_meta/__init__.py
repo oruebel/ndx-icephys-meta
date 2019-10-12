@@ -1,7 +1,20 @@
-import os
-from pynwb import load_namespaces
-#ndx_icephys_meta_specpath = os.path.join(os.path.dirname(__file__), 'spec', 'ndx-icephys-meta.namespace.yaml')
-ndx_icephys_meta_specpath = '/Users/oruebel/Devel/nwb/icephys_extensions/ndx-icephys-meta/spec/ndx-icephys-meta.namespace.yaml'
-load_namespaces(ndx_icephys_meta_specpath)
+def load_icephys_meta_namespace():
+    import os
+    from pynwb import load_namespaces
+    # Set the path where the spec will be installed by default
+    ndx_icephys_meta_specpath = os.path.join(os.path.dirname(__file__),
+                                             'spec',
+                                             'ndx-icephys-meta.namespace.yaml')
+    # If the extensions has not been installed but we running directly from the git repo
+    if not os.path.exists(ndx_icephys_meta_specpath):
+        ndx_icephys_meta_specpath = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                                 '../../../spec/',
+                                                                 'ndx-icephys-meta.namespace.yaml'))
+    # load namespace
+    load_namespaces(ndx_icephys_meta_specpath)
 
-from .icephys import *
+
+load_icephys_meta_namespace()
+
+# Import the files
+from .icephys import IntracellularRecordings # noqa E402, F401
