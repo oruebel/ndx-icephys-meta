@@ -18,9 +18,6 @@ class SweepsMap(DynamicTableMap):
         ret = container.get('recordings')
         if ret is None:
             return ret
-        # set the recordings table if it hasn't been set yet
-        if ret.target.table is None:
-            ret.target.table = self.get_nwb_file(container).recordings
         return ret
 
     @ObjectMapper.constructor_arg('intracellular_recordings')
