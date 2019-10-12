@@ -16,8 +16,6 @@ class SweepsMap(DynamicTableMap):
         Define the recordings column for write
         """
         ret = container.get('recordings')
-        if ret is None:
-            return ret
         return ret
 
     @ObjectMapper.constructor_arg('intracellular_recordings')
