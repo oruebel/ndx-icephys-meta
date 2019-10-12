@@ -1,6 +1,7 @@
 groups:
 - neurodata_type_def: IntracellularRecordings
   neurodata_type_inc: DynamicTable
+  name: IntracellularRecordings
   doc: A table to group together a stimulus and response from a single electrode and
     a single sweep. Each row in the table represents a single recording consisting
     typically of a stimulus and a corresponding response.

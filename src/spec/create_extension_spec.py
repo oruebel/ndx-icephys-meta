@@ -43,6 +43,7 @@ def main():
 
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
     icephys_recordings_table_spec = NWBGroupSpec(
+        name='IntracellularRecordings',
         neurodata_type_def='IntracellularRecordings',
         neurodata_type_inc='DynamicTable',
         doc='A table to group together a stimulus and response from a single electrode and a single sweep. '
