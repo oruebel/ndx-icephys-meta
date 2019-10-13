@@ -10,13 +10,13 @@ from pynwb import NWBHDF5IO
 
 
 try:
-    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps
+    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps, SweepSequences
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
     import os
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps
+    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps, SweepSequences
 
 
 class ICEphysMetaTestBase(unittest.TestCase):
@@ -70,9 +70,13 @@ class ICEphysMetaTestBase(unittest.TestCase):
             {'name': 'sw',
              'type': Sweeps,
              'doc': 'Sweeps table to be added to the file before write',
+             'default': None},
+            {'name': 'sws',
+             'type': SweepSequences,
+             'doc': 'SweepSequences table to be added to the file before write',
              'default': None})
     def write_test_helper(self, **kwargs):
-        ir, sw = popargs('ir', 'sw', kwargs)
+        ir, sw, sws = popargs('ir', 'sw', 'sws', kwargs)
         # For testing we'll add our IR table as a processing module and write the file to disk
         if ir is not None or sw is not None:
             test_module = self.nwbfile.create_processing_module(name='icephys_meta_module',
@@ -81,6 +85,8 @@ class ICEphysMetaTestBase(unittest.TestCase):
                 test_module.add(ir)
             if sw is not None:
                 test_module.add(sw)
+            if sws is not None:
+                test_module.add(sws)
 
         # Write our test file
         with NWBHDF5IO(self.path, 'w') as io:
@@ -94,6 +100,9 @@ class ICEphysMetaTestBase(unittest.TestCase):
             if sw is not None:
                 in_sw = infile.get_processing_module('icephys_meta_module').get('Sweeps')  # noqa F841
                 # TODO compare the data in sw with in_sw to make sure the data was written and read correctly
+            if sws is not None:
+                in_sws = infile.get_processing_module('icephys_meta_module').get('SweepSequences')  # noqa F841
+                # TODO compare the data in sws with in_sws to make sure the data was written and read correctly
 
 
 class IntracellularRecordingsTests(ICEphysMetaTestBase):
@@ -212,7 +221,7 @@ class SweepsTests(ICEphysMetaTestBase):
         _ = Sweeps(intracellular_recordings=ir)
         self.assertTrue(True)
 
-    def test_empty_write(self):
+    def test_basic_write(self):
         ir = IntracellularRecordings()
         ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,
@@ -221,6 +230,27 @@ class SweepsTests(ICEphysMetaTestBase):
         sw = Sweeps(intracellular_recordings=ir)
         sw.add_sweep(recordings=[0])
         self.write_test_helper(ir=ir, sw=sw)
+
+
+class SweepSequencesTests(ICEphysMetaTestBase):
+
+    def test_init(self):
+        ir = IntracellularRecordings()
+        sw = Sweeps(intracellular_recordings=ir)
+        _ = SweepSequences(sweeps=sw)
+        self.assertTrue(True)
+
+    def test_basic_write(self):
+        ir = IntracellularRecordings()
+        ir.add_recording(electrode=self.electrode,
+                         stimulus=self.stimulus,
+                         response=self.response,
+                         id=10)
+        sw = Sweeps(intracellular_recordings=ir)
+        sw.add_sweep(recordings=[0])
+        sws = SweepSequences(sw)
+        sws.add_sweep_sequence(sweeps=[0, ])
+        self.write_test_helper(ir=ir, sw=sw, sws=sws)
 
 
 if __name__ == '__main__':

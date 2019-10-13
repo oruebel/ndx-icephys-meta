@@ -163,3 +163,58 @@ class Sweeps(DynamicTable):
             kwargs['recordings'] = []
         re = super(Sweeps, self).add_row(**kwargs)
         return re
+
+
+@register_class('SweepSequences', 'ndx-icephys-meta')
+class SweepSequences(DynamicTable):
+    """
+    A table for grouping different intracellular recording sweeps from the
+    Sweeps table together. This is typically used to group together sweeps
+    where the a sequence of stimuli of the same type with varying parameters
+    have been presented in a sequence.
+    """
+
+    __columns__ = (
+        {'name': 'sweeps',
+         'description': 'Column with a references to one or more rows in the Sweepss table',
+         'required': True,
+         'index': True,
+         'table': True},
+    )
+
+    @docval({'name': 'sweeps',
+             'type': Sweeps,
+             'doc': 'the Sweeps table that the recordings column indexes'},
+            *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        self.__sweeps = popargs('sweeps', kwargs)
+        # Define defaultb name and description settings
+        kwargs['name'] = 'SweepSequences'
+        kwargs['description'] = ('A table for grouping different intracellular recording sweeps from the '
+                                 'Sweeps table together. This is typically used to group together sweeps '
+                                 'where the a sequence of stimuli of the same type with varying parameters '
+                                 'have been presented in a sequence.')
+        # Initialize the DynamicTable
+        call_docval_func(super(SweepSequences, self).__init__, kwargs)
+        if self['sweeps'].target.table is None:
+            self['sweeps'].target.table = self.__sweeps
+
+    @docval({'name': 'sweeps',
+             'type': 'array_data',
+             'doc': 'the indices of the recordings belonging to this sweep',
+             'default': None},
+            allow_extra=True)
+    def add_sweep_sequence(self, **kwargs):
+        """
+        Add a sweep sequences (i.e., one row)  consisting of one-or-more recording sweeps
+        and associated custom sweep sequence  metadata to the table.
+
+        :returns: Result from DynamicTable.add_row(...) call
+
+        """
+        # Check recordings
+        sweeps = getargs('sweeps', kwargs)
+        if sweeps is None:
+            kwargs['sweeps'] = []
+        re = super(SweepSequences, self).add_row(**kwargs)
+        return re
