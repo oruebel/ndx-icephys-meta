@@ -132,7 +132,7 @@ def main():
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording sweep sequences together.'
             'With each SweepSequence typically representing a particular type of stimulus, the '
-            'Runs table is typcially used to group sets of stimuli applied in sequence.',
+            'Runs table is typically used to group sets of stimuli applied in sequence.',
         datasets=[NWBDatasetSpec(name='sweep_sequences',
                                  neurodata_type_inc='DynamicTableRegion',
                                  doc='A reference to one or more rows in the SweepSequences table.',

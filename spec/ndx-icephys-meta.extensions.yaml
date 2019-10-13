@@ -95,7 +95,7 @@ groups:
   name: Runs
   doc: A table for grouping different intracellular recording sweep sequences together.With
     each SweepSequence typically representing a particular type of stimulus, the Runs
-    table is typcially used to group sets of stimuli applied in sequence.
+    table is typically used to group sets of stimuli applied in sequence.
   datasets:
   - name: sweep_sequences
     neurodata_type_inc: DynamicTableRegion

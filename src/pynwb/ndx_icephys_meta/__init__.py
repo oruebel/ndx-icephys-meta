@@ -17,5 +17,5 @@ def load_icephys_meta_namespace():
 load_icephys_meta_namespace()
 
 # Import the files
-from .icephys import IntracellularRecordings, Sweeps  # noqa E402, F401
+from .icephys import IntracellularRecordings, Sweeps, SweepSequences, Runs # noqa E402, F401
 from . import io as __io  # noqa E402, F401
