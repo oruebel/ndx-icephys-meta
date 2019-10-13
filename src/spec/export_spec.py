@@ -1,6 +1,7 @@
 import os
 import warnings
 
+
 def export_spec(ns_builder, new_data_types):
     """
     Creates YAML specification files for a new namespace and extensions with
