@@ -1,6 +1,6 @@
 from pynwb import register_map
 from hdmf.common.io.table import DynamicTableMap
-from ndx_icephys_meta.icephys import Sweeps, SweepSequences, Runs
+from ndx_icephys_meta.icephys import Sweeps, SweepSequences, Runs, Conditions
 from hdmf.build import ObjectMapper
 
 
@@ -72,5 +72,29 @@ class RunsMap(DynamicTableMap):
         Define the sweep_sequences constructor argument for read
         """
         ret = builder['sweep_sequences']['attributes']['table']
+        ret = manager.construct(ret)
+        return ret
+
+
+@register_map(Conditions)
+class ConditionsMap(DynamicTableMap):
+    """
+    Define object mapping for the Runs Container class/spec
+    """
+
+    @DynamicTableMap.object_attr("runs")
+    def runs_column(self, container, manager):
+        """
+        Define the sweep_sequences column for write
+        """
+        ret = container.get('runs')
+        return ret
+
+    @ObjectMapper.constructor_arg('runs')
+    def runs_arg(self, builder, manager):
+        """
+        Define the runs constructor argument for read
+        """
+        ret = builder['runs']['attributes']['table']
         ret = manager.construct(ret)
         return ret

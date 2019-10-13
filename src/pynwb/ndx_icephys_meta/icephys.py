@@ -230,7 +230,7 @@ class Runs(DynamicTable):
 
     __columns__ = (
         {'name': 'sweep_sequences',
-         'description': 'Column with a references to one or more rows in the SweepSeqeunces table',
+         'description': 'Column with a references to one or more rows in the SweepSequences table',
          'required': True,
          'index': True,
          'table': True},
@@ -270,4 +270,55 @@ class Runs(DynamicTable):
         if sweep_sequences is None:
             kwargs['sweep_sequences'] = []
         re = super(Runs, self).add_row(**kwargs)
+        return re
+
+
+@register_class('Conditions', 'ndx-icephys-meta')
+class Conditions(DynamicTable):
+    """
+    A table for grouping different intracellular recording runs together that
+    belong to the same experimental conditions.
+    """
+
+    __columns__ = (
+        {'name': 'runs',
+         'description': 'Column with a references to one or more rows in the Runs table',
+         'required': True,
+         'index': True,
+         'table': True},
+    )
+
+    @docval({'name': 'runs',
+             'type': Runs,
+             'doc': 'the Runs table that the runs column indexes'},
+            *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        self.__runs = popargs('runs', kwargs)
+        # Define default name and description settings
+        kwargs['name'] = 'Conditions'
+        kwargs['description'] = ('A table for grouping different intracellular recording runs together that '
+                                 'belong to the same experimental conditions.')
+        # Initialize the DynamicTable
+        call_docval_func(super(Conditions, self).__init__, kwargs)
+        if self['runs'].target.table is None:
+            self['runs'].target.table = self.__runs
+
+    @docval({'name': 'runs',
+             'type': 'array_data',
+             'doc': 'the indices of the runs  belonging to this condition',
+             'default': None},
+            allow_extra=True)
+    def add_condition(self, **kwargs):
+        """
+        Add a condition (i.e., one row)  consisting of one-or-more recording runs of sweep sequences
+        and associated custom conditions  metadata to the table.
+
+        :returns: Result from DynamicTable.add_row(...) call
+
+        """
+        # Check recordings
+        runs = getargs('runs', kwargs)
+        if runs is None:
+            kwargs['runs'] = []
+        re = super(Conditions, self).add_row(**kwargs)
         return re
