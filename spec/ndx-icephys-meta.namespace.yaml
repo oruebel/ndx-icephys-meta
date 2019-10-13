@@ -11,7 +11,7 @@ namespaces:
   - bdichter@lbl.gov
   - None
   - ajtritt@lbl.gov
-  doc: 'Implement proposal for hierarchical metadata strucutre for intracellular electrophysiology
+  doc: 'Implement proposal for hierarchical metadata structure for intracellular electrophysiology
     data '
   name: ndx-icephys-meta
   schema:
