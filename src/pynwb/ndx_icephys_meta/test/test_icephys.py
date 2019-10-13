@@ -124,6 +124,9 @@ class ICEphysMetaTestBase(unittest.TestCase):
 
 
 class IntracellularRecordingsTests(ICEphysMetaTestBase):
+    """
+    Class for testing the IntracellularRecordings Container
+    """
 
     def test_init(self):
         _ = IntracellularRecordings()
@@ -233,13 +236,22 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
 
 
 class SweepsTests(ICEphysMetaTestBase):
+    """
+    Test class for testing the Sweeps Container class
+    """
 
     def test_init(self):
+        """
+        Test  __init__ to make sure we can instantiate the Sweeps container
+        """
         ir = IntracellularRecordings()
         _ = Sweeps(intracellular_recordings=ir)
         self.assertTrue(True)
 
     def test_basic_write(self):
+        """
+        Populate, write, and read the Sweeps container and other required containers
+        """
         ir = IntracellularRecordings()
         ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,
@@ -251,14 +263,23 @@ class SweepsTests(ICEphysMetaTestBase):
 
 
 class SweepSequencesTests(ICEphysMetaTestBase):
+    """
+    Test class for testing the SweepsSequences Container class
+    """
 
     def test_init(self):
+        """
+        Test  __init__ to make sure we can instantiate the SweepSequences container
+        """
         ir = IntracellularRecordings()
         sw = Sweeps(intracellular_recordings=ir)
         _ = SweepSequences(sweeps=sw)
         self.assertTrue(True)
 
     def test_basic_write(self):
+        """
+        Populate, write, and read the SweepSequences container and other required containers
+        """
         ir = IntracellularRecordings()
         ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,
@@ -272,8 +293,14 @@ class SweepSequencesTests(ICEphysMetaTestBase):
 
 
 class RunsTests(ICEphysMetaTestBase):
+    """
+    Test class for testing the Runs Container class
+    """
 
     def test_init(self):
+        """
+        Test  __init__ to make sure we can instantiate the Runs container
+        """
         ir = IntracellularRecordings()
         sw = Sweeps(intracellular_recordings=ir)
         sws = SweepSequences(sweeps=sw)
@@ -281,6 +308,9 @@ class RunsTests(ICEphysMetaTestBase):
         self.assertTrue(True)
 
     def test_basic_write(self):
+        """
+        Populate, write, and read the Runs container and other required containers
+        """
         ir = IntracellularRecordings()
         ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,
@@ -296,8 +326,14 @@ class RunsTests(ICEphysMetaTestBase):
 
 
 class ConditionsTests(ICEphysMetaTestBase):
+    """
+    Test class for testing the Conditions Container class
+    """
 
     def test_init(self):
+        """
+        Test  __init__ to make sure we can instantiate the Conditions container
+        """
         ir = IntracellularRecordings()
         sw = Sweeps(intracellular_recordings=ir)
         sws = SweepSequences(sweeps=sw)
@@ -306,6 +342,9 @@ class ConditionsTests(ICEphysMetaTestBase):
         self.assertTrue(True)
 
     def test_basic_write(self):
+        """
+        Populate, write, and read the Conditions container and other required containers
+        """
         ir = IntracellularRecordings()
         ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,

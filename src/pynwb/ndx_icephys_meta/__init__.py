@@ -1,4 +1,14 @@
+"""
+Python package with PyNWB extension classes for interacting with the icephys_meta extension
+"""
+
 def load_icephys_meta_namespace():
+    """
+    Internal helper function for loading the icephys_meta extension namespace for PyNWB
+
+    Uses the load_namespaces function from PyNWB and as such modifies the state of PyNWB
+    """
+    # use function level imports here to avoid pulling these functions into the module namespace
     import os
     from pynwb import load_namespaces
     # Set the path where the spec will be installed by default
@@ -13,7 +23,7 @@ def load_icephys_meta_namespace():
     # load namespace
     load_namespaces(ndx_icephys_meta_specpath)
 
-
+# Load the icephys_meta extension namespace
 load_icephys_meta_namespace()
 
 # Import the files

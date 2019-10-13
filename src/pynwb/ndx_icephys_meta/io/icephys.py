@@ -1,3 +1,7 @@
+"""
+Module with ObjectMapper classes for the icephys-meta Container classes/neurodata_types
+"""
+
 from pynwb import register_map
 from hdmf.common.io.table import DynamicTableMap
 from ndx_icephys_meta.icephys import Sweeps, SweepSequences, Runs, Conditions
