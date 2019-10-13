@@ -51,6 +51,7 @@ class SweepSequencesMap(DynamicTableMap):
         ret = manager.construct(ret)
         return ret
 
+
 @register_map(Runs)
 class RunsMap(DynamicTableMap):
     """

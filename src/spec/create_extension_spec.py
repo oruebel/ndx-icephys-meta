@@ -3,7 +3,6 @@ from pynwb.spec import (
     NWBGroupSpec,
     NWBAttributeSpec,
     NWBDatasetSpec,
-    NWBLinkSpec,
     NWBDtypeSpec,
     NWBRefSpec
 )
@@ -12,7 +11,8 @@ from export_spec import export_spec
 
 def main():
     # the values for ns_builder are auto-generated from your cookiecutter inputs
-    ns_builder = NWBNamespaceBuilder(doc='Implement proposal for hierarchical metadata strucutre for intracellular electrophysiology data ',
+    ns_builder = NWBNamespaceBuilder(doc='Implement proposal for hierarchical metadata structure '
+                                         'for intracellular electrophysiology data ',
                                      name='ndx-icephys-meta',
                                      version='0.1.0',
                                      author=['Oliver Ruebel',
@@ -202,4 +202,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

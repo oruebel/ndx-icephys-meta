@@ -75,7 +75,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
              'type': SweepSequences,
              'doc': 'SweepSequences table to be added to the file before write',
              'default': None},
-             {'name': 'runs',
+            {'name': 'runs',
              'type': Runs,
              'doc': 'Runs table to be added to the file before write',
              'default': None})
@@ -261,6 +261,7 @@ class SweepSequencesTests(ICEphysMetaTestBase):
         sws.add_sweep_sequence(sweeps=[0, ])
         self.write_test_helper(ir=ir, sw=sw, sws=sws)
 
+
 class RunsTests(ICEphysMetaTestBase):
 
     def test_init(self):
@@ -281,8 +282,9 @@ class RunsTests(ICEphysMetaTestBase):
         sws = SweepSequences(sw)
         sws.add_sweep_sequence(sweeps=[0, ])
         runs = Runs(sweep_sequences=sws)
-        runs.add_run(sweep_sequences=[0,])
+        runs.add_run(sweep_sequences=[0, ])
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs)
+
 
 if __name__ == '__main__':
     unittest.main()
