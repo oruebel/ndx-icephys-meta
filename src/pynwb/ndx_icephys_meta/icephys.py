@@ -128,13 +128,16 @@ class Sweeps(DynamicTable):
          'table': True},
     )
 
-    @docval({'name': 'intracellular_recordings',
+    @docval({'name': 'intracellular_recordings_table',
              'type': IntracellularRecordings,
-             'doc': 'the IntracellularRecordings table that the recordings column indexes'},
+             'doc': 'the IntracellularRecordings table that the recordings column indexes. May be None when '
+                    'reading the Container from file as the table attribute is already populated in this case '
+                    'but otherwise this is required.',
+             'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
-        self.__intracellular_recordings = popargs('intracellular_recordings', kwargs)
-        # Define defaultb name and description settings
+        intracellular_recordings_table = popargs('intracellular_recordings_table', kwargs)
+        # Define default name and description settings
         kwargs['name'] = 'Sweeps'
         kwargs['description'] = ('A table for grouping different intracellular recordings from the'
                                  'IntracellularRecordings table together that were recorded simultaneously '
@@ -142,7 +145,10 @@ class Sweeps(DynamicTable):
         # Initialize the DynamicTable
         call_docval_func(super(Sweeps, self).__init__, kwargs)
         if self['recordings'].target.table is None:
-            self['recordings'].target.table = self.__intracellular_recordings
+            if intracellular_recordings_table is not None:
+                self['recordings'].target.table = intracellular_recordings_table
+            else:
+                raise ValueError("intracellular_recordings constructor argument required")
 
     @docval({'name': 'recordings',
              'type': 'array_data',
@@ -182,12 +188,15 @@ class SweepSequences(DynamicTable):
          'table': True},
     )
 
-    @docval({'name': 'sweeps',
+    @docval({'name': 'sweeps_table',
              'type': Sweeps,
-             'doc': 'the Sweeps table that the sweeps column indexes'},
+             'doc': 'the Sweeps table that the sweeps column indexes. May be None when '
+                    'reading the Container from file as the table attribute is already '
+                    'populated in this case but otherwise this is required.',
+             'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
-        self.__sweeps = popargs('sweeps', kwargs)
+        sweeps_table = popargs('sweeps_table', kwargs)
         # Define defaultb name and description settings
         kwargs['name'] = 'SweepSequences'
         kwargs['description'] = ('A table for grouping different intracellular recording sweeps from the '
@@ -197,7 +206,10 @@ class SweepSequences(DynamicTable):
         # Initialize the DynamicTable
         call_docval_func(super(SweepSequences, self).__init__, kwargs)
         if self['sweeps'].target.table is None:
-            self['sweeps'].target.table = self.__sweeps
+            if sweeps_table is not None:
+                self['sweeps'].target.table = sweeps_table
+            else:
+                raise ValueError('sweeps_table constructor argument required')
 
     @docval({'name': 'sweeps',
              'type': 'array_data',
@@ -236,12 +248,15 @@ class Runs(DynamicTable):
          'table': True},
     )
 
-    @docval({'name': 'sweep_sequences',
+    @docval({'name': 'sweep_sequences_table',
              'type': SweepSequences,
-             'doc': 'the SweepSequences table that the sweep_sequences column indexes'},
+             'doc': 'the SweepSequences table that the sweep_sequences column indexes. May be None when '
+                    'reading the Container from file as the table attribute is already populated in this '
+                    'case but otherwise this is required.',
+             'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
-        self.__sweep_sequences = popargs('sweep_sequences', kwargs)
+        sweep_sequences_table = popargs('sweep_sequences_table', kwargs)
         # Define default name and description settings
         kwargs['name'] = 'Runs'
         kwargs['description'] = ('A table for grouping different intracellular recording sweep sequences together.'
@@ -250,7 +265,10 @@ class Runs(DynamicTable):
         # Initialize the DynamicTable
         call_docval_func(super(Runs, self).__init__, kwargs)
         if self['sweep_sequences'].target.table is None:
-            self['sweep_sequences'].target.table = self.__sweep_sequences
+            if sweep_sequences_table is not None:
+                self['sweep_sequences'].target.table = sweep_sequences_table
+            else:
+                raise ValueError('sweep_sequences_table constructor argument required')
 
     @docval({'name': 'sweep_sequences',
              'type': 'array_data',
@@ -288,12 +306,13 @@ class Conditions(DynamicTable):
          'table': True},
     )
 
-    @docval({'name': 'runs',
+    @docval({'name': 'runs_table',
              'type': Runs,
-             'doc': 'the Runs table that the runs column indexes'},
+             'doc': 'the Runs table that the runs column indexes',
+             'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
-        self.__runs = popargs('runs', kwargs)
+        runs_table = popargs('runs_table', kwargs)
         # Define default name and description settings
         kwargs['name'] = 'Conditions'
         kwargs['description'] = ('A table for grouping different intracellular recording runs together that '
@@ -301,7 +320,10 @@ class Conditions(DynamicTable):
         # Initialize the DynamicTable
         call_docval_func(super(Conditions, self).__init__, kwargs)
         if self['runs'].target.table is None:
-            self['runs'].target.table = self.__runs
+            if runs_table is not None:
+                self['runs'].target.table = runs_table
+            else:
+                raise ValueError('runs_table constructor argument required')
 
     @docval({'name': 'runs',
              'type': 'array_data',

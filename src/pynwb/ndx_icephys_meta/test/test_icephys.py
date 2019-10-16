@@ -245,8 +245,17 @@ class SweepsTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the Sweeps container
         """
         ir = IntracellularRecordings()
-        _ = Sweeps(intracellular_recordings=ir)
+        _ = Sweeps(intracellular_recordings_table=ir)
         self.assertTrue(True)
+
+    def test_missing_intracellular_recordings_on_init(self):
+        """
+        Test that ValueError is raised when intracellular_recordings is missing. This is
+        allowed only on read where the intracellular_recordings table is already set
+        from the file.
+        """
+        with self.assertRaises(ValueError):
+            _ = Sweeps()
 
     def test_basic_write(self):
         """
@@ -257,7 +266,7 @@ class SweepsTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=10)
-        sw = Sweeps(intracellular_recordings=ir)
+        sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         self.write_test_helper(ir=ir, sw=sw)
 
@@ -272,9 +281,18 @@ class SweepSequencesTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the SweepSequences container
         """
         ir = IntracellularRecordings()
-        sw = Sweeps(intracellular_recordings=ir)
-        _ = SweepSequences(sweeps=sw)
+        sw = Sweeps(intracellular_recordings_table=ir)
+        _ = SweepSequences(sweeps_table=sw)
         self.assertTrue(True)
+
+    def test_missing_sweeps_on_init(self):
+        """
+        Test that ValueError is raised when sweeps is missing. This is
+        allowed only on read where the sweeps table is already set
+        from the file.
+        """
+        with self.assertRaises(ValueError):
+            _ = SweepSequences()
 
     def test_basic_write(self):
         """
@@ -285,7 +303,7 @@ class SweepSequencesTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=10)
-        sw = Sweeps(intracellular_recordings=ir)
+        sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
         sws.add_sweep_sequence(sweeps=[0, ])
@@ -302,10 +320,19 @@ class RunsTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the Runs container
         """
         ir = IntracellularRecordings()
-        sw = Sweeps(intracellular_recordings=ir)
-        sws = SweepSequences(sweeps=sw)
-        _ = Runs(sweep_sequences=sws)
+        sw = Sweeps(intracellular_recordings_table=ir)
+        sws = SweepSequences(sweeps_table=sw)
+        _ = Runs(sweep_sequences_table=sws)
         self.assertTrue(True)
+
+    def test_missing_sweepsequences_on_init(self):
+        """
+        Test that ValueError is raised when sweep_sequences is missing. This is
+        allowed only on read where the sweep_sequences table is already set
+        from the file.
+        """
+        with self.assertRaises(ValueError):
+            _ = Runs()
 
     def test_basic_write(self):
         """
@@ -316,11 +343,11 @@ class RunsTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=10)
-        sw = Sweeps(intracellular_recordings=ir)
+        sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
         sws.add_sweep_sequence(sweeps=[0, ])
-        runs = Runs(sweep_sequences=sws)
+        runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs)
 
@@ -335,11 +362,20 @@ class ConditionsTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the Conditions container
         """
         ir = IntracellularRecordings()
-        sw = Sweeps(intracellular_recordings=ir)
-        sws = SweepSequences(sweeps=sw)
-        runs = Runs(sweep_sequences=sws)
-        _ = Conditions(runs=runs)
+        sw = Sweeps(intracellular_recordings_table=ir)
+        sws = SweepSequences(sweeps_table=sw)
+        runs = Runs(sweep_sequences_table=sws)
+        _ = Conditions(runs_table=runs)
         self.assertTrue(True)
+
+    def test_missing_runs_on_init(self):
+        """
+        Test that ValueError is raised when runs is missing. This is
+        allowed only on read where the runs table is already set
+        from the file.
+        """
+        with self.assertRaises(ValueError):
+            _ = Conditions()
 
     def test_basic_write(self):
         """
@@ -350,13 +386,13 @@ class ConditionsTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=10)
-        sw = Sweeps(intracellular_recordings=ir)
+        sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
         sws.add_sweep_sequence(sweeps=[0, ])
-        runs = Runs(sweep_sequences=sws)
+        runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
-        cond = Conditions(runs=runs)
+        cond = Conditions(runs_table=runs)
         cond.add_condition(runs=[0, ])
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs, cond=cond)
 
