@@ -3,8 +3,10 @@ from pynwb.icephys import PatchClampSeries, IntracellularElectrode
 from hdmf.common import DynamicTable
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval
 
+namespace = 'ndx-icephys-meta'
 
-@register_class('IntracellularRecordings', 'ndx-icephys-meta')
+
+@register_class('IntracellularRecordings', namespace)
 class IntracellularRecordings(DynamicTable):
     """
     A table to group together a stimulus and response from a single electrode and
@@ -112,7 +114,7 @@ class IntracellularRecordings(DynamicTable):
         return super(IntracellularRecordings, self).add_row(**row_kwargs)
 
 
-@register_class('Sweeps', 'ndx-icephys-meta')
+@register_class('Sweeps', namespace)
 class Sweeps(DynamicTable):
     """
     A table for grouping different intracellular recordings from the
@@ -171,7 +173,7 @@ class Sweeps(DynamicTable):
         return re
 
 
-@register_class('SweepSequences', 'ndx-icephys-meta')
+@register_class('SweepSequences', namespace)
 class SweepSequences(DynamicTable):
     """
     A table for grouping different intracellular recording sweeps from the
@@ -232,7 +234,7 @@ class SweepSequences(DynamicTable):
         return re
 
 
-@register_class('Runs', 'ndx-icephys-meta')
+@register_class('Runs', namespace)
 class Runs(DynamicTable):
     """
     A table for grouping different intracellular recording sweep sequences together.
@@ -291,7 +293,7 @@ class Runs(DynamicTable):
         return re
 
 
-@register_class('Conditions', 'ndx-icephys-meta')
+@register_class('Conditions', namespace)
 class Conditions(DynamicTable):
     """
     A table for grouping different intracellular recording runs together that
