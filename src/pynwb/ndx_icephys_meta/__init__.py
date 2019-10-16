@@ -2,6 +2,7 @@
 Python package with PyNWB extension classes for interacting with the icephys_meta extension
 """
 
+
 def load_icephys_meta_namespace():
     """
     Internal helper function for loading the icephys_meta extension namespace for PyNWB
@@ -22,6 +23,7 @@ def load_icephys_meta_namespace():
                                                                  'ndx-icephys-meta.namespace.yaml'))
     # load namespace
     load_namespaces(ndx_icephys_meta_specpath)
+
 
 # Load the icephys_meta extension namespace
 load_icephys_meta_namespace()
