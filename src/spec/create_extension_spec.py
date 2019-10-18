@@ -6,7 +6,8 @@ from pynwb.spec import (
     NWBDtypeSpec,
     NWBRefSpec
 )
-from export_spec import export_spec
+from hdmf.spec.write import export_spec
+import os
 
 
 def main():
@@ -43,7 +44,7 @@ def main():
 
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
     icephys_recordings_table_spec = NWBGroupSpec(
-        name='IntracellularRecordings',
+        name='intracellular_recordings',
         neurodata_type_def='IntracellularRecordings',
         neurodata_type_inc='DynamicTable',
         doc='A table to group together a stimulus and response from a single electrode and a single sweep. '
@@ -71,7 +72,7 @@ def main():
     # Create a Sweeps (similar to trials) table to group Intracellular Electrophysiology Recording that were
     # recorded at the same time and belong together
     sweeps_table_spec = NWBGroupSpec(
-        name='Sweeps',
+        name='sweeps',
         neurodata_type_def='Sweeps',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recordings from the '
@@ -98,7 +99,7 @@ def main():
 
     # Create the SweepSequences table to group different Sweeps together
     sweepsequences_table_spec = NWBGroupSpec(
-        name='SweepSequences',
+        name='sweep_sequences',
         neurodata_type_def='SweepSequences',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording sweeps from the '
@@ -127,7 +128,7 @@ def main():
 
     # Create the Runs table to group different SweepSequences together
     runs_table_spec = NWBGroupSpec(
-        name='Runs',
+        name='runs',
         neurodata_type_def='Runs',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording sweep sequences together.'
@@ -155,7 +156,7 @@ def main():
 
     # Create Conditions tbale for grouping different Runs together
     conditions_table_spec = NWBGroupSpec(
-        name='Conditions',
+        name='conditions',
         neurodata_type_def='Conditions',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording runs together that '
@@ -180,24 +181,84 @@ def main():
                   ]
         )
 
-    # TODO need to modify /general/intracellular_ephys in NWB to support adding the new structure there
+    # Update NWBFile to modify /general/intracellular_ephys in NWB to support adding the new structure there
+    # NOTE: If this proposal for extension to NWB gets merged with the core schema the new NWBFile type would
+    #       need to be removed and the NWBFile schema updated instead
+    icephys_file_spec = NWBGroupSpec(
+        neurodata_type_inc='NWBFile',
+        neurodata_type_def='ICEphysMetaNWBFile',
+        doc='Extension of the NWBFile class to allow placing the new icephys '
+            'metadata types in /general/intracellular_ephys in the NWBFile '
+            'NOTE: If this proposal for extension to NWB gets merged with '
+            'the core schema, then this type would be removed and the '
+            'NWBFile specification updated instead',
+        groups=[NWBGroupSpec(
+         name='general',
+         doc='expand definition of general from NWBFile',
+         groups=[NWBGroupSpec(name='intracellular_ephys',
+                              doc='expand definition from NWBFile',
+                              groups=[NWBGroupSpec(neurodata_type_inc='IntracellularRecordings',
+                                                   doc=icephys_recordings_table_spec.doc,
+                                                   name='intracellular_recordings',
+                                                   quantity='?'),
+                                      NWBGroupSpec(neurodata_type_inc='Sweeps',
+                                                   doc=sweeps_table_spec.doc,
+                                                   name='sweeps',
+                                                   quantity='?'),
+                                      NWBGroupSpec(neurodata_type_inc='SweepSequences',
+                                                   doc=sweepsequences_table_spec.doc,
+                                                   name='sweep_sequences',
+                                                   quantity='?'),
+                                      NWBGroupSpec(neurodata_type_inc='Runs',
+                                                   doc=runs_table_spec.doc,
+                                                   name='runs',
+                                                   quantity='?'),
+                                      NWBGroupSpec(neurodata_type_inc='Conditions',
+                                                   doc=conditions_table_spec.doc,
+                                                   name='conditions',
+                                                   quantity='?'),
+                                      # Update doc on SweepTable to declare it as deprecated
+                                      NWBGroupSpec(neurodata_type_inc='SweepTable',
+                                                   doc='[DEPRACATED] Table used to group different PatchClampSeries'
+                                                       'SweepTable is being replaced with the IntracellularRecordings'
+                                                       'and Sweeps type tabel (and corresponding SweepSequences, Runs'
+                                                       'and Consitions tables.',
+                                                   name='sweep_table',
+                                                   quantity='?')
+                                      ]
+                              )
+                 ]
+            )
+        ]
+    )
+
+    # Add the type we want to include from core to this list
+    include_core_types = ['DynamicTable',
+                          'DynamicTableRegion',
+                          'VectorData',
+                          'VectorIndex',
+                          'PatchClampSeries',
+                          'IntracellularElectrode',
+                          'NWBFile']
+    # Include the types that are used by the extension and their namespaces (where to find them)
+    for type_name in include_core_types:
+        ns_builder.include_type(type_name, namespace='core')
 
     # Add our new data types to this list
     new_data_types = [icephys_recordings_table_spec,
                       sweeps_table_spec,
                       sweepsequences_table_spec,
                       runs_table_spec,
-                      conditions_table_spec]
+                      conditions_table_spec,
+                      icephys_file_spec]
 
-    # Include the types that are used by the extension and their namespaces (where to find them)
-    ns_builder.include_type('DynamicTable', namespace='core')
-    ns_builder.include_type('DynamicTableRegion', namespace='core')
-    ns_builder.include_type('VectorData', namespace='core')
-    ns_builder.include_type('VectorIndex', namespace='core')
-    ns_builder.include_type('PatchClampSeries', namespace='core')
-    ns_builder.include_type('IntracellularElectrode', namespace='core')
-
-    export_spec(ns_builder, new_data_types)
+    # Export the spec
+    project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    output_dir = os.path.join(project_dir, 'spec')
+    export_spec(ns_builder=ns_builder,
+                new_data_types=new_data_types,
+                output_dir=output_dir)
+    print("Exported specification to: %s" % output_dir)
 
 
 if __name__ == "__main__":

@@ -10,13 +10,21 @@ from pynwb import NWBHDF5IO
 
 
 try:
-    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps, SweepSequences, Runs, Conditions
+    from ndx_icephys_meta.icephys import (IntracellularRecordings,
+                                          Sweeps,
+                                          SweepSequences,
+                                          Runs,
+                                          Conditions)
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
     import os
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    from ndx_icephys_meta.icephys import IntracellularRecordings, Sweeps, SweepSequences, Runs, Conditions
+    from ndx_icephys_meta.icephys import (IntracellularRecordings,
+                                          Sweeps,
+                                          SweepSequences,
+                                          Runs,
+                                          Conditions)
 
 
 class ICEphysMetaTestBase(unittest.TestCase):
@@ -395,6 +403,18 @@ class ConditionsTests(ICEphysMetaTestBase):
         cond = Conditions(runs_table=runs)
         cond.add_condition(runs=[0, ])
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs, cond=cond)
+
+
+class ICEphysMetaNWBFileTests(ICEphysMetaTestBase):
+    """
+    Test class for testing the ICEphysMetaNWBFileTests Container class
+    """
+
+    def test_init(self):
+        """
+        Test  __init__ to make sure we can instantiate the ICEphysMetaNWBFileTests container
+        """
+        pass
 
 
 if __name__ == '__main__':

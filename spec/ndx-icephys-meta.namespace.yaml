@@ -23,5 +23,6 @@ namespaces:
     - VectorIndex
     - PatchClampSeries
     - IntracellularElectrode
+    - NWBFile
   - source: ndx-icephys-meta.extensions.yaml
   version: 0.1.0

@@ -346,3 +346,8 @@ class Conditions(DynamicTable):
             kwargs['runs'] = []
         re = super(Conditions, self).add_row(**kwargs)
         return re
+
+
+# Create the class for our derived NWBFile type dynamically
+# from pynwb import get_class
+# ICEphysMetaNWBFile = get_class('ICEphysMetaNWBFile', namespace)
