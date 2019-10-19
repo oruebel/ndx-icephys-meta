@@ -9,7 +9,7 @@ groups:
     case both, the stimulus and resposne will point to the samePatchClampSeries while
     the idx_start and count of the invalid column will be set to -1, thus,indicating
     that no values have been recorded for the stimulus or response, respectively.
-    Note,a recording MUSt contain at least a stimulus or response.
+    Note,a recording MUST contain at least a stimulus or response.
   datasets:
   - name: stimulus
     neurodata_type_inc: VectorData
@@ -131,7 +131,7 @@ groups:
   - name: runs_index
     neurodata_type_inc: VectorIndex
     doc: Index dataset for the runs column.
-- neurodata_type_def: ICEphysMetaNWBFile
+- neurodata_type_def: ICEphysFile
   neurodata_type_inc: NWBFile
   doc: 'Extension of the NWBFile class to allow placing the new icephys metadata types
     in /general/intracellular_ephys in the NWBFile NOTE: If this proposal for extension
@@ -153,7 +153,7 @@ groups:
           an experiment. In this case both, the stimulus and resposne will point to
           the samePatchClampSeries while the idx_start and count of the invalid column
           will be set to -1, thus,indicating that no values have been recorded for
-          the stimulus or response, respectively. Note,a recording MUSt contain at
+          the stimulus or response, respectively. Note,a recording MUST contain at
           least a stimulus or response.
         quantity: '?'
       - name: sweeps

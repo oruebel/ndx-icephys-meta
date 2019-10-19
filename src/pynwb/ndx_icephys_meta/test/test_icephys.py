@@ -1,20 +1,21 @@
 import unittest2 as unittest
-from pynwb import NWBFile
+import warnings
 import numpy as np
 from datetime import datetime
 from dateutil.tz import tzlocal
+from pynwb import NWBFile
 from pynwb.icephys import CurrentClampStimulusSeries, VoltageClampSeries
 from pynwb.testing import remove_test_file
-from hdmf.utils import docval, popargs
 from pynwb import NWBHDF5IO
-
+from hdmf.utils import docval, popargs
 
 try:
     from ndx_icephys_meta.icephys import (IntracellularRecordings,
                                           Sweeps,
                                           SweepSequences,
                                           Runs,
-                                          Conditions)
+                                          Conditions,
+                                          ICEphysFile)
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
     import os
@@ -24,12 +25,17 @@ except ImportError:
                                           Sweeps,
                                           SweepSequences,
                                           Runs,
-                                          Conditions)
+                                          Conditions,
+                                          ICEphysFile)
 
 
 class ICEphysMetaTestBase(unittest.TestCase):
     """
-    Base helper class for setting up tests for the ndx-icephys-meta extension
+    Base helper class for setting up tests for the ndx-icephys-meta extension.
+
+    Here we use the base NWBFile class for read/write (rather than our custom ICEphysFile)
+    to make sure tests of the individual tables do not depend on our custom class. We are testing
+    ICEphysFile separately.
     """
     def setUp(self):
         # Create an example nwbfile with a device, intracellular electrode, stimulus, and response
@@ -115,19 +121,19 @@ class ICEphysMetaTestBase(unittest.TestCase):
         with NWBHDF5IO(self.path, 'r') as io:
             infile = io.read()
             if ir is not None:
-                in_ir = infile.get_processing_module('icephys_meta_module').get('IntracellularRecordings')  # noqa F841
+                in_ir = infile.get_processing_module('icephys_meta_module').get('intracellular_recordings')  # noqa F841
                 # TODO compare the data in ir with in_ir to make sure the data was written and read correctly
             if sw is not None:
-                in_sw = infile.get_processing_module('icephys_meta_module').get('Sweeps')  # noqa F841
+                in_sw = infile.get_processing_module('icephys_meta_module').get('sweeps')  # noqa F841
                 # TODO compare the data in sw with in_sw to make sure the data was written and read correctly
             if sws is not None:
-                in_sws = infile.get_processing_module('icephys_meta_module').get('SweepSequences')  # noqa F841
+                in_sws = infile.get_processing_module('icephys_meta_module').get('sweep_sequences')  # noqa F841
                 # TODO compare the data in sws with in_sws to make sure the data was written and read correctly
             if runs is not None:
-                in_runs = infile.get_processing_module('icephys_meta_module').get('Runs')  # noqa F841
+                in_runs = infile.get_processing_module('icephys_meta_module').get('runs')  # noqa F841
                 # TODO compare the data in runs with in_runs to make sure the data was written and read correctly
             if cond is not None:
-                in_con = infile.get_processing_module('icephys_meta_module').get('Conditions')  # noqa F841
+                in_con = infile.get_processing_module('icephys_meta_module').get('conditions')  # noqa F841
                 # TODO compare the data in cond with in_cond to make sure the data was written and read correctly
 
 
@@ -405,14 +411,358 @@ class ConditionsTests(ICEphysMetaTestBase):
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs, cond=cond)
 
 
-class ICEphysMetaNWBFileTests(ICEphysMetaTestBase):
+class ICEphysFileTests(ICEphysMetaTestBase):
     """
-    Test class for testing the ICEphysMetaNWBFileTests Container class
+    Test class for testing the ICEphysFileTests Container class
     """
+    def setUp(self):
+        warnings.simplefilter("always")  # Trigger all warnings
+        self.path = 'test_icephys_meta_intracellularrecording.h5'
+
+    def tearDown(self):
+        remove_test_file(self.path)
+
+    def __get_icephysfile(self):
+        """
+        Create a dummy ICEphysFile instance
+        """
+        icefile = ICEphysFile(
+            session_description='my first synthetic recording',
+            identifier='EXAMPLE_ID',
+            session_start_time=datetime.now(tzlocal()),
+            experimenter='Dr. Bilbo Baggins',
+            lab='Bag End Laboratory',
+            institution='University of Middle Earth at the Shire',
+            experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+            session_id='LONELYMTN')
+        return icefile
+
+    def __add_device(self, icefile):
+        return icefile.create_device(name='Heka ITC-1600')
+
+    def __add_electrode(self, icefile, device):
+        return icefile.create_ic_electrode(name="elec0",
+                                           description='a mock intracellular electrode',
+                                           device=device)
+
+    def __get_stimuls(self, electrode):
+        """
+        Create a dummy CurrentClampStimulusSeries
+        """
+        return CurrentClampStimulusSeries(
+            name="ccss",
+            data=[1, 2, 3, 4, 5],
+            starting_time=123.6,
+            rate=10e3,
+            electrode=electrode,
+            gain=0.02,
+            sweep_number=15)
+
+    def __get_response(self, electrode):
+        """
+        Create a dummy VoltageClampSeries
+        """
+        return VoltageClampSeries(
+            name='vcs',
+            data=[0.1, 0.2, 0.3, 0.4, 0.5],
+            conversion=1e-12,
+            resolution=np.nan,
+            starting_time=123.6,
+            rate=20e3,
+            electrode=electrode,
+            gain=0.02,
+            capacitance_slow=100e-12,
+            resistance_comp_correction=70.0,
+            sweep_number=15)
 
     def test_init(self):
         """
-        Test  __init__ to make sure we can instantiate the ICEphysMetaNWBFileTests container
+        Test  __init__ to make sure we can instantiate the ICEphysFileTests container
+        """
+        _ = self.__get_icephysfile()
+
+    def test_deprecate_sweeps_on_add_stimulus(self):
+        """
+        Test that warnings are raised if the user tries to use a sweeps table
+        """
+        nwbfile = self.__get_icephysfile()
+        device = self.__add_device(nwbfile)
+        electrode = self.__add_electrode(nwbfile, device)
+        stimulus = self.__get_stimuls(electrode=electrode)
+        responce = self.__get_response(electrode=electrode)
+        # Make sure we warn if sweeptable is added on add_stimulus
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")  # Trigger all warnings
+            nwbfile.add_stimulus(stimulus, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+            assert issubclass(w[-1].category, DeprecationWarning)
+            # make sure we don't trigger the same deprecation warning twice
+            nwbfile.add_acquisition(responce, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+
+    def test_deprecate_sweeps_on_add_acquistion(self):
+        """
+        Test that warnings are raised if the user tries to use a sweeps table
+        """
+        nwbfile = self.__get_icephysfile()
+        device = self.__add_device(nwbfile)
+        electrode = self.__add_electrode(nwbfile, device)
+        stimulus = self.__get_stimuls(electrode=electrode)
+        responce = self.__get_response(electrode=electrode)
+        # Make sure we warn if sweeptable is added on add_stimulus
+        with warnings.catch_warnings(record=True) as w:
+            nwbfile.add_acquisition(responce, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+            assert issubclass(w[-1].category, DeprecationWarning)
+            # make sure we don't trigger the same deprecation warning twice
+            nwbfile.add_stimulus(stimulus, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+
+    def test_deprecate_sweeps_on_init(self):
+        """
+        Test that warnings are raised if the user tries to use a sweeps table
+        """
+        from pynwb.icephys import SweepTable
+        with warnings.catch_warnings(record=True) as w:
+            nwbfile = ICEphysFile(
+                session_description='my first synthetic recording',
+                identifier='EXAMPLE_ID',
+                session_start_time=datetime.now(tzlocal()),
+                experimenter='Dr. Bilbo Baggins',
+                lab='Bag End Laboratory',
+                institution='University of Middle Earth at the Shire',
+                experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+                session_id='LONELYMTN',
+                sweep_table=SweepTable())
+            device = self.__add_device(nwbfile)
+            electrode = self.__add_electrode(nwbfile, device)
+            stimulus = self.__get_stimuls(electrode=electrode)
+            self.assertEqual(len(w), 1)
+            assert issubclass(w[-1].category, DeprecationWarning)
+            # make sure we don't trigger the same deprecation warning twice
+            nwbfile.add_stimulus(stimulus, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_conditions_column(self):
+        """
+        Test that we can add a dynamic column to the conditions via nwb.add_conditions_column(...)
+        """
+        pass
+
+    def test_add_icephys_meta_full_roundtrip(self):
+        """
+        This test adds all data and then constructs step-by-step the full table structure
+        Returns:
+
+        """
+        ####################################
+        # Create our file and timeseries
+        ###################################
+        nwbfile = self.__get_icephysfile()
+        device = self.__add_device(nwbfile)
+        electrode = self.__add_electrode(nwbfile, device)
+        # Add the data using standard methods from NWBFile
+        stimulus = self.__get_stimuls(electrode=electrode)
+        nwbfile.add_stimulus(stimulus)
+        # Check that the deprecated sweep table has indeed not been created
+        self.assertIsNone(nwbfile.sweep_table)
+        response = self.__get_response(electrode=electrode)
+        nwbfile.add_acquisition(response)
+        # Check that the deprecated sweep table has indeed not been created
+        self.assertIsNone(nwbfile.sweep_table)
+
+        #############################################
+        #  Test adding IntracellularRecordings
+        #############################################
+        # Check that our IntracellularRecordings table does not yet exists
+        self.assertIsNone(nwbfile.intracellular_recordings)
+        # Add an intracellular recording
+        nwbfile.add_intracellular_recording(electrode=electrode,
+                                            stimulus=stimulus,
+                                            response=response,
+                                            id=10)
+        # Check that the table has been created
+        self.assertIsNotNone(nwbfile.intracellular_recordings)
+        # Check that the values in our row are correct
+        self.assertEqual(len(nwbfile.intracellular_recordings), 1)
+        res = nwbfile.intracellular_recordings[0]
+        # Check the ID
+        self.assertEqual(res[0], 10)
+        # Check the stimulus
+        self.assertEqual(res[1][0], 0)
+        self.assertEqual(res[1][1], 5)
+        self.assertIs(res[1][2], stimulus)
+        # Check the response
+        self.assertEqual(res[2][0], 0)
+        self.assertEqual(res[2][1], 5)
+        self.assertIs(res[2][2], response)
+        # Check the Intracellular electrode
+        self.assertIs(res[3], electrode)
+
+        #############################################
+        #  Test adding Sweeps
+        #############################################
+        # Confirm that our Sweeps table does not yet exist
+        self.assertIsNone(nwbfile.sweeps)
+        # Add a sweep
+        nwbfile.add_sweep(recordings=[0], id=12)
+        # Check that the Sweeps table has been added
+        self.assertIsNotNone(nwbfile.sweeps)
+        # Check that the values for our sweeps table are correct
+        res = nwbfile.sweeps[0]
+        # check the id value
+        self.assertEqual(res[0], 12)
+        # Check that our sweep contains 1 IntracellularRecording
+        self.assertEqual(len(res[1]), 1)
+
+        #############################################
+        #  Test adding a SweepSequence
+        #############################################
+        # Confirm that our SweepSequences table does not yet exist
+        self.assertIsNone(nwbfile.sweep_sequences)
+        # Add a sweep
+        nwbfile.add_sweep_sequence(sweeps=[0], id=15)
+        # Check that the Sweeps table has been added
+        self.assertIsNotNone(nwbfile.sweep_sequences)
+        # Check that the values for our Sweeps table are correct
+        res = nwbfile.sweep_sequences[0]
+        # check the id value
+        self.assertEqual(res[0], 15)
+        # Check that our sweep contains 1 IntracellularRecording
+        self.assertEqual(len(res[1]), 1)
+
+        #############################################
+        #  Test adding a Run
+        #############################################
+        # Confirm that our Runs table does not yet exist
+        self.assertIsNone(nwbfile.runs)
+        # Add a run
+        nwbfile.add_run(sweep_sequences=[0], id=17)
+        # Check that the Sweeps table has been added
+        self.assertIsNotNone(nwbfile.runs)
+        # Check that the values for our Runs table are correct
+        res = nwbfile.runs[0]
+        # check the id value
+        self.assertEqual(res[0], 17)
+        # Check that our run contains 1 SweepSequence
+        self.assertEqual(len(res[1]), 1)
+
+        #############################################
+        #  Test adding a Condition
+        #############################################
+        # Confirm that our Runs table does not yet exist
+        self.assertIsNone(nwbfile.conditions)
+        # Add a condition
+        nwbfile.add_condition(runs=[0], id=19)
+        # Check that the Conditions table has been added
+        self.assertIsNotNone(nwbfile.conditions)
+        # Check that the values for our Conditions table are correct
+        res = nwbfile.conditions[0]
+        # check the id value
+        self.assertEqual(res[0], 19)
+        # Check that our run contains 1 run
+        self.assertEqual(len(res[1]), 1)
+
+        #############################################
+        #  Test writing the file to disk
+        #############################################
+        # Write our file to disk
+        # Write our test file
+        with NWBHDF5IO(self.path, 'w') as io:
+            io.write(nwbfile)
+
+        #############################################
+        #  Test reading the file back from disk
+        #############################################
+        with NWBHDF5IO(self.path, 'r') as io:
+            infile = io.read()
+
+            ############################################################################
+            #  Test that the  IntracellularRecordings table has been written correctly
+            ############################################################################
+            self.assertIsNotNone(infile.intracellular_recordings)
+            self.assertEqual(len(infile.intracellular_recordings), 1)
+            res = nwbfile.intracellular_recordings[0]
+            # Check the ID
+            self.assertEqual(res[0], 10)
+            # Check the stimulus
+            self.assertEqual(res[1][0], 0)
+            self.assertEqual(res[1][1], 5)
+            self.assertIs(res[1][2], nwbfile.get_stimulus("ccss"))
+            # Check the response
+            self.assertEqual(res[2][0], 0)
+            self.assertEqual(res[2][1], 5)
+            self.assertIs(res[2][2], nwbfile.get_acquisition('vcs'))
+            # Check the Intracellular electrode
+            self.assertIs(res[3], electrode)
+
+            ############################################################################
+            #  Test that the  Sweeps table has been written correctly
+            ############################################################################
+            self.assertIsNotNone(infile.sweeps)
+            self.assertEqual(len(infile.sweeps), 1)
+            res = nwbfile.sweeps[0]
+            # Check the ID and len of the intracellular_recordings column
+            self.assertEqual(res[0], 12)
+            self.assertEqual(len(res[1]), 1)
+
+            ############################################################################
+            #  Test that the  SweepSequences table has been written correctly
+            ############################################################################
+            self.assertIsNotNone(infile.sweep_sequences)
+            self.assertEqual(len(infile.sweep_sequences), 1)
+            res = nwbfile.sweep_sequences[0]
+            # Check the ID and len of the sweeps column
+            self.assertEqual(res[0], 15)
+            self.assertEqual(len(res[1]), 1)
+
+            ############################################################################
+            #  Test that the  Runs table has been written correctly
+            ############################################################################
+            self.assertIsNotNone(infile.runs)
+            self.assertEqual(len(infile.runs), 1)
+            res = nwbfile.runs[0]
+            # Check the ID and len of the sweeps column
+            self.assertEqual(res[0], 17)
+            self.assertEqual(len(res[1]), 1)
+
+            ############################################################################
+            #  Test that the Conditions table has been written correctly
+            ############################################################################
+            self.assertIsNotNone(infile.conditions)
+            self.assertEqual(len(infile.conditions), 1)
+            res = nwbfile.conditions[0]
+            # Check the ID and len of the sweeps column
+            self.assertEqual(res[0], 19)
+            self.assertEqual(len(res[1]), 1)
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_intracellular_recordings_column(self):
+        """
+        Test that we can add a dynamic column to the intracellular_recordings
+        via nwbfile.add_intracellular_recordings_column
+        """
+        pass
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_sweeps_column(self):
+        """
+        Test that we can add a dynamic column to the sweeps via nwbfile.add_sweeps_column
+        """
+        pass
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_sweep_seqences_column(self):
+        """
+        Test that we can add a dynamic column to the sweep_sequences via nwbfile.add_sweep_sequences_column
+        """
+        pass
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_runs_column(self):
+        """
+        Test that we can add a dynamic column to the runs via nwbfile.add_runs_column
         """
         pass
 

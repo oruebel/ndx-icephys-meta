@@ -1,7 +1,9 @@
 from pynwb import register_class
+from pynwb.file import NWBFile
 from pynwb.icephys import PatchClampSeries, IntracellularElectrode
 from hdmf.common import DynamicTable
-from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval
+from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
+import warnings
 
 namespace = 'ndx-icephys-meta'
 
@@ -31,7 +33,7 @@ class IntracellularRecordings(DynamicTable):
 
     @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
-        kwargs['name'] = 'IntracellularRecordings'
+        kwargs['name'] = 'intracellular_recordings'
         kwargs['description'] = ('A table to group together a stimulus and response from a single electrode and'
                                  'a single sweep. Each row in the table represents a single recording consisting'
                                  'typically of a stimulus and a corresponding response.')
@@ -140,7 +142,7 @@ class Sweeps(DynamicTable):
     def __init__(self, **kwargs):
         intracellular_recordings_table = popargs('intracellular_recordings_table', kwargs)
         # Define default name and description settings
-        kwargs['name'] = 'Sweeps'
+        kwargs['name'] = 'sweeps'
         kwargs['description'] = ('A table for grouping different intracellular recordings from the'
                                  'IntracellularRecordings table together that were recorded simultaneously '
                                  'from different electrodes.')
@@ -200,7 +202,7 @@ class SweepSequences(DynamicTable):
     def __init__(self, **kwargs):
         sweeps_table = popargs('sweeps_table', kwargs)
         # Define defaultb name and description settings
-        kwargs['name'] = 'SweepSequences'
+        kwargs['name'] = 'sweep_sequences'
         kwargs['description'] = ('A table for grouping different intracellular recording sweeps from the '
                                  'Sweeps table together. This is typically used to group together sweeps '
                                  'where the a sequence of stimuli of the same type with varying parameters '
@@ -260,7 +262,7 @@ class Runs(DynamicTable):
     def __init__(self, **kwargs):
         sweep_sequences_table = popargs('sweep_sequences_table', kwargs)
         # Define default name and description settings
-        kwargs['name'] = 'Runs'
+        kwargs['name'] = 'runs'
         kwargs['description'] = ('A table for grouping different intracellular recording sweep sequences together.'
                                  'With each SweepSequence typically representing a particular type of stimulus, the '
                                  'Runs table is typically used to group sets of stimuli applied in sequence.')
@@ -316,7 +318,7 @@ class Conditions(DynamicTable):
     def __init__(self, **kwargs):
         runs_table = popargs('runs_table', kwargs)
         # Define default name and description settings
-        kwargs['name'] = 'Conditions'
+        kwargs['name'] = 'conditions'
         kwargs['description'] = ('A table for grouping different intracellular recording runs together that '
                                  'belong to the same experimental conditions.')
         # Initialize the DynamicTable
@@ -348,6 +350,249 @@ class Conditions(DynamicTable):
         return re
 
 
-# Create the class for our derived NWBFile type dynamically
-# from pynwb import get_class
-# ICEphysMetaNWBFile = get_class('ICEphysMetaNWBFile', namespace)
+@register_class('ICEphysFile', namespace)
+class ICEphysFile(NWBFile):
+    """
+    Extension of the NWBFile class to allow placing the new icephys
+    metadata types in /general/intracellular_ephys in the NWBFile
+    NOTE: If this proposal for extension to NWB gets merged with
+    the core schema, then this type would be removed and the
+    NWBFile specification updated instead
+    """
+
+    __nwbfields__ = ({'name': 'intracellular_recordings',
+                      'child': True,
+                      'required_name': 'intracellular_recordings',
+                      'doc': 'IntracellularRecordings table to group together a stimulus and response '
+                             'from a single intracellular electrode and a single sweep.'},
+                     {'name': 'sweeps',
+                      'child': True,
+                      'required_name': 'sweeps',
+                      'doc': 'Sweeps table for grouping different intracellular recordings from the '
+                              'IntracellularRecordings table together that were recorded simultaneously '
+                              'from different electrodes'},
+                     {'name': 'sweep_sequences',
+                      'child': True,
+                      'required_name': 'sweep_sequences',
+                      'doc': 'A table for grouping different intracellular recording sweeps from the '
+                             'Sweeps table together. This is typically used to group together sweeps '
+                             'where the a sequence of stimuli of the same type with varying parameters '
+                             'have been presented in a sequence.'},
+                     {'name': 'runs',
+                      'child': True,
+                      'required_name': 'runs',
+                      'doc': 'A table for grouping different intracellular recording sweep sequences together.'
+                             'With each SweepSequence typically representing a particular type of stimulus, the '
+                             'Runs table is typically used to group sets of stimuli applied in sequence.'},
+                     {'name': 'conditions',
+                      'child': True,
+                      'required_name': 'conditions',
+                      'doc': 'A table for grouping different intracellular recording runs together that '
+                             'belong to the same experimental conditions.'})
+
+    @docval(*get_docval(NWBFile.__init__),
+            {'name': 'intracellular_recordings', 'type': IntracellularRecordings,  'default': None,
+             'doc': 'the IntracellularRecordings table that belongs to this NWBFile'},
+            {'name': 'sweeps', 'type': Sweeps, 'default': None,
+             'doc': 'the Sweeps table that belongs to this NWBFile'},
+            {'name': 'sweep_sequences', 'type': SweepSequences, 'default': None,
+             'doc': 'the SweepSequences table that belongs to this NWBFile'},
+            {'name': 'runs', 'type': Runs, 'default': None,
+             'doc': 'the Runs table that belongs to this NWBFile'},
+            {'name': 'conditions', 'type': Conditions, 'default': None,
+             'doc': 'the Conditions table that belongs to this NWBFile'})
+    def __init__(self, **kwargs):
+        # Get the arguments to pass to NWBFile and remove arguments custum to this class
+        intracellular_recordings = kwargs.pop('intracellular_recordings', None)
+        sweeps = kwargs.pop('sweeps', None)
+        sweep_sequences = kwargs.pop('sweep_sequences', None)
+        runs = kwargs.pop('runs', None)
+        conditions = kwargs.pop('conditions', None)
+        if kwargs.get('sweep_table') is not None:
+            warnings.warn("Use of SweepTable is deprecated. Use the intracellular_recordings, "
+                          "sweeps, sweep_sequences, runs and/or conditions table(s) instead.", DeprecationWarning)
+        # Initialize the NWBFile parent class
+        pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
+        super(ICEphysFile, self).__init__(*pargs, **pkwargs)
+        # Set the intracellular_recordings if available
+        setattr(self, 'intracellular_recordings', intracellular_recordings)
+        setattr(self, 'sweeps', sweeps)
+        setattr(self, 'sweep_sequences', sweep_sequences)
+        setattr(self, 'runs', runs)
+        setattr(self, 'conditions', conditions)
+
+    @docval(*get_docval(NWBFile.add_stimulus),
+            {'name': 'use_sweep_table', 'type': bool, 'default': False, 'doc': 'Use the deprecated SweepTable'})
+    def add_stimulus(self, **kwargs):
+        """
+        Overwrite behavior from NWBFile to avoid use of the deprecated SweepTable
+        """
+        timeseries = popargs('timeseries', kwargs)
+        self._add_stimulus_internal(timeseries)
+        use_sweep_table = popargs('use_sweep_table', kwargs)
+        if use_sweep_table:
+            if self.sweep_table is None:
+                warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordings, "
+                              "Sweeps tables instead. See the add_intracellular_recordings, "
+                              "add_sweep, add_sweep_sequence, add_run, add_condition functions.",
+                              DeprecationWarning)
+            self._update_sweep_table(timeseries)
+
+    @docval(*get_docval(NWBFile.add_acquisition),
+            {'name': 'use_sweep_table', 'type': bool, 'default': False, 'doc': 'Use the deprecated SweepTable'})
+    def add_acquisition(self, **kwargs):
+        """
+        Overwrite behavior from NWBFile to avoid use of the deprecated SweepTable
+        """
+        nwbdata = popargs('nwbdata', kwargs)
+        self._add_acquisition_internal(nwbdata)
+        use_sweep_table = popargs('use_sweep_table', kwargs)
+        if use_sweep_table:
+            if self.sweep_table is None:
+                warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordings, "
+                              "Sweeps tables instead. See the add_intracellular_recordings, "
+                              "add_sweep, add_sweep_sequence, add_run, add_condition functions.",
+                              DeprecationWarning)
+            self._update_sweep_table(nwbdata)
+
+    def _check_intracellular_recordings(self):
+        """
+        Create IntracellularRecordings table if not yet done
+        """
+        if self.intracellular_recordings is None:
+            self.intracellular_recordings = IntracellularRecordings()
+
+    @docval(*get_docval(IntracellularRecordings.add_column))
+    def add_intracellular_recordings_column(self, **kwargs):
+        """
+        Add a column to the IntracellularRecordings table.
+        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
+        """
+        self._check_intracellular_recordings()
+        call_docval_func(self.intracellular_recordings.add_column, kwargs)
+
+    @docval(*get_docval(IntracellularRecordings.add_recording),
+            allow_extra=True)
+    def add_intracellular_recording(self, **kwargs):
+        """
+        Add a intracellular recording to the intracellular_recordings table. If the
+        electrode, stimiulus, and/or response do not exsist yet in the NWBFile, then
+        they will be added to this NWBFile before adding them to the table.
+        """
+        # Add the stimulus, response, and electrode to the file if they don't exist yet
+        stimulus, response, electrode = getargs('stimulus', 'response', 'electrode', kwargs)
+        if stimulus.name not in self.stimulus:
+            self.add_stimulus(stimulus, use_sweep_table=False)
+        if response.name not in self.acquisition:
+            self.add_acquisition(response, use_sweep_table=False)
+        if electrode.name not in self.ic_electrodes:
+            self.add_ic_electrode(electrode)
+        # make sure the intracellular recordings table exists and if not create it
+        self._check_intracellular_recordings()
+        # Add the recoding to the intracellular_recordings table
+        call_docval_func(self.intracellular_recordings.add_recording, kwargs)
+
+    def _check_sweeps(self):
+        """
+        Create the Sweeps (and IntracellularRecordings) table if not yet done
+        """
+        if self.sweeps is None:
+            self._check_intracellular_recordings()
+            self.sweeps = Sweeps(self.intracellular_recordings)
+
+    @docval(*get_docval(Sweeps.add_column))
+    def add_sweeps_column(self, **kwargs):
+        """
+        Add a column to the Sweeps table.
+        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
+        """
+        self._check_sweeps()
+        call_docval_func(self.sweeps.add_column, kwargs)
+
+    @docval(*get_docval(Sweeps.add_sweep),
+            allow_extra=True)
+    def add_sweep(self, **kwargs):
+        """
+        Add a new sweep to the sweeps table
+        """
+        self._check_sweeps()
+        call_docval_func(self.sweeps.add_sweep, kwargs)
+
+    def _check_sweep_sequences(self):
+        """
+        Create the SweepSequences (and dependent Sweeps and IntracellularRecordings) table if not yet done
+        """
+        if self.sweep_sequences is None:
+            self._check_sweeps()
+            self.sweep_sequences = SweepSequences(self.sweeps)
+
+    @docval(*get_docval(SweepSequences.add_column))
+    def add_sweep_sequences_column(self, **kwargs):
+        """
+        Add a column to the SweepSequences table.
+        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
+        """
+        self._check_sweeps()
+        call_docval_func(self.sweep_sequences.add_column, kwargs)
+
+    @docval(*get_docval(SweepSequences.add_sweep_sequence),
+            allow_extra=True)
+    def add_sweep_sequence(self, **kwargs):
+        """
+        Add a new sweep sequence to the sweep_sequences table
+        """
+        self._check_sweep_sequences()
+        call_docval_func(self.sweep_sequences.add_sweep_sequence, kwargs)
+
+    def _check_runs(self):
+        """
+        Create the Runs (and dependent SweepSequences, Sweeps, and IntracellularRecrodings) table if not yet done
+        """
+        if self.runs is None:
+            self._check_sweep_sequences()
+            self.runs = Runs(self.sweep_sequences)
+
+    @docval(*get_docval(Runs.add_column))
+    def add_runs_column(self, **kwargs):
+        """
+        Add a column to the Runs table.
+        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
+        """
+        self._check_runs()
+        call_docval_func(self.runs.add_column, kwargs)
+
+    @docval(*get_docval(Runs.add_run),
+            allow_extra=True)
+    def add_run(self, **kwargs):
+        """
+        Add a new run to the Runs table
+        """
+        self._check_runs()
+        call_docval_func(self.runs.add_run, kwargs)
+
+    def _check_conditions(self):
+        """
+        Create the Conditions (and dependent Runs, SweepSequences, Sweeps, and IntracellularRecrodings)
+        table if not yet done
+        """
+        if self.conditions is None:
+            self._check_runs()
+            self.conditions = Conditions(self.runs)
+
+    @docval(*get_docval(Conditions.add_column))
+    def add_conditions_column(self, **kwargs):
+        """
+        Add a column to the Conditions table.
+        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
+        """
+        self._check_runs()
+        call_docval_func(self.runs.add_column, kwargs)
+
+    @docval(*get_docval(Conditions.add_condition),
+            allow_extra=True)
+    def add_condition(self, **kwargs):
+        """
+        Add a new condition to the Conditions table
+        """
+        self._check_conditions()
+        call_docval_func(self.conditions.add_condition, kwargs)

@@ -53,7 +53,7 @@ def main():
             'as part of an experiment. In this case both, the stimulus and resposne will point to the same'
             'PatchClampSeries while the idx_start and count of the invalid column will be set to -1, thus,'
             'indicating that no values have been recorded for the stimulus or response, respectively. Note,'
-            'a recording MUSt contain at least a stimulus or response.',
+            'a recording MUST contain at least a stimulus or response.',
         datasets=[NWBDatasetSpec(name='stimulus',
                                  neurodata_type_inc='VectorData',
                                  doc='Column storing the reference to the recorded stimulus for the recording (rows)',
@@ -186,7 +186,7 @@ def main():
     #       need to be removed and the NWBFile schema updated instead
     icephys_file_spec = NWBGroupSpec(
         neurodata_type_inc='NWBFile',
-        neurodata_type_def='ICEphysMetaNWBFile',
+        neurodata_type_def='ICEphysFile',
         doc='Extension of the NWBFile class to allow placing the new icephys '
             'metadata types in /general/intracellular_ephys in the NWBFile '
             'NOTE: If this proposal for extension to NWB gets merged with '
