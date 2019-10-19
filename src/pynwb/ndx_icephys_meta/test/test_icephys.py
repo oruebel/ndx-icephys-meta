@@ -706,6 +706,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             # Check the ID and len of the intracellular_recordings column
             self.assertEqual(res[0], 12)
             self.assertEqual(len(res[1]), 1)
+            self.assertEqual(res[1][0][0], 10)  # Check id of the references ic_recordings row
 
             ############################################################################
             #  Test that the  SweepSequences table has been written correctly
@@ -716,6 +717,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             # Check the ID and len of the sweeps column
             self.assertEqual(res[0], 15)
             self.assertEqual(len(res[1]), 1)
+            self.assertEqual(res[1][0][0], 12)  # Check id of the references sweeps row
 
             ############################################################################
             #  Test that the  Runs table has been written correctly
@@ -726,6 +728,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             # Check the ID and len of the sweeps column
             self.assertEqual(res[0], 17)
             self.assertEqual(len(res[1]), 1)
+            self.assertEqual(res[1][0][0], 15)  # Check id of the references sweep_sequence row
 
             ############################################################################
             #  Test that the Conditions table has been written correctly
@@ -736,6 +739,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             # Check the ID and len of the sweeps column
             self.assertEqual(res[0], 19)
             self.assertEqual(len(res[1]), 1)
+            self.assertEqual(res[1][0][0], 17)  # Check id of the referenced runs row
 
     @unittest.skip("Test not implemented yet")
     def test_add_intracellular_recordings_column(self):
