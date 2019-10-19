@@ -544,9 +544,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(len(w), 1)
 
     @unittest.skip("Test not implemented yet")
-    def test_add_conditions_column(self):
+    def test_add_ic_conditions_column(self):
         """
-        Test that we can add a dynamic column to the conditions via nwb.add_conditions_column(...)
+        Test that we can add a dynamic column to the conditions via nwb.add_ic_conditions_column(...)
         """
         pass
 
@@ -604,13 +604,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding Sweeps
         #############################################
         # Confirm that our Sweeps table does not yet exist
-        self.assertIsNone(nwbfile.sweeps)
+        self.assertIsNone(nwbfile.ic_sweeps)
         # Add a sweep
         nwbfile.add_sweep(recordings=[0], id=12)
         # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.sweeps)
-        # Check that the values for our sweeps table are correct
-        res = nwbfile.sweeps[0]
+        self.assertIsNotNone(nwbfile.ic_sweeps)
+        # Check that the values for our ic_sweeps table are correct
+        res = nwbfile.ic_sweeps[0]
         # check the id value
         self.assertEqual(res[0], 12)
         # Check that our sweep contains 1 IntracellularRecording
@@ -620,13 +620,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a SweepSequence
         #############################################
         # Confirm that our SweepSequences table does not yet exist
-        self.assertIsNone(nwbfile.sweep_sequences)
+        self.assertIsNone(nwbfile.ic_sweep_sequences)
         # Add a sweep
         nwbfile.add_sweep_sequence(sweeps=[0], id=15)
         # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.sweep_sequences)
+        self.assertIsNotNone(nwbfile.ic_sweep_sequences)
         # Check that the values for our Sweeps table are correct
-        res = nwbfile.sweep_sequences[0]
+        res = nwbfile.ic_sweep_sequences[0]
         # check the id value
         self.assertEqual(res[0], 15)
         # Check that our sweep contains 1 IntracellularRecording
@@ -636,13 +636,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a Run
         #############################################
         # Confirm that our Runs table does not yet exist
-        self.assertIsNone(nwbfile.runs)
+        self.assertIsNone(nwbfile.ic_runs)
         # Add a run
         nwbfile.add_run(sweep_sequences=[0], id=17)
         # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.runs)
+        self.assertIsNotNone(nwbfile.ic_runs)
         # Check that the values for our Runs table are correct
-        res = nwbfile.runs[0]
+        res = nwbfile.ic_runs[0]
         # check the id value
         self.assertEqual(res[0], 17)
         # Check that our run contains 1 SweepSequence
@@ -652,13 +652,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a Condition
         #############################################
         # Confirm that our Runs table does not yet exist
-        self.assertIsNone(nwbfile.conditions)
+        self.assertIsNone(nwbfile.ic_conditions)
         # Add a condition
-        nwbfile.add_condition(runs=[0], id=19)
+        nwbfile.add_ic_condition(runs=[0], id=19)
         # Check that the Conditions table has been added
-        self.assertIsNotNone(nwbfile.conditions)
+        self.assertIsNotNone(nwbfile.ic_conditions)
         # Check that the values for our Conditions table are correct
-        res = nwbfile.conditions[0]
+        res = nwbfile.ic_conditions[0]
         # check the id value
         self.assertEqual(res[0], 19)
         # Check that our run contains 1 run
@@ -700,9 +700,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the  Sweeps table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.sweeps)
-            self.assertEqual(len(infile.sweeps), 1)
-            res = nwbfile.sweeps[0]
+            self.assertIsNotNone(infile.ic_sweeps)
+            self.assertEqual(len(infile.ic_sweeps), 1)
+            res = nwbfile.ic_sweeps[0]
             # Check the ID and len of the intracellular_recordings column
             self.assertEqual(res[0], 12)
             self.assertEqual(len(res[1]), 1)
@@ -710,9 +710,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the  SweepSequences table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.sweep_sequences)
-            self.assertEqual(len(infile.sweep_sequences), 1)
-            res = nwbfile.sweep_sequences[0]
+            self.assertIsNotNone(infile.ic_sweep_sequences)
+            self.assertEqual(len(infile.ic_sweep_sequences), 1)
+            res = nwbfile.ic_sweep_sequences[0]
             # Check the ID and len of the sweeps column
             self.assertEqual(res[0], 15)
             self.assertEqual(len(res[1]), 1)
@@ -720,9 +720,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the  Runs table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.runs)
-            self.assertEqual(len(infile.runs), 1)
-            res = nwbfile.runs[0]
+            self.assertIsNotNone(infile.ic_runs)
+            self.assertEqual(len(infile.ic_runs), 1)
+            res = nwbfile.ic_runs[0]
             # Check the ID and len of the sweeps column
             self.assertEqual(res[0], 17)
             self.assertEqual(len(res[1]), 1)
@@ -730,9 +730,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the Conditions table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.conditions)
-            self.assertEqual(len(infile.conditions), 1)
-            res = nwbfile.conditions[0]
+            self.assertIsNotNone(infile.ic_conditions)
+            self.assertEqual(len(infile.ic_conditions), 1)
+            res = nwbfile.ic_conditions[0]
             # Check the ID and len of the sweeps column
             self.assertEqual(res[0], 19)
             self.assertEqual(len(res[1]), 1)
@@ -746,21 +746,21 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         pass
 
     @unittest.skip("Test not implemented yet")
-    def test_add_sweeps_column(self):
+    def test_add_ic_sweeps_column(self):
         """
-        Test that we can add a dynamic column to the sweeps via nwbfile.add_sweeps_column
+        Test that we can add a dynamic column to the sweeps via nwbfile.add_ic_sweeps_column
         """
         pass
 
     @unittest.skip("Test not implemented yet")
     def test_add_sweep_seqences_column(self):
         """
-        Test that we can add a dynamic column to the sweep_sequences via nwbfile.add_sweep_sequences_column
+        Test that we can add a dynamic column to the sweep_sequences via nwbfile.add_ic_sweep_sequences_column
         """
         pass
 
     @unittest.skip("Test not implemented yet")
-    def test_add_runs_column(self):
+    def test_add_ic_runs_column(self):
         """
         Test that we can add a dynamic column to the runs via nwbfile.add_runs_column
         """
