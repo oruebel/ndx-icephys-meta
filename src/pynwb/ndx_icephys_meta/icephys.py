@@ -511,7 +511,7 @@ class ICEphysFile(NWBFile):
 
     @docval(*get_docval(Sweeps.add_sweep),
             allow_extra=True)
-    def add_sweep(self, **kwargs):
+    def add_ic_sweep(self, **kwargs):
         """
         Add a new sweep to the ic_sweeps table
         """
@@ -537,7 +537,7 @@ class ICEphysFile(NWBFile):
 
     @docval(*get_docval(SweepSequences.add_sweep_sequence),
             allow_extra=True)
-    def add_sweep_sequence(self, **kwargs):
+    def add_ic_sweep_sequence(self, **kwargs):
         """
         Add a new sweep sequence to the ic_sweep_sequences table
         """
@@ -563,7 +563,7 @@ class ICEphysFile(NWBFile):
 
     @docval(*get_docval(Runs.add_run),
             allow_extra=True)
-    def add_run(self, **kwargs):
+    def add_ic_run(self, **kwargs):
         """
         Add a new run to the Runs table
         """

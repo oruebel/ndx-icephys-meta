@@ -606,7 +606,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Confirm that our Sweeps table does not yet exist
         self.assertIsNone(nwbfile.ic_sweeps)
         # Add a sweep
-        nwbfile.add_sweep(recordings=[0], id=12)
+        nwbfile.add_ic_sweep(recordings=[0], id=12)
         # Check that the Sweeps table has been added
         self.assertIsNotNone(nwbfile.ic_sweeps)
         # Check that the values for our ic_sweeps table are correct
@@ -622,7 +622,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Confirm that our SweepSequences table does not yet exist
         self.assertIsNone(nwbfile.ic_sweep_sequences)
         # Add a sweep
-        nwbfile.add_sweep_sequence(sweeps=[0], id=15)
+        nwbfile.add_ic_sweep_sequence(sweeps=[0], id=15)
         # Check that the Sweeps table has been added
         self.assertIsNotNone(nwbfile.ic_sweep_sequences)
         # Check that the values for our Sweeps table are correct
@@ -638,7 +638,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Confirm that our Runs table does not yet exist
         self.assertIsNone(nwbfile.ic_runs)
         # Add a run
-        nwbfile.add_run(sweep_sequences=[0], id=17)
+        nwbfile.add_ic_run(sweep_sequences=[0], id=17)
         # Check that the Sweeps table has been added
         self.assertIsNotNone(nwbfile.ic_runs)
         # Check that the values for our Runs table are correct
@@ -753,7 +753,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         pass
 
     @unittest.skip("Test not implemented yet")
-    def test_add_sweep_seqences_column(self):
+    def test_add_ic_sweep_seqences_column(self):
         """
         Test that we can add a dynamic column to the sweep_sequences via nwbfile.add_ic_sweep_sequences_column
         """
@@ -762,7 +762,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
     @unittest.skip("Test not implemented yet")
     def test_add_ic_runs_column(self):
         """
-        Test that we can add a dynamic column to the runs via nwbfile.add_runs_column
+        Test that we can add a dynamic column to the runs via nwbfile.add_ic_runs_column
         """
         pass
 
