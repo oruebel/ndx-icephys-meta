@@ -462,15 +462,6 @@ class ICEphysFile(NWBFile):
         if self.intracellular_recordings is None:
             self.intracellular_recordings = IntracellularRecordings()
 
-    @docval(*get_docval(IntracellularRecordings.add_column))
-    def add_intracellular_recordings_column(self, **kwargs):
-        """
-        Add a column to the IntracellularRecordings table.
-        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
-        """
-        self._check_intracellular_recordings()
-        call_docval_func(self.intracellular_recordings.add_column, kwargs)
-
     @docval(*get_docval(IntracellularRecordings.add_recording),
             allow_extra=True)
     def add_intracellular_recording(self, **kwargs):
@@ -500,15 +491,6 @@ class ICEphysFile(NWBFile):
             self._check_intracellular_recordings()
             self.ic_sweeps = Sweeps(self.intracellular_recordings)
 
-    @docval(*get_docval(Sweeps.add_column))
-    def add_ic_sweeps_column(self, **kwargs):
-        """
-        Add a column to the Sweeps table.
-        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
-        """
-        self._check_ic_sweeps()
-        call_docval_func(self.ic_sweeps.add_column, kwargs)
-
     @docval(*get_docval(Sweeps.add_sweep),
             allow_extra=True)
     def add_ic_sweep(self, **kwargs):
@@ -525,15 +507,6 @@ class ICEphysFile(NWBFile):
         if self.ic_sweep_sequences is None:
             self._check_ic_sweeps()
             self.ic_sweep_sequences = SweepSequences(self.ic_sweeps)
-
-    @docval(*get_docval(SweepSequences.add_column))
-    def add_ic_sweep_sequences_column(self, **kwargs):
-        """
-        Add a column to the SweepSequences table.
-        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
-        """
-        self._check_ic_sweeps()
-        call_docval_func(self.ic_sweep_sequences.add_column, kwargs)
 
     @docval(*get_docval(SweepSequences.add_sweep_sequence),
             allow_extra=True)
@@ -552,15 +525,6 @@ class ICEphysFile(NWBFile):
             self._check_ic_sweep_sequences()
             self.ic_runs = Runs(self.ic_sweep_sequences)
 
-    @docval(*get_docval(Runs.add_column))
-    def add_ic_runs_column(self, **kwargs):
-        """
-        Add a column to the Runs table.
-        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
-        """
-        self._check_ic_runs()
-        call_docval_func(self.runs.add_column, kwargs)
-
     @docval(*get_docval(Runs.add_run),
             allow_extra=True)
     def add_ic_run(self, **kwargs):
@@ -578,15 +542,6 @@ class ICEphysFile(NWBFile):
         if self.ic_conditions is None:
             self._check_ic_runs()
             self.ic_conditions = Conditions(self.ic_runs)
-
-    @docval(*get_docval(Conditions.add_column))
-    def add_ic_conditions_column(self, **kwargs):
-        """
-        Add a column to the Conditions table.
-        See :py:meth:`~hdmf.common.DynamicTable.add_column` for more details
-        """
-        self._check_ic_runs()
-        call_docval_func(self.ic_runs.add_column, kwargs)
 
     @docval(*get_docval(Conditions.add_condition),
             allow_extra=True)
