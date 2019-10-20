@@ -35,4 +35,5 @@ python src/pynwb/ndx_icephys_meta/test/test_icephys.py
     * ``ndx_icephys_meta/test`` : Unit test for the Python extension
     * ``ndx_icephys_meta/icephys.py`` : PyNWB Container classes
     * ``ndx_icephys_meta/io/icephys.py`` : PyNWB ObjectMapper classes
+    * ``examples`` : Examples illustrating the use of the extension in Python
 
