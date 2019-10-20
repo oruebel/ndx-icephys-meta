@@ -22,7 +22,7 @@ This generates the specification docs directly from the YAML specifciation in th
 ## Running the unit tests
 
 ```
-python python src/pynwb/ndx_icephys_meta/test/test_icephys.py
+python src/pynwb/ndx_icephys_meta/test/test_icephys.py
 ```
 
 ## Content
