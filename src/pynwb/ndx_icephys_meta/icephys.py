@@ -113,7 +113,7 @@ class IntracellularRecordings(DynamicTable):
                       'stimulus': (stimulus_start_index, stimulus_index_count, stimulus),
                       'response': (response_start_index, response_index_count, response)}
         row_kwargs.update(kwargs)
-        return super(IntracellularRecordings, self).add_row(**row_kwargs)
+        return super(IntracellularRecordings, self).add_row(enforce_unique_id=True, **row_kwargs)
 
 
 @register_class('Sweeps', namespace)
@@ -171,7 +171,7 @@ class Sweeps(DynamicTable):
         recordings = getargs('recordings', kwargs)
         if recordings is None:
             kwargs['recordings'] = []
-        re = super(Sweeps, self).add_row(**kwargs)
+        re = super(Sweeps, self).add_row(enforce_unique_id=True, **kwargs)
         return re
 
 
@@ -232,7 +232,7 @@ class SweepSequences(DynamicTable):
         sweeps = getargs('sweeps', kwargs)
         if sweeps is None:
             kwargs['sweeps'] = []
-        re = super(SweepSequences, self).add_row(**kwargs)
+        re = super(SweepSequences, self).add_row(enforce_unique_id=True, **kwargs)
         return re
 
 
@@ -291,7 +291,7 @@ class Runs(DynamicTable):
         sweep_sequences = getargs('sweep_sequences', kwargs)
         if sweep_sequences is None:
             kwargs['sweep_sequences'] = []
-        re = super(Runs, self).add_row(**kwargs)
+        re = super(Runs, self).add_row(enforce_unique_id=True, **kwargs)
         return re
 
 
@@ -346,7 +346,7 @@ class Conditions(DynamicTable):
         runs = getargs('runs', kwargs)
         if runs is None:
             kwargs['runs'] = []
-        re = super(Conditions, self).add_row(**kwargs)
+        re = super(Conditions, self).add_row(enforce_unique_id=True, **kwargs)
         return re
 
 
