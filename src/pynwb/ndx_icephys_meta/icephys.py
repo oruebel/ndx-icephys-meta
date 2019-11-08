@@ -1,11 +1,163 @@
 from pynwb import register_class
 from pynwb.file import NWBFile
 from pynwb.icephys import PatchClampSeries, IntracellularElectrode
-from hdmf.common import DynamicTable
+from hdmf.common import DynamicTable, DynamicTableRegion
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
+import pandas as pd
 
 namespace = 'ndx-icephys-meta'
+
+
+class HierarchicalDynamicTableMixin(object):
+    """
+    Mixin class for defining specialized functionality for hierarchical dynamic tables.
+
+
+    Assumptions:
+
+    1) The current implementation assumes that there is only one DynamicTableRegion column
+    that needs to be expanded as part of the hierarchy.  Allowing multiple hierarchical
+    columns in a single table get tricky, because it is unclear how those rows should
+    be joined. To clarify, allowing multiple DynamicTableRegion should be fine, as long
+    as only one of them should be expanded as part of the hierarchy.
+
+    2) The default implementation of the get_hierarchy_column_name function assumes that
+    the first DynamicTableRegion that references a DynamicTable that inherits from
+    HierarchicalDynamicTableMixin is the one that should be expanded as part of the
+    hierarchy of tables. If there is no such column, then the default implementation
+    assumes that the first DynamicTableRegion column is the one that needs to be expanded.
+    These assumption of get_hierarchy_column_name can be easily fixed by overwriting
+    the function in the subclass to return the name of the approbritate column.
+    """
+
+    def get_hierarchy_column_name(self):
+        """
+        Get the name of column that references another DynamicTable that
+        is itseflHierarchicalDynamicTableMixin table.
+
+        :returns: String with the column name or None
+        """
+        first_col = None
+        for col_index, col in enumerate(self.columns):
+            if isinstance(col, DynamicTableRegion):
+                first_col = col.name
+                if isinstance(col.table, HierarchicalDynamicTableMixin):
+                    return col.name
+        return first_col
+
+    def get_referencing_column_names(self):
+        """
+        Determine the names of all columns that reference another table, i.e.,
+        find all DynamicTableRegion type columns
+
+        Returns: List of strings with the column names
+        """
+        col_names = []
+        for col_index, col in enumerate(self.columns):
+            if isinstance(col, DynamicTableRegion):
+                col_names.append(col.name)
+        return col_names
+
+    def get_targets(self):
+        """
+        Returns: List of all HierarchicalDynamicTableMixin tables references from this table
+        """
+        hcol_name = self.get_hierarchy_column_name()
+        hcol = self[hcol_name]
+        hcol_target = hcol.table if isinstance(hcol, DynamicTableRegion) else hcol.target.table
+        if isinstance(hcol_target, HierarchicalDynamicTableMixin):
+            return [hcol_target, ] + hcol_target.get_targets()
+        else:
+            return [hcol_target, ]
+
+    def to_denormalized_dataframe(self):
+        """
+        Shorthand for 'self.to_hierarchical_dataframe().reset_index()'
+
+        The function denormalizes the hierarchical table and represents all data as
+        columns in the resulting dataframe.
+        """
+        return self.to_hierarchical_dataframe().reset_index()
+
+    def to_hierarchical_dataframe(self):
+        """
+        Create a Pandas dataframe with a hierarchical MultiIndex index that represents the
+        hierarchical dynamic table.
+        """
+        # Get the references column
+        hcol_name = self.get_hierarchy_column_name()
+        hcol = self[hcol_name]
+        hcol_target = hcol.table if isinstance(hcol, DynamicTableRegion) else hcol.target.table
+
+        # Create the data variables we need to collect the data for our output dataframe and associated index
+        index = []
+        data = []
+        columns = None
+        index_names = None
+
+        # Case 1:  Our DynamicTableRegion column points to a regular DynamicTable
+        #          If this is the case than we need to de-normalize the data and flatten the hierarcht
+        if not isinstance(hcol_target, HierarchicalDynamicTableMixin):
+            # 1) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
+            for row_index, row_df in enumerate(hcol):
+                # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
+                #       next need to iterate over all rows in that table to denormalize our data
+                for row in row_df.itertuples(index=True):
+                    # 1.1.1) Determine the column data for our row. Each selected row from our target table
+                    #        becomes a row in our flattened table
+                    data.append(row[1:])
+                    # 1.1.2) Determine the multi-index tuple for our row, consisting of: i) id of the row in this
+                    #        table, ii) all columns (except the hierarchical column we are flattening), and
+                    #        iii) the index (i.e., id) from our target row
+                    index_data = ([self.id[row_index], ] +
+                                  [self[row_index, colname] for colname in self.colnames if colname != hcol_name] +
+                                  [row[0], ])
+                    index.append(tuple(index_data))
+                    # Determine the names for our index and columns of our output table if this is the first row.
+                    # These are constant for all rows so we only need to do this onle once for the first row.
+                    if row_index == 0:
+                        index_names = ([self.name + "_id", ] +
+                                       [(self.name + "_" + colname)
+                                        for colname in self.colnames if colname != hcol_name] +
+                                       [hcol_target.name + "_id"])
+                        columns = row_df.columns
+
+        # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
+        else:
+            # 1) First we need to recursively flatten the hierarchy by calling 'to_hierarchical_dataframe()'
+            #    (i.e., this function) on the target of our hierarchical column
+            hcol_hdf = hcol_target.to_hierarchical_dataframe()
+            # 2) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
+            for row_index, row_df_level1 in enumerate(hcol):
+                # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
+                #       next need to iterate over all rows in that table to denormalize our data
+                for row_df_level2 in row_df_level1.itertuples(index=True):
+                    # 1.1.2) Since our target is itself a HierarchicalDynamicTable each target row itself
+                    #        may expand into multiple rows in flattened hcol_hdf. So we now need to look
+                    #        up the rows in hcol_hdf that correspond to the rows in row_df_level2.
+                    #        NOTE: In this look-up we assume that the ids (and hence the index) of
+                    #              each row in the table are in fact unique.
+                    for row_tuple_level3 in hcol_hdf.loc[[row_df_level2[0]]].itertuples(index=True):
+                        # 1.1.2.1) Determine the column data for our row.
+                        data.append(row_tuple_level3[1:])
+                        # 1.1.2.2) Determine the multi-index tuple for our row,
+                        index_data = ([self.id[row_index], ] +
+                                      [self[row_index, colname] for colname in self.colnames if colname != hcol_name] +
+                                      list(row_tuple_level3[0]))
+                        index.append(tuple(index_data))
+                        # Determine the names for our index and columns of our output table if this is the first row
+                        if row_index == 0:
+                            index_names = ([self.name + "_id"] +
+                                           [(self.name + "_" + colname)
+                                            for colname in self.colnames if colname != hcol_name] +
+                                           hcol_hdf.index.names)
+                            columns = hcol_hdf.columns
+
+        # Construct the pandas dataframe with the hierarchical multi-index
+        multi_index = pd.MultiIndex.from_tuples(index, names=index_names)
+        out_df = pd.DataFrame(data=data, index=multi_index, columns=columns)
+        return out_df
 
 
 @register_class('IntracellularRecordings', namespace)
@@ -117,7 +269,7 @@ class IntracellularRecordings(DynamicTable):
 
 
 @register_class('Sweeps', namespace)
-class Sweeps(DynamicTable):
+class Sweeps(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recordings from the
     IntracellularRecordings table together that were recorded simultaneously
@@ -176,7 +328,7 @@ class Sweeps(DynamicTable):
 
 
 @register_class('SweepSequences', namespace)
-class SweepSequences(DynamicTable):
+class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording sweeps from the
     Sweeps table together. This is typically used to group together sweeps
@@ -237,7 +389,7 @@ class SweepSequences(DynamicTable):
 
 
 @register_class('Runs', namespace)
-class Runs(DynamicTable):
+class Runs(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording sweep sequences together.
     With each SweepSequence typically representing a particular type of stimulus, the
@@ -296,7 +448,7 @@ class Runs(DynamicTable):
 
 
 @register_class('Conditions', namespace)
-class Conditions(DynamicTable):
+class Conditions(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording runs together that
     belong to the same experimental conditions.
