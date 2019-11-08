@@ -135,25 +135,24 @@ class HierarchicalDynamicTableMixin(object):
                 for row in row_df.itertuples(index=True):
                     # 1.1.1) Determine the column data for our row. Each selected row from our target table
                     #        becomes a row in our flattened table
-                    data.append(row[1:])
+                    data.append(row)
                     # 1.1.2) Determine the multi-index tuple for our row, consisting of: i) id of the row in this
                     #        table, ii) all columns (except the hierarchical column we are flattening), and
                     #        iii) the index (i.e., id) from our target row
                     index_data = ([self.id[row_index], ] +
-                                  [self[row_index, colname] for colname in self.colnames if colname != hcol_name] +
-                                  [row[0], ])
+                                  [self[row_index, colname] for colname in self.colnames if colname != hcol_name])
                     index.append(tuple(index_data))
                     # Determine the names for our index and columns of our output table if this is the first row.
                     # These are constant for all rows so we only need to do this onle once for the first row.
                     if row_index == 0:
                         index_names = ([self.name + "_id", ] +
                                        [(self.name + "_" + colname)
-                                        for colname in self.colnames if colname != hcol_name] +
-                                       [hcol_target.name + "_id"])
+                                        for colname in self.colnames if colname != hcol_name])
                         if flat_column_index:
-                            columns = row_df.columns
+                            columns = ['id', ] + list(row_df.columns)
                         else:
-                            columns = pd.MultiIndex.from_tuples([(hcol_target.name, c) for c in row_df.columns],
+                            columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
+                                                                [(hcol_target.name, c) for c in row_df.columns],
                                                                 names=('source_table', 'label'))
 
         # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
