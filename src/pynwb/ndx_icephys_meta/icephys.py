@@ -59,28 +59,57 @@ class HierarchicalDynamicTableMixin(object):
                 col_names.append(col.name)
         return col_names
 
-    def get_targets(self):
+    def get_targets(self, include_self=False):
         """
-        Returns: List of all HierarchicalDynamicTableMixin tables references from this table
+        Get a list of the full table hierachy, i.e., recursively list all
+        tables referenced in the hierarchy.
+
+        Returns: List of DynamicTabl objects
+
         """
         hcol_name = self.get_hierarchy_column_name()
         hcol = self[hcol_name]
         hcol_target = hcol.table if isinstance(hcol, DynamicTableRegion) else hcol.target.table
         if isinstance(hcol_target, HierarchicalDynamicTableMixin):
-            return [hcol_target, ] + hcol_target.get_targets()
+            re = [self, ] if include_self else []
+            re += [hcol_target, ]
+            re += hcol_target.get_targets()
+            return re
         else:
             return [hcol_target, ]
 
-    def to_denormalized_dataframe(self):
+    def to_denormalized_dataframe(self, flat_column_index=False):
         """
         Shorthand for 'self.to_hierarchical_dataframe().reset_index()'
 
         The function denormalizes the hierarchical table and represents all data as
         columns in the resulting dataframe.
         """
-        return self.to_hierarchical_dataframe().reset_index()
+        def get_first_prefix(instr, prefixs):
+            """Internal helper function to find the first prefix that matches"""
+            for p in prefixs:
+                if instr.startswith(p):
+                    return p
+            return prefixs[-1]
 
-    def to_hierarchical_dataframe(self):
+        def remove_prefix(instr, prefix):
+            """Internal helper function to remove the first prefix that matches"""
+
+            if instr.startswith(prefix):
+                return instr[len(prefix):]
+            return instr
+
+        hier_df = self.to_hierarchical_dataframe(flat_column_index=True)
+        flat_df = hier_df.reset_index()
+        if not flat_column_index:
+            table_names = [t.name for t in self.get_targets(include_self=True)]
+            mi_tuples = [(get_first_prefix(n, table_names),
+                          remove_prefix(n, get_first_prefix(n, table_names)+"_")) for n in flat_df.columns]
+            flat_df.columns = pd.MultiIndex.from_tuples(mi_tuples, names=('source_table', 'label'))
+
+        return flat_df
+
+    def to_hierarchical_dataframe(self, flat_column_index=False):
         """
         Create a Pandas dataframe with a hierarchical MultiIndex index that represents the
         hierarchical dynamic table.
@@ -121,13 +150,17 @@ class HierarchicalDynamicTableMixin(object):
                                        [(self.name + "_" + colname)
                                         for colname in self.colnames if colname != hcol_name] +
                                        [hcol_target.name + "_id"])
-                        columns = row_df.columns
+                        if flat_column_index:
+                            columns = row_df.columns
+                        else:
+                            columns = pd.MultiIndex.from_tuples([(hcol_target.name, c) for c in row_df.columns],
+                                                                names=('source_table', 'label'))
 
         # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
         else:
             # 1) First we need to recursively flatten the hierarchy by calling 'to_hierarchical_dataframe()'
             #    (i.e., this function) on the target of our hierarchical column
-            hcol_hdf = hcol_target.to_hierarchical_dataframe()
+            hcol_hdf = hcol_target.to_hierarchical_dataframe(flat_column_index=flat_column_index)
             # 2) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
             for row_index, row_df_level1 in enumerate(hcol):
                 # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
