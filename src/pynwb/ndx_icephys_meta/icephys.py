@@ -129,7 +129,7 @@ class HierarchicalDynamicTableMixin(object):
         #          If this is the case than we need to de-normalize the data and flatten the hierarcht
         if not isinstance(hcol_target, HierarchicalDynamicTableMixin):
             # 1) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
-            for row_index, row_df in enumerate(hcol[:]): # need hcol[:] here in case this is an h5py.Dataset
+            for row_index, row_df in enumerate(hcol[:]):  # need hcol[:] here in case this is an h5py.Dataset
                 # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
                 #       next need to iterate over all rows in that table to denormalize our data
                 for row in row_df.itertuples(index=True):

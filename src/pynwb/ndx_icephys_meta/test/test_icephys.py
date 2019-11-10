@@ -37,6 +37,144 @@ class ICEphysMetaTestBase(unittest.TestCase):
     to make sure tests of the individual tables do not depend on our custom class. We are testing
     ICEphysFile separately.
     """
+    @classmethod
+    def create_stimulus_and_response(cls, sweep_number, electrode):
+        """
+        Internal helper function to construct a dummy stimulus and reponse pair representing an
+        instracellular recording:
+
+        :param sweep_number: Integer sweep number of the recording
+        :param electrode: Intracellular electrode used
+
+        :returns: Tuple of CurrentClampStimulusSeries with the stimulus and VoltageClampSeries with the response.
+        """
+        stimulus = CurrentClampStimulusSeries(
+                    name="ccss_"+str(sweep_number),
+                    data=[1, 2, 3, 4, 5],
+                    starting_time=123.6,
+                    rate=10e3,
+                    electrode=electrode,
+                    gain=0.02,
+                    sweep_number=sweep_number)
+        # Create and ic-response
+        response = VoltageClampSeries(
+                    name='vcs_'+str(sweep_number),
+                    data=[0.1, 0.2, 0.3, 0.4, 0.5],
+                    conversion=1e-12,
+                    resolution=np.nan,
+                    starting_time=123.6,
+                    rate=20e3,
+                    electrode=electrode,
+                    gain=0.02,
+                    capacitance_slow=100e-12,
+                    resistance_comp_correction=70.0,
+                    sweep_number=sweep_number)
+        return stimulus, response
+
+    @classmethod
+    def create_icephs_meta_testfile(cls, filename=None, add_custom_columns=True):
+        """
+        Create a small but relatively complex icephys test file that
+        we can use for testing of queries.
+
+        :param filename: The name of the output file to be generated. If set to None then the file is not written
+                         but only created in memor
+        :type filename: str, None
+        :param add_custom_colums: Add custom metadata columns to each table
+        :type add_custom_colums: bool
+
+        :returns: ICEphysFile NWBFile object
+        :rtype: ICEphysFile
+        """
+        nwbfile = ICEphysFile(
+                session_description='my first synthetic recording',
+                identifier='EXAMPLE_ID',
+                session_start_time=datetime.now(tzlocal()),
+                experimenter='Dr. Bilbo Baggins',
+                lab='Bag End Laboratory',
+                institution='University of Middle Earth at the Shire',
+                experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+                session_id='LONELYMTN')
+        # Add a device
+        device = nwbfile.create_device(name='Heka ITC-1600')
+        # Add an intracellular electrode
+        electrode0 = nwbfile.create_ic_electrode(name="elec0",
+                                                 description='a mock intracellular electrode',
+                                                 device=device)
+        # Add an intracellular electrode
+        electrode1 = nwbfile.create_ic_electrode(name="elec1",
+                                                 description='another mock intracellular electrode',
+                                                 device=device)
+        # Add the intracelluar recordings
+        for sweep_number in range(20):
+            e = (electrode0 if (sweep_number % 2 == 0) else electrode1)
+            stim, resp = cls.create_stimulus_and_response(sweep_number, e)
+            nwbfile.add_intracellular_recording(electrode=e,
+                                                stimulus=stim,
+                                                response=resp,
+                                                id=sweep_number)
+        nwbfile.intracellular_recordings.add_column(name='stimulus_type',
+                                                    data=['A1', 'A2',
+                                                          'B1', 'B2',
+                                                          'C1', 'C2', 'C3',
+                                                          'D1', 'D2', 'D3',
+                                                          'A1', 'A2',
+                                                          'B1', 'B2',
+                                                          'C1', 'C2', 'C3',
+                                                          'D1', 'D2', 'D3'],
+                                                    description='String indicating the type of stimulus applied')
+        # Add sweeps
+        nwbfile.add_ic_sweep(recordings=[0, 1], id=100)
+        nwbfile.add_ic_sweep(recordings=[2, 3], id=101)
+        nwbfile.add_ic_sweep(recordings=[4, 5, 6], id=102)
+        nwbfile.add_ic_sweep(recordings=[7, 8, 9], id=103)
+        nwbfile.add_ic_sweep(recordings=[10, 11], id=104)
+        nwbfile.add_ic_sweep(recordings=[12, 13], id=105)
+        nwbfile.add_ic_sweep(recordings=[14, 15, 16], id=106)
+        nwbfile.add_ic_sweep(recordings=[17, 18, 19], id=107)
+        if add_custom_columns:
+            nwbfile.ic_sweeps.add_column(name='tag',
+                                         data=np.arange(8),
+                                         description='some integer tag for a sweep')
+
+        # Add sweep sequences
+        nwbfile.add_ic_sweep_sequence(sweeps=[0, 1], id=1000)
+        nwbfile.add_ic_sweep_sequence(sweeps=[2, ], id=1001)
+        nwbfile.add_ic_sweep_sequence(sweeps=[3, ], id=1002)
+        nwbfile.add_ic_sweep_sequence(sweeps=[4, 5], id=1003)
+        nwbfile.add_ic_sweep_sequence(sweeps=[6, ], id=1004)
+        nwbfile.add_ic_sweep_sequence(sweeps=[7, ], id=1005)
+        if add_custom_columns:
+            nwbfile.ic_sweep_sequences.add_column(name='type',
+                                                  data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
+                                                  description='type of the sweep sequence')
+
+        # Add runs
+        nwbfile.add_ic_run(sweep_sequences=[0, ], id=10000)
+        nwbfile.add_ic_run(sweep_sequences=[1, 2], id=10001)
+        nwbfile.add_ic_run(sweep_sequences=[3, ], id=10002)
+        nwbfile.add_ic_run(sweep_sequences=[4, 5], id=10003)
+        if add_custom_columns:
+            nwbfile.ic_runs.add_column(name='type',
+                                       data=['R1', 'R2', 'R1', 'R2'],
+                                       description='some run type indicator')
+
+        # Add conditions
+        nwbfile.add_ic_condition(runs=[0, 1], id=100000)
+        nwbfile.add_ic_condition(runs=[2, 3], id=100001)
+        if add_custom_columns:
+            nwbfile.ic_conditions.add_column(name='temperature',
+                                             data=[32., 24.],
+                                             description='Temperatur in C')
+
+        # Write our test file
+        if filename is not None:
+            with NWBHDF5IO(filename, 'w') as io:
+                io.write(nwbfile)
+
+        # Return our in-memory NWBFile
+        return nwbfile
+
     def setUp(self):
         # Create an example nwbfile with a device, intracellular electrode, stimulus, and response
         self.nwbfile = NWBFile(
