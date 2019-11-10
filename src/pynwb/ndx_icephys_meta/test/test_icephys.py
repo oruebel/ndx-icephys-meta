@@ -38,41 +38,42 @@ class ICEphysMetaTestBase(unittest.TestCase):
     ICEphysFile separately.
     """
     @classmethod
-    def create_stimulus_and_response(cls, sweep_number, electrode):
+    def create_stimulus_and_response(cls, sweep_number, electrode, randomize_data):
         """
         Internal helper function to construct a dummy stimulus and reponse pair representing an
         instracellular recording:
 
         :param sweep_number: Integer sweep number of the recording
         :param electrode: Intracellular electrode used
+        :param randomize_data: Randomize data values in the stimulus and response
 
         :returns: Tuple of CurrentClampStimulusSeries with the stimulus and VoltageClampSeries with the response.
         """
         stimulus = CurrentClampStimulusSeries(
                     name="ccss_"+str(sweep_number),
-                    data=[1, 2, 3, 4, 5],
-                    starting_time=123.6,
-                    rate=10e3,
+                    data=[1, 2, 3, 4, 5] if not randomize_data else np.random.rand(10),
+                    starting_time=123.6 if not randomize_data else (np.random.rand() * 100),
+                    rate=10e3 if not randomize_data else  int(np.random.rand()*10) * 1000 + 1000.,
                     electrode=electrode,
-                    gain=0.02,
+                    gain=0.1 if not randomize_data else np.random.rand(),
                     sweep_number=sweep_number)
         # Create and ic-response
         response = VoltageClampSeries(
                     name='vcs_'+str(sweep_number),
-                    data=[0.1, 0.2, 0.3, 0.4, 0.5],
+                    data=[0.1, 0.2, 0.3, 0.4, 0.5] if not randomize_data else np.random.rand(10),
                     conversion=1e-12,
                     resolution=np.nan,
-                    starting_time=123.6,
-                    rate=20e3,
+                    starting_time=123.6 if not randomize_data else (np.random.rand() * 100),
+                    rate=20e3 if not randomize_data else  int(np.random.rand()*20) * 1000. +1000.,
                     electrode=electrode,
-                    gain=0.02,
+                    gain=0.02 if not randomize_data else np.random.rand(),
                     capacitance_slow=100e-12,
-                    resistance_comp_correction=70.0,
+                    resistance_comp_correction=70.0 if not randomize_data else 70.0 + np.random.rand(),
                     sweep_number=sweep_number)
         return stimulus, response
 
     @classmethod
-    def create_icephs_meta_testfile(cls, filename=None, add_custom_columns=True):
+    def create_icephs_meta_testfile(cls, filename=None, add_custom_columns=True, randomize_data=True):
         """
         Create a small but relatively complex icephys test file that
         we can use for testing of queries.
@@ -82,6 +83,8 @@ class ICEphysMetaTestBase(unittest.TestCase):
         :type filename: str, None
         :param add_custom_colums: Add custom metadata columns to each table
         :type add_custom_colums: bool
+        :param randomize_data: Randomize data values in the stimulus and response
+        :type randomize_data: bool
 
         :returns: ICEphysFile NWBFile object
         :rtype: ICEphysFile
@@ -107,9 +110,11 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                                  device=device)
         # Add the intracelluar recordings
         for sweep_number in range(20):
-            e = (electrode0 if (sweep_number % 2 == 0) else electrode1)
-            stim, resp = cls.create_stimulus_and_response(sweep_number, e)
-            nwbfile.add_intracellular_recording(electrode=e,
+            elec = (electrode0 if (sweep_number % 2 == 0) else electrode1)
+            stim, resp = cls.create_stimulus_and_response(sweep_number=sweep_number,
+                                                          electrode=elec,
+                                                          randomize_data=randomize_data)
+            nwbfile.add_intracellular_recording(electrode=elec,
                                                 stimulus=stim,
                                                 response=resp,
                                                 id=sweep_number)
