@@ -53,7 +53,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                     name="ccss_"+str(sweep_number),
                     data=[1, 2, 3, 4, 5] if not randomize_data else np.random.rand(10),
                     starting_time=123.6 if not randomize_data else (np.random.rand() * 100),
-                    rate=10e3 if not randomize_data else  int(np.random.rand()*10) * 1000 + 1000.,
+                    rate=10e3 if not randomize_data else int(np.random.rand()*10) * 1000 + 1000.,
                     electrode=electrode,
                     gain=0.1 if not randomize_data else np.random.rand(),
                     sweep_number=sweep_number)
@@ -64,7 +64,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                     conversion=1e-12,
                     resolution=np.nan,
                     starting_time=123.6 if not randomize_data else (np.random.rand() * 100),
-                    rate=20e3 if not randomize_data else  int(np.random.rand()*20) * 1000. +1000.,
+                    rate=20e3 if not randomize_data else int(np.random.rand() * 20) * 1000. + 1000.,
                     electrode=electrode,
                     gain=0.02 if not randomize_data else np.random.rand(),
                     capacitance_slow=100e-12,
@@ -293,11 +293,10 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         # Add a row to our IR table
         ir = IntracellularRecordings()
         row_index = ir.add_recording(electrode=self.electrode,
-                         stimulus=self.stimulus,
-                         response=self.response,
-                         id=10)
+                                     stimulus=self.stimulus,
+                                     response=self.response,
+                                     id=10)
         res = ir[0]
-        #print(res)
         # Check the ID
         self.assertEqual(res.index[0], 10)
         # Check the stimulus
@@ -312,13 +311,15 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         self.assertIs(res.iloc[0]['electrode'], self.electrode)
         # test writing out ir table
         self.write_test_helper(ir)
+        # test that we get the correct row index back
+        self.assertEqual(row_index, 0)
 
     def test_add_row_no_response(self):
         ir = IntracellularRecordings()
-        ir.add_recording(electrode=self.electrode,
-                         stimulus=self.stimulus,
-                         response=None,
-                         id=10)
+        row_index = ir.add_recording(electrode=self.electrode,
+                                     stimulus=self.stimulus,
+                                     response=None,
+                                     id=10)
         res = ir[0]
         # Check the ID
         self.assertEqual(res.index[0], 10)
@@ -334,6 +335,8 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         self.assertIs(res.iloc[0]['electrode'], self.electrode)
         # test writing out ir table
         self.write_test_helper(ir)
+        # test that we get the correct row index back
+        self.assertEqual(row_index, 0)
 
     def test_add_row_index_out_of_range(self):
 
@@ -435,12 +438,14 @@ class SweepsTests(ICEphysMetaTestBase):
         Populate, write, and read the Sweeps container and other required containers
         """
         ir = IntracellularRecordings()
-        ir.add_recording(electrode=self.electrode,
-                         stimulus=self.stimulus,
-                         response=self.response,
-                         id=10)
+        row_index = ir.add_recording(electrode=self.electrode,
+                                     stimulus=self.stimulus,
+                                     response=self.response,
+                                     id=10)
+        self.assertEqual(row_index, 0)
         sw = Sweeps(intracellular_recordings_table=ir)
-        sw.add_sweep(recordings=[0])
+        row_index = sw.add_sweep(recordings=[0])
+        self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw)
 
     def test_enforce_unique_id(self):
@@ -486,14 +491,17 @@ class SweepSequencesTests(ICEphysMetaTestBase):
         Populate, write, and read the SweepSequences container and other required containers
         """
         ir = IntracellularRecordings()
-        ir.add_recording(electrode=self.electrode,
-                         stimulus=self.stimulus,
-                         response=self.response,
-                         id=10)
+        row_index = ir.add_recording(electrode=self.electrode,
+                                     stimulus=self.stimulus,
+                                     response=self.response,
+                                     id=10)
+        self.assertEqual(row_index, 0)
         sw = Sweeps(intracellular_recordings_table=ir)
-        sw.add_sweep(recordings=[0])
+        row_index = sw.add_sweep(recordings=[0])
+        self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ])
+        row_index = sws.add_sweep_sequence(sweeps=[0, ])
+        self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw, sws=sws)
 
     def test_enforce_unique_id(self):
@@ -542,14 +550,17 @@ class RunsTests(ICEphysMetaTestBase):
         Populate, write, and read the Runs container and other required containers
         """
         ir = IntracellularRecordings()
-        ir.add_recording(electrode=self.electrode,
-                         stimulus=self.stimulus,
-                         response=self.response,
-                         id=10)
+        row_index = ir.add_recording(electrode=self.electrode,
+                                     stimulus=self.stimulus,
+                                     response=self.response,
+                                     id=10)
+        self.assertEqual(row_index, 0)
         sw = Sweeps(intracellular_recordings_table=ir)
-        sw.add_sweep(recordings=[0])
+        row_index = sw.add_sweep(recordings=[0])
+        self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ])
+        row_index = sws.add_sweep_sequence(sweeps=[0, ])
+        self.assertEqual(row_index, 0)
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs)
@@ -603,18 +614,23 @@ class ConditionsTests(ICEphysMetaTestBase):
         Populate, write, and read the Conditions container and other required containers
         """
         ir = IntracellularRecordings()
-        ir.add_recording(electrode=self.electrode,
-                         stimulus=self.stimulus,
-                         response=self.response,
-                         id=10)
+        row_index = ir.add_recording(electrode=self.electrode,
+                                     stimulus=self.stimulus,
+                                     response=self.response,
+                                     id=10)
+        self.assertEqual(row_index, 0)
         sw = Sweeps(intracellular_recordings_table=ir)
-        sw.add_sweep(recordings=[0])
+        row_index = sw.add_sweep(recordings=[0])
+        self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ])
+        row_index = sws.add_sweep_sequence(sweeps=[0, ])
+        self.assertEqual(row_index, 0)
         runs = Runs(sweep_sequences_table=sws)
-        runs.add_run(sweep_sequences=[0, ])
+        row_index = runs.add_run(sweep_sequences=[0, ])
+        self.assertEqual(row_index, 0)
         cond = Conditions(runs_table=runs)
-        cond.add_condition(runs=[0, ])
+        row_index = cond.add_condition(runs=[0, ])
+        self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw, sws=sws, runs=runs, cond=cond)
 
     def test_enforce_unique_id(self):
