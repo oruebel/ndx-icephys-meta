@@ -292,23 +292,24 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
     def test_add_row(self):
         # Add a row to our IR table
         ir = IntracellularRecordings()
-        ir.add_recording(electrode=self.electrode,
+        row_index = ir.add_recording(electrode=self.electrode,
                          stimulus=self.stimulus,
                          response=self.response,
                          id=10)
         res = ir[0]
+        #print(res)
         # Check the ID
-        self.assertEqual(res[0], 10)
+        self.assertEqual(res.index[0], 10)
         # Check the stimulus
-        self.assertEqual(res[1][0], 0)
-        self.assertEqual(res[1][1], 5)
-        self.assertIs(res[1][2], self.stimulus)
+        self.assertEqual(res.iloc[0]['stimulus'][0], 0)
+        self.assertEqual(res.iloc[0]['stimulus'][1], 5)
+        self.assertIs(res.iloc[0]['stimulus'][2], self.stimulus)
         # Check the response
-        self.assertEqual(res[2][0], 0)
-        self.assertEqual(res[2][1], 5)
-        self.assertIs(res[2][2], self.response)
+        self.assertEqual(res.iloc[0]['response'][0], 0)
+        self.assertEqual(res.iloc[0]['response'][1], 5)
+        self.assertIs(res.iloc[0]['response'][2], self.response)
         # Check the Intracellular electrode
-        self.assertIs(res[3], self.electrode)
+        self.assertIs(res.iloc[0]['electrode'], self.electrode)
         # test writing out ir table
         self.write_test_helper(ir)
 
@@ -320,17 +321,17 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
                          id=10)
         res = ir[0]
         # Check the ID
-        self.assertEqual(res[0], 10)
+        self.assertEqual(res.index[0], 10)
         # Check the stimulus
-        self.assertEqual(res[1][0], 0)
-        self.assertEqual(res[1][1], 5)
-        self.assertIs(res[1][2], self.stimulus)
+        self.assertEqual(res.iloc[0]['stimulus'][0], 0)
+        self.assertEqual(res.iloc[0]['stimulus'][1], 5)
+        self.assertIs(res.iloc[0]['stimulus'][2], self.stimulus)
         # Check the response
-        self.assertEqual(res[2][0], -1)
-        self.assertEqual(res[2][1], -1)
-        self.assertIs(res[2][2], self.stimulus)
+        self.assertEqual(res.iloc[0]['response'][0], -1)
+        self.assertEqual(res.iloc[0]['response'][1], -1)
+        self.assertIs(res.iloc[0]['response'][2], self.stimulus)
         # Check the Intracellular electrode
-        self.assertIs(res[3], self.electrode)
+        self.assertIs(res.iloc[0]['electrode'], self.electrode)
         # test writing out ir table
         self.write_test_helper(ir)
 
@@ -814,17 +815,17 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         self.assertEqual(len(nwbfile.intracellular_recordings), 1)
         res = nwbfile.intracellular_recordings[0]
         # Check the ID
-        self.assertEqual(res[0], 10)
+        self.assertEqual(res.index[0], 10)
         # Check the stimulus
-        self.assertEqual(res[1][0], 0)
-        self.assertEqual(res[1][1], 5)
-        self.assertIs(res[1][2], stimulus)
+        self.assertEqual(res.iloc[0]['stimulus'][0], 0)
+        self.assertEqual(res.iloc[0]['stimulus'][1], 5)
+        self.assertIs(res.iloc[0]['stimulus'][2], stimulus)
         # Check the response
-        self.assertEqual(res[2][0], 0)
-        self.assertEqual(res[2][1], 5)
-        self.assertIs(res[2][2], response)
+        self.assertEqual(res.iloc[0]['response'][0], 0)
+        self.assertEqual(res.iloc[0]['response'][1], 5)
+        self.assertIs(res.iloc[0]['response'][2], response)
         # Check the Intracellular electrode
-        self.assertIs(res[3], electrode)
+        self.assertIs(res.iloc[0]['electrode'], electrode)
 
         #############################################
         #  Test adding Sweeps
@@ -838,9 +839,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Check that the values for our ic_sweeps table are correct
         res = nwbfile.ic_sweeps[0]
         # check the id value
-        self.assertEqual(res[0], 12)
+        self.assertEqual(res.index[0], 12)
         # Check that our sweep contains 1 IntracellularRecording
-        self.assertEqual(len(res[1]), 1)
+        self.assertEqual(len(res.iloc[0]['recordings']), 1)
 
         #############################################
         #  Test adding a SweepSequence
@@ -854,9 +855,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Check that the values for our Sweeps table are correct
         res = nwbfile.ic_sweep_sequences[0]
         # check the id value
-        self.assertEqual(res[0], 15)
+        self.assertEqual(res.index[0], 15)
         # Check that our sweep contains 1 IntracellularRecording
-        self.assertEqual(len(res[1]), 1)
+        self.assertEqual(len(res.iloc[0]['sweeps']), 1)
 
         #############################################
         #  Test adding a Run
@@ -870,9 +871,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Check that the values for our Runs table are correct
         res = nwbfile.ic_runs[0]
         # check the id value
-        self.assertEqual(res[0], 17)
+        self.assertEqual(res.index[0], 17)
         # Check that our run contains 1 SweepSequence
-        self.assertEqual(len(res[1]), 1)
+        self.assertEqual(len(res.iloc[0]['sweep_sequences']), 1)
 
         #############################################
         #  Test adding a Condition
@@ -886,9 +887,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Check that the values for our Conditions table are correct
         res = nwbfile.ic_conditions[0]
         # check the id value
-        self.assertEqual(res[0], 19)
+        self.assertEqual(res.index[0], 19)
         # Check that our run contains 1 run
-        self.assertEqual(len(res[1]), 1)
+        self.assertEqual(len(res.iloc[0]['runs']), 1)
 
         #############################################
         #  Test writing the file to disk
@@ -911,17 +912,17 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(len(infile.intracellular_recordings), 1)
             res = nwbfile.intracellular_recordings[0]
             # Check the ID
-            self.assertEqual(res[0], 10)
+            self.assertEqual(res.index[0], 10)
             # Check the stimulus
-            self.assertEqual(res[1][0], 0)
-            self.assertEqual(res[1][1], 5)
-            self.assertIs(res[1][2], nwbfile.get_stimulus("ccss"))
+            self.assertEqual(res.iloc[0]['stimulus'][0], 0)
+            self.assertEqual(res.iloc[0]['stimulus'][1], 5)
+            self.assertIs(res.iloc[0]['stimulus'][2], stimulus)
             # Check the response
-            self.assertEqual(res[2][0], 0)
-            self.assertEqual(res[2][1], 5)
-            self.assertIs(res[2][2], nwbfile.get_acquisition('vcs'))
+            self.assertEqual(res.iloc[0]['response'][0], 0)
+            self.assertEqual(res.iloc[0]['response'][1], 5)
+            self.assertIs(res.iloc[0]['response'][2],  nwbfile.get_acquisition('vcs'))
             # Check the Intracellular electrode
-            self.assertIs(res[3], electrode)
+            self.assertIs(res.iloc[0]['electrode'], electrode)
 
             ############################################################################
             #  Test that the  Sweeps table has been written correctly
@@ -930,9 +931,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(len(infile.ic_sweeps), 1)
             res = nwbfile.ic_sweeps[0]
             # Check the ID and len of the intracellular_recordings column
-            self.assertEqual(res[0], 12)
-            self.assertEqual(len(res[1]), 1)
-            self.assertEqual(res[1][0][0], 10)  # Check id of the references ic_recordings row
+            self.assertEqual(res.index[0], 12)
+            self.assertEqual(len(res.iloc[0]['recordings']), 1)
+            self.assertEqual(res.iloc[0]['recordings'].index[0], 10)  # Check id of the references ic_recordings row
 
             ############################################################################
             #  Test that the  SweepSequences table has been written correctly
@@ -941,9 +942,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(len(infile.ic_sweep_sequences), 1)
             res = nwbfile.ic_sweep_sequences[0]
             # Check the ID and len of the sweeps column
-            self.assertEqual(res[0], 15)
-            self.assertEqual(len(res[1]), 1)
-            self.assertEqual(res[1][0][0], 12)  # Check id of the references sweeps row
+            self.assertEqual(res.index[0], 15)
+            self.assertEqual(len(res.iloc[0]['sweeps']), 1)
+            self.assertEqual(res.iloc[0]['sweeps'].index[0], 12)  # Check id of the references sweeps row
 
             ############################################################################
             #  Test that the  Runs table has been written correctly
@@ -952,9 +953,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(len(infile.ic_runs), 1)
             res = nwbfile.ic_runs[0]
             # Check the ID and len of the sweeps column
-            self.assertEqual(res[0], 17)
-            self.assertEqual(len(res[1]), 1)
-            self.assertEqual(res[1][0][0], 15)  # Check id of the references sweep_sequence row
+            self.assertEqual(res.index[0], 17)
+            self.assertEqual(len(res.iloc[0]['sweep_sequences']), 1)
+            self.assertEqual(res.iloc[0]['sweep_sequences'].index[0], 15)  # Check id of the sweep_sequence row
 
             ############################################################################
             #  Test that the Conditions table has been written correctly
@@ -963,9 +964,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(len(infile.ic_conditions), 1)
             res = nwbfile.ic_conditions[0]
             # Check the ID and len of the sweeps column
-            self.assertEqual(res[0], 19)
-            self.assertEqual(len(res[1]), 1)
-            self.assertEqual(res[1][0][0], 17)  # Check id of the referenced runs row
+            self.assertEqual(res.index[0], 19)
+            self.assertEqual(len(res.iloc[0]['runs']), 1)
+            self.assertEqual(res.iloc[0]['runs'].index[0], 17)  # Check id of the referenced runs row
 
     @unittest.skip("Test not implemented yet")
     def test_add_intracellular_recordings_column(self):
