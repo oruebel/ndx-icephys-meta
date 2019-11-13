@@ -786,12 +786,52 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             nwbfile.add_stimulus(stimulus, use_sweep_table=True)
             self.assertEqual(len(w), 1)
 
+    def test_deprectation_ic_filtering_on_init(self):
+        with warnings.catch_warnings(record=True) as w:
+            nwbfile = ICEphysFile(
+                session_description='my first synthetic recording',
+                identifier='EXAMPLE_ID',
+                session_start_time=datetime.now(tzlocal()),
+                experimenter='Dr. Bilbo Baggins',
+                lab='Bag End Laboratory',
+                institution='University of Middle Earth at the Shire',
+                experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+                session_id='LONELYMTN',
+                ic_filtering='test filtering')
+            assert issubclass(w[-1].category, DeprecationWarning)
+            self.assertEqual(nwbfile.ic_filtering, 'test filtering')
+
     @unittest.skip("Test not implemented yet")
     def test_add_ic_conditions_column(self):
         """
         Test that we can add a dynamic column to the conditions via nwb.add_ic_conditions_column(...)
         """
         pass
+
+    def test_ic_filtering_roundtrip(self):
+        # create the base file
+        nwbfile = ICEphysFile(
+                session_description='my first synthetic recording',
+                identifier='EXAMPLE_ID',
+                session_start_time=datetime.now(tzlocal()),
+                experimenter='Dr. Bilbo Baggins',
+                lab='Bag End Laboratory',
+                institution='University of Middle Earth at the Shire',
+                experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+                session_id='LONELYMTN')
+        # set the ic_filtering attribute and make sure we get a deprectation warning
+        with warnings.catch_warnings(record=True) as w:
+            nwbfile.ic_filtering = 'test filtering'
+            assert issubclass(w[-1].category, DeprecationWarning)
+        # write the test fil
+        with NWBHDF5IO(self.path, 'w') as io:
+            io.write(nwbfile)
+        # read the test file and confirm ic_filtering has been written
+        with NWBHDF5IO(self.path, 'r') as io:
+            with warnings.catch_warnings(record=True) as w:
+                infile = io.read()
+                assert issubclass(w[-1].category, DeprecationWarning)
+                self.assertEqual(infile.ic_filtering, 'test filtering')
 
     def test_add_icephys_meta_full_roundtrip(self):
         """

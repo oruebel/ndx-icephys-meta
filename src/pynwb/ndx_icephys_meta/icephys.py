@@ -568,7 +568,8 @@ class ICEphysFile(NWBFile):
                       'child': True,
                       'required_name': 'conditions',
                       'doc': 'A table for grouping different intracellular recording runs together that '
-                             'belong to the same experimental conditions.'})
+                             'belong to the same experimental conditions.'},
+                     )
 
     @docval(*get_docval(NWBFile.__init__),
             {'name': 'intracellular_recordings', 'type': IntracellularRecordings,  'default': None,
@@ -580,7 +581,9 @@ class ICEphysFile(NWBFile):
             {'name': 'ic_runs', 'type': Runs, 'default': None,
              'doc': 'the Runs table that belongs to this NWBFile'},
             {'name': 'ic_conditions', 'type': Conditions, 'default': None,
-             'doc': 'the Conditions table that belongs to this NWBFile'})
+             'doc': 'the Conditions table that belongs to this NWBFile'},
+            {'name': 'ic_filtering', 'type': str, 'default': None,
+             'doc': '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description of filtering used.'})
     def __init__(self, **kwargs):
         # Get the arguments to pass to NWBFile and remove arguments custum to this class
         intracellular_recordings = kwargs.pop('intracellular_recordings', None)
@@ -594,12 +597,25 @@ class ICEphysFile(NWBFile):
         # Initialize the NWBFile parent class
         pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
         super(ICEphysFile, self).__init__(*pargs, **pkwargs)
+        # Set ic filtering if requested
+        self.ic_filtering = kwargs.get('ic_filtering')
         # Set the intracellular_recordings if available
         setattr(self, 'intracellular_recordings', intracellular_recordings)
         setattr(self, 'ic_sweeps', ic_sweeps)
         setattr(self, 'ic_sweep_sequences', ic_sweep_sequences)
         setattr(self, 'ic_runs', ic_runs)
         setattr(self, 'ic_conditions', ic_conditions)
+
+    @property
+    def ic_filtering(self):
+        return self.fields.get('ic_filtering')
+
+    @ic_filtering.setter
+    def ic_filtering(self, val):
+        if val is not None:
+            warnings.warn("Use of ic_filtering is deprecated. Use the IntracellularElectrode.filtering"
+                          "field instead", DeprecationWarning)
+            self.fields['ic_filtering'] = val
 
     @docval(*get_docval(NWBFile.add_stimulus),
             {'name': 'use_sweep_table', 'type': bool, 'default': False, 'doc': 'Use the deprecated SweepTable'})

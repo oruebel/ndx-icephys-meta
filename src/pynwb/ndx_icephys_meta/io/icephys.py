@@ -22,3 +22,4 @@ class ICEphysFileMap(NWBFileMap):
         self.map_spec('ic_sweep_sequences', icephys_spec.get_neurodata_type('SweepSequences'))
         self.map_spec('ic_runs', icephys_spec.get_neurodata_type('Runs'))
         self.map_spec('ic_conditions', icephys_spec.get_neurodata_type('Conditions'))
+        self.map_spec('ic_filtering', icephys_spec.get_dataset('filtering'))
