@@ -232,6 +232,8 @@ class IntracellularRecordings(DynamicTable):
             {'name': 'response_index_count', 'type': 'int', 'doc': 'Stop index of the response', 'default': -1},
             {'name': 'response', 'type': PatchClampSeries, 'doc': 'The PatchClampSeries with the response',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_recording(self, **kwargs):
         """
@@ -242,9 +244,6 @@ class IntracellularRecordings(DynamicTable):
         for either stimulus or response, but not both. Internally, this results in both stimulus
         and response pointing to the same timeseries, while the start_index and index_count for
         the invalid series will both be set to -1.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Get the input data
         stimulus_start_index, stimulus_index_count, stimulus = popargs('stimulus_start_index',
@@ -297,7 +296,8 @@ class IntracellularRecordings(DynamicTable):
                       'stimulus': (stimulus_start_index, stimulus_index_count, stimulus),
                       'response': (response_start_index, response_index_count, response)}
         row_kwargs.update(kwargs)
-        return super(IntracellularRecordings, self).add_row(enforce_unique_id=True, **row_kwargs)
+        _ = super(IntracellularRecordings, self).add_row(enforce_unique_id=True, **row_kwargs)
+        return len(self.id) - 1
 
 
 @register_class('Sweeps', namespace)
@@ -342,21 +342,20 @@ class Sweeps(DynamicTable, HierarchicalDynamicTableMixin):
              'type': 'array_data',
              'doc': 'the indices of the recordings belonging to this sweep',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_sweep(self, **kwargs):
         """
         Add a single Sweep consisting of one-or-more recordings and associated custom
         Sweeps metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Check recordings
         recordings = getargs('recordings', kwargs)
         if recordings is None:
             kwargs['recordings'] = []
-        re = super(Sweeps, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(Sweeps, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('SweepSequences', namespace)
@@ -403,21 +402,20 @@ class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
              'type': 'array_data',
              'doc': 'the indices of the sweeps belonging to this sweep sequence',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_sweep_sequence(self, **kwargs):
         """
         Add a sweep sequence (i.e., one row)  consisting of one-or-more recording sweeps
         and associated custom sweep sequence  metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Check recordings
         sweeps = getargs('sweeps', kwargs)
         if sweeps is None:
             kwargs['sweeps'] = []
-        re = super(SweepSequences, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(SweepSequences, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('Runs', namespace)
@@ -462,21 +460,20 @@ class Runs(DynamicTable, HierarchicalDynamicTableMixin):
              'type': 'array_data',
              'doc': 'the indices of the sweep sequences belonging to this run',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_run(self, **kwargs):
         """
         Add a run (i.e., one row)  consisting of one-or-more recording sweep sequences
         and associated custom run  metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
-        """
+  """
         # Check recordings
         sweep_sequences = getargs('sweep_sequences', kwargs)
         if sweep_sequences is None:
             kwargs['sweep_sequences'] = []
-        re = super(Runs, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(Runs, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('Conditions', namespace)
@@ -517,21 +514,20 @@ class Conditions(DynamicTable, HierarchicalDynamicTableMixin):
              'type': 'array_data',
              'doc': 'the indices of the runs  belonging to this condition',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_condition(self, **kwargs):
         """
         Add a condition (i.e., one row)  consisting of one-or-more recording runs of sweep sequences
         and associated custom conditions  metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Check recordings
         runs = getargs('runs', kwargs)
         if runs is None:
             kwargs['runs'] = []
-        re = super(Conditions, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(Conditions, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('ICEphysFile', namespace)
@@ -647,11 +643,13 @@ class ICEphysFile(NWBFile):
             self.intracellular_recordings = IntracellularRecordings()
 
     @docval(*get_docval(IntracellularRecordings.add_recording),
+            returns='Integer index of the row that was added to IntracellularRecordings',
+            rtype=int,
             allow_extra=True)
     def add_intracellular_recording(self, **kwargs):
         """
         Add a intracellular recording to the intracellular_recordings table. If the
-        electrode, stimiulus, and/or response do not exsist yet in the NWBFile, then
+        electrode, stimulus, and/or response do not exsist yet in the NWBFile, then
         they will be added to this NWBFile before adding them to the table.
         """
         # Add the stimulus, response, and electrode to the file if they don't exist yet
@@ -665,7 +663,7 @@ class ICEphysFile(NWBFile):
         # make sure the intracellular recordings table exists and if not create it
         self._check_intracellular_recordings()
         # Add the recoding to the intracellular_recordings table
-        call_docval_func(self.intracellular_recordings.add_recording, kwargs)
+        return call_docval_func(self.intracellular_recordings.add_recording, kwargs)
 
     def _check_ic_sweeps(self):
         """
@@ -676,13 +674,15 @@ class ICEphysFile(NWBFile):
             self.ic_sweeps = Sweeps(self.intracellular_recordings)
 
     @docval(*get_docval(Sweeps.add_sweep),
+            returns='Integer index of the row that was added to Sweeps',
+            rtype=int,
             allow_extra=True)
     def add_ic_sweep(self, **kwargs):
         """
         Add a new sweep to the ic_sweeps table
         """
         self._check_ic_sweeps()
-        call_docval_func(self.ic_sweeps.add_sweep, kwargs)
+        return call_docval_func(self.ic_sweeps.add_sweep, kwargs)
 
     def _check_ic_sweep_sequences(self):
         """
@@ -693,13 +693,15 @@ class ICEphysFile(NWBFile):
             self.ic_sweep_sequences = SweepSequences(self.ic_sweeps)
 
     @docval(*get_docval(SweepSequences.add_sweep_sequence),
+            returns='Integer index of the row that was added to SweepSequences',
+            rtype=int,
             allow_extra=True)
     def add_ic_sweep_sequence(self, **kwargs):
         """
         Add a new sweep sequence to the ic_sweep_sequences table
         """
         self._check_ic_sweep_sequences()
-        call_docval_func(self.ic_sweep_sequences.add_sweep_sequence, kwargs)
+        return call_docval_func(self.ic_sweep_sequences.add_sweep_sequence, kwargs)
 
     def _check_ic_runs(self):
         """
@@ -710,13 +712,15 @@ class ICEphysFile(NWBFile):
             self.ic_runs = Runs(self.ic_sweep_sequences)
 
     @docval(*get_docval(Runs.add_run),
+            returns='Integer index of the row that was added to Runs',
+            rtype=int,
             allow_extra=True)
     def add_ic_run(self, **kwargs):
         """
         Add a new run to the Runs table
         """
         self._check_ic_runs()
-        call_docval_func(self.ic_runs.add_run, kwargs)
+        return call_docval_func(self.ic_runs.add_run, kwargs)
 
     def _check_ic_conditions(self):
         """
@@ -728,10 +732,12 @@ class ICEphysFile(NWBFile):
             self.ic_conditions = Conditions(self.ic_runs)
 
     @docval(*get_docval(Conditions.add_condition),
+            returns='Integer index of the row that was added to Conditions',
+            rtype=int,
             allow_extra=True)
     def add_ic_condition(self, **kwargs):
         """
         Add a new condition to the Conditions table
         """
         self._check_ic_conditions()
-        call_docval_func(self.ic_conditions.add_condition, kwargs)
+        return call_docval_func(self.ic_conditions.add_condition, kwargs)
