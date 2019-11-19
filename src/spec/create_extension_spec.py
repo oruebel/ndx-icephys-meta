@@ -225,7 +225,15 @@ def main():
                                                        'and Consitions tables.',
                                                    name='sweep_table',
                                                    quantity='?')
-                                      ]
+                                      ],
+                              datasets=[NWBDatasetSpec(name='filtering',
+                                                       doc='[DEPRECATED] Use IntracellularElectrode.filtering instead. '
+                                                            'Description of filtering used. Includes filtering type '
+                                                            'and parameters, frequency fall-off, etc. If this changes '
+                                                            'between TimeSeries, filter description should be stored '
+                                                            'as a text attribute for each TimeSeries.',
+                                                       dtype='text',
+                                                       quantity='?')]
                               )
                  ]
             )

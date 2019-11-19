@@ -1,11 +1,195 @@
 from pynwb import register_class
 from pynwb.file import NWBFile
 from pynwb.icephys import PatchClampSeries, IntracellularElectrode
-from hdmf.common import DynamicTable
+from hdmf.common import DynamicTable, DynamicTableRegion
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
+import pandas as pd
 
 namespace = 'ndx-icephys-meta'
+
+
+class HierarchicalDynamicTableMixin(object):
+    """
+    Mixin class for defining specialized functionality for hierarchical dynamic tables.
+
+
+    Assumptions:
+
+    1) The current implementation assumes that there is only one DynamicTableRegion column
+    that needs to be expanded as part of the hierarchy.  Allowing multiple hierarchical
+    columns in a single table get tricky, because it is unclear how those rows should
+    be joined. To clarify, allowing multiple DynamicTableRegion should be fine, as long
+    as only one of them should be expanded as part of the hierarchy.
+
+    2) The default implementation of the get_hierarchy_column_name function assumes that
+    the first DynamicTableRegion that references a DynamicTable that inherits from
+    HierarchicalDynamicTableMixin is the one that should be expanded as part of the
+    hierarchy of tables. If there is no such column, then the default implementation
+    assumes that the first DynamicTableRegion column is the one that needs to be expanded.
+    These assumption of get_hierarchy_column_name can be easily fixed by overwriting
+    the function in the subclass to return the name of the approbritate column.
+    """
+
+    def get_hierarchy_column_name(self):
+        """
+        Get the name of column that references another DynamicTable that
+        is itseflHierarchicalDynamicTableMixin table.
+
+        :returns: String with the column name or None
+        """
+        first_col = None
+        for col_index, col in enumerate(self.columns):
+            if isinstance(col, DynamicTableRegion):
+                first_col = col.name
+                if isinstance(col.table, HierarchicalDynamicTableMixin):
+                    return col.name
+        return first_col
+
+    def get_referencing_column_names(self):
+        """
+        Determine the names of all columns that reference another table, i.e.,
+        find all DynamicTableRegion type columns
+
+        Returns: List of strings with the column names
+        """
+        col_names = []
+        for col_index, col in enumerate(self.columns):
+            if isinstance(col, DynamicTableRegion):
+                col_names.append(col.name)
+        return col_names
+
+    def get_targets(self, include_self=False):
+        """
+        Get a list of the full table hierachy, i.e., recursively list all
+        tables referenced in the hierarchy.
+
+        Returns: List of DynamicTabl objects
+
+        """
+        hcol_name = self.get_hierarchy_column_name()
+        hcol = self[hcol_name]
+        hcol_target = hcol.table if isinstance(hcol, DynamicTableRegion) else hcol.target.table
+        if isinstance(hcol_target, HierarchicalDynamicTableMixin):
+            re = [self, ] if include_self else []
+            re += [hcol_target, ]
+            re += hcol_target.get_targets()
+            return re
+        else:
+            return [hcol_target, ]
+
+    def to_denormalized_dataframe(self, flat_column_index=False):
+        """
+        Shorthand for 'self.to_hierarchical_dataframe().reset_index()'
+
+        The function denormalizes the hierarchical table and represents all data as
+        columns in the resulting dataframe.
+        """
+        def get_first_prefix(instr, prefixs):
+            """Internal helper function to find the first prefix that matches"""
+            for p in prefixs:
+                if instr.startswith(p):
+                    return p
+            return prefixs[-1]
+
+        def remove_prefix(instr, prefix):
+            """Internal helper function to remove the first prefix that matches"""
+
+            if instr.startswith(prefix):
+                return instr[len(prefix):]
+            return instr
+
+        hier_df = self.to_hierarchical_dataframe(flat_column_index=True)
+        flat_df = hier_df.reset_index()
+        if not flat_column_index:
+            table_names = [t.name for t in self.get_targets(include_self=True)]
+            mi_tuples = [(get_first_prefix(n, table_names),
+                          remove_prefix(n, get_first_prefix(n, table_names)+"_")) for n in flat_df.columns]
+            flat_df.columns = pd.MultiIndex.from_tuples(mi_tuples, names=('source_table', 'label'))
+
+        return flat_df
+
+    def to_hierarchical_dataframe(self, flat_column_index=False):
+        """
+        Create a Pandas dataframe with a hierarchical MultiIndex index that represents the
+        hierarchical dynamic table.
+        """
+        # Get the references column
+        hcol_name = self.get_hierarchy_column_name()
+        hcol = self[hcol_name]
+        hcol_target = hcol.table if isinstance(hcol, DynamicTableRegion) else hcol.target.table
+
+        # Create the data variables we need to collect the data for our output dataframe and associated index
+        index = []
+        data = []
+        columns = None
+        index_names = None
+
+        # Case 1:  Our DynamicTableRegion column points to a regular DynamicTable
+        #          If this is the case than we need to de-normalize the data and flatten the hierarcht
+        if not isinstance(hcol_target, HierarchicalDynamicTableMixin):
+            # 1) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
+            for row_index, row_df in enumerate(hcol[:]):  # need hcol[:] here in case this is an h5py.Dataset
+                # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
+                #       next need to iterate over all rows in that table to denormalize our data
+                for row in row_df.itertuples(index=True):
+                    # 1.1.1) Determine the column data for our row. Each selected row from our target table
+                    #        becomes a row in our flattened table
+                    data.append(row)
+                    # 1.1.2) Determine the multi-index tuple for our row, consisting of: i) id of the row in this
+                    #        table, ii) all columns (except the hierarchical column we are flattening), and
+                    #        iii) the index (i.e., id) from our target row
+                    index_data = ([self.id[row_index], ] +
+                                  [self[row_index, colname] for colname in self.colnames if colname != hcol_name])
+                    index.append(tuple(index_data))
+                    # Determine the names for our index and columns of our output table if this is the first row.
+                    # These are constant for all rows so we only need to do this onle once for the first row.
+                    if row_index == 0:
+                        index_names = ([self.name + "_id", ] +
+                                       [(self.name + "_" + colname)
+                                        for colname in self.colnames if colname != hcol_name])
+                        if flat_column_index:
+                            columns = ['id', ] + list(row_df.columns)
+                        else:
+                            columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
+                                                                [(hcol_target.name, c) for c in row_df.columns],
+                                                                names=('source_table', 'label'))
+
+        # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
+        else:
+            # 1) First we need to recursively flatten the hierarchy by calling 'to_hierarchical_dataframe()'
+            #    (i.e., this function) on the target of our hierarchical column
+            hcol_hdf = hcol_target.to_hierarchical_dataframe(flat_column_index=flat_column_index)
+            # 2) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
+            for row_index, row_df_level1 in enumerate(hcol[:]):   # need hcol[:] here  in case this is an h5py.Dataset
+                # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
+                #       next need to iterate over all rows in that table to denormalize our data
+                for row_df_level2 in row_df_level1.itertuples(index=True):
+                    # 1.1.2) Since our target is itself a HierarchicalDynamicTable each target row itself
+                    #        may expand into multiple rows in flattened hcol_hdf. So we now need to look
+                    #        up the rows in hcol_hdf that correspond to the rows in row_df_level2.
+                    #        NOTE: In this look-up we assume that the ids (and hence the index) of
+                    #              each row in the table are in fact unique.
+                    for row_tuple_level3 in hcol_hdf.loc[[row_df_level2[0]]].itertuples(index=True):
+                        # 1.1.2.1) Determine the column data for our row.
+                        data.append(row_tuple_level3[1:])
+                        # 1.1.2.2) Determine the multi-index tuple for our row,
+                        index_data = ([self.id[row_index], ] +
+                                      [self[row_index, colname] for colname in self.colnames if colname != hcol_name] +
+                                      list(row_tuple_level3[0]))
+                        index.append(tuple(index_data))
+                        # Determine the names for our index and columns of our output table if this is the first row
+                        if row_index == 0:
+                            index_names = ([self.name + "_id"] +
+                                           [(self.name + "_" + colname)
+                                            for colname in self.colnames if colname != hcol_name] +
+                                           hcol_hdf.index.names)
+                            columns = hcol_hdf.columns
+
+        # Construct the pandas dataframe with the hierarchical multi-index
+        multi_index = pd.MultiIndex.from_tuples(index, names=index_names)
+        out_df = pd.DataFrame(data=data, index=multi_index, columns=columns)
+        return out_df
 
 
 @register_class('IntracellularRecordings', namespace)
@@ -48,6 +232,8 @@ class IntracellularRecordings(DynamicTable):
             {'name': 'response_index_count', 'type': 'int', 'doc': 'Stop index of the response', 'default': -1},
             {'name': 'response', 'type': PatchClampSeries, 'doc': 'The PatchClampSeries with the response',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_recording(self, **kwargs):
         """
@@ -58,9 +244,6 @@ class IntracellularRecordings(DynamicTable):
         for either stimulus or response, but not both. Internally, this results in both stimulus
         and response pointing to the same timeseries, while the start_index and index_count for
         the invalid series will both be set to -1.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Get the input data
         stimulus_start_index, stimulus_index_count, stimulus = popargs('stimulus_start_index',
@@ -113,11 +296,12 @@ class IntracellularRecordings(DynamicTable):
                       'stimulus': (stimulus_start_index, stimulus_index_count, stimulus),
                       'response': (response_start_index, response_index_count, response)}
         row_kwargs.update(kwargs)
-        return super(IntracellularRecordings, self).add_row(enforce_unique_id=True, **row_kwargs)
+        _ = super(IntracellularRecordings, self).add_row(enforce_unique_id=True, **row_kwargs)
+        return len(self.id) - 1
 
 
 @register_class('Sweeps', namespace)
-class Sweeps(DynamicTable):
+class Sweeps(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recordings from the
     IntracellularRecordings table together that were recorded simultaneously
@@ -158,25 +342,24 @@ class Sweeps(DynamicTable):
              'type': 'array_data',
              'doc': 'the indices of the recordings belonging to this sweep',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_sweep(self, **kwargs):
         """
         Add a single Sweep consisting of one-or-more recordings and associated custom
         Sweeps metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Check recordings
         recordings = getargs('recordings', kwargs)
         if recordings is None:
             kwargs['recordings'] = []
-        re = super(Sweeps, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(Sweeps, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('SweepSequences', namespace)
-class SweepSequences(DynamicTable):
+class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording sweeps from the
     Sweeps table together. This is typically used to group together sweeps
@@ -219,25 +402,24 @@ class SweepSequences(DynamicTable):
              'type': 'array_data',
              'doc': 'the indices of the sweeps belonging to this sweep sequence',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_sweep_sequence(self, **kwargs):
         """
         Add a sweep sequence (i.e., one row)  consisting of one-or-more recording sweeps
         and associated custom sweep sequence  metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Check recordings
         sweeps = getargs('sweeps', kwargs)
         if sweeps is None:
             kwargs['sweeps'] = []
-        re = super(SweepSequences, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(SweepSequences, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('Runs', namespace)
-class Runs(DynamicTable):
+class Runs(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording sweep sequences together.
     With each SweepSequence typically representing a particular type of stimulus, the
@@ -278,25 +460,24 @@ class Runs(DynamicTable):
              'type': 'array_data',
              'doc': 'the indices of the sweep sequences belonging to this run',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_run(self, **kwargs):
         """
         Add a run (i.e., one row)  consisting of one-or-more recording sweep sequences
         and associated custom run  metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
-        """
+  """
         # Check recordings
         sweep_sequences = getargs('sweep_sequences', kwargs)
         if sweep_sequences is None:
             kwargs['sweep_sequences'] = []
-        re = super(Runs, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(Runs, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('Conditions', namespace)
-class Conditions(DynamicTable):
+class Conditions(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording runs together that
     belong to the same experimental conditions.
@@ -333,21 +514,20 @@ class Conditions(DynamicTable):
              'type': 'array_data',
              'doc': 'the indices of the runs  belonging to this condition',
              'default': None},
+            returns='Integer index of the row that was added to this table',
+            rtype=int,
             allow_extra=True)
     def add_condition(self, **kwargs):
         """
         Add a condition (i.e., one row)  consisting of one-or-more recording runs of sweep sequences
         and associated custom conditions  metadata to the table.
-
-        :returns: Result from DynamicTable.add_row(...) call
-
         """
         # Check recordings
         runs = getargs('runs', kwargs)
         if runs is None:
             kwargs['runs'] = []
-        re = super(Conditions, self).add_row(enforce_unique_id=True, **kwargs)
-        return re
+        _ = super(Conditions, self).add_row(enforce_unique_id=True, **kwargs)
+        return len(self.id) - 1
 
 
 @register_class('ICEphysFile', namespace)
@@ -388,7 +568,8 @@ class ICEphysFile(NWBFile):
                       'child': True,
                       'required_name': 'conditions',
                       'doc': 'A table for grouping different intracellular recording runs together that '
-                             'belong to the same experimental conditions.'})
+                             'belong to the same experimental conditions.'},
+                     )
 
     @docval(*get_docval(NWBFile.__init__),
             {'name': 'intracellular_recordings', 'type': IntracellularRecordings,  'default': None,
@@ -400,7 +581,9 @@ class ICEphysFile(NWBFile):
             {'name': 'ic_runs', 'type': Runs, 'default': None,
              'doc': 'the Runs table that belongs to this NWBFile'},
             {'name': 'ic_conditions', 'type': Conditions, 'default': None,
-             'doc': 'the Conditions table that belongs to this NWBFile'})
+             'doc': 'the Conditions table that belongs to this NWBFile'},
+            {'name': 'ic_filtering', 'type': str, 'default': None,
+             'doc': '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description of filtering used.'})
     def __init__(self, **kwargs):
         # Get the arguments to pass to NWBFile and remove arguments custum to this class
         intracellular_recordings = kwargs.pop('intracellular_recordings', None)
@@ -414,12 +597,25 @@ class ICEphysFile(NWBFile):
         # Initialize the NWBFile parent class
         pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
         super(ICEphysFile, self).__init__(*pargs, **pkwargs)
+        # Set ic filtering if requested
+        self.ic_filtering = kwargs.get('ic_filtering')
         # Set the intracellular_recordings if available
         setattr(self, 'intracellular_recordings', intracellular_recordings)
         setattr(self, 'ic_sweeps', ic_sweeps)
         setattr(self, 'ic_sweep_sequences', ic_sweep_sequences)
         setattr(self, 'ic_runs', ic_runs)
         setattr(self, 'ic_conditions', ic_conditions)
+
+    @property
+    def ic_filtering(self):
+        return self.fields.get('ic_filtering')
+
+    @ic_filtering.setter
+    def ic_filtering(self, val):
+        if val is not None:
+            warnings.warn("Use of ic_filtering is deprecated. Use the IntracellularElectrode.filtering"
+                          "field instead", DeprecationWarning)
+            self.fields['ic_filtering'] = val
 
     @docval(*get_docval(NWBFile.add_stimulus),
             {'name': 'use_sweep_table', 'type': bool, 'default': False, 'doc': 'Use the deprecated SweepTable'})
@@ -463,11 +659,13 @@ class ICEphysFile(NWBFile):
             self.intracellular_recordings = IntracellularRecordings()
 
     @docval(*get_docval(IntracellularRecordings.add_recording),
+            returns='Integer index of the row that was added to IntracellularRecordings',
+            rtype=int,
             allow_extra=True)
     def add_intracellular_recording(self, **kwargs):
         """
         Add a intracellular recording to the intracellular_recordings table. If the
-        electrode, stimiulus, and/or response do not exsist yet in the NWBFile, then
+        electrode, stimulus, and/or response do not exsist yet in the NWBFile, then
         they will be added to this NWBFile before adding them to the table.
         """
         # Add the stimulus, response, and electrode to the file if they don't exist yet
@@ -481,7 +679,7 @@ class ICEphysFile(NWBFile):
         # make sure the intracellular recordings table exists and if not create it
         self._check_intracellular_recordings()
         # Add the recoding to the intracellular_recordings table
-        call_docval_func(self.intracellular_recordings.add_recording, kwargs)
+        return call_docval_func(self.intracellular_recordings.add_recording, kwargs)
 
     def _check_ic_sweeps(self):
         """
@@ -492,13 +690,15 @@ class ICEphysFile(NWBFile):
             self.ic_sweeps = Sweeps(self.intracellular_recordings)
 
     @docval(*get_docval(Sweeps.add_sweep),
+            returns='Integer index of the row that was added to Sweeps',
+            rtype=int,
             allow_extra=True)
     def add_ic_sweep(self, **kwargs):
         """
         Add a new sweep to the ic_sweeps table
         """
         self._check_ic_sweeps()
-        call_docval_func(self.ic_sweeps.add_sweep, kwargs)
+        return call_docval_func(self.ic_sweeps.add_sweep, kwargs)
 
     def _check_ic_sweep_sequences(self):
         """
@@ -509,13 +709,15 @@ class ICEphysFile(NWBFile):
             self.ic_sweep_sequences = SweepSequences(self.ic_sweeps)
 
     @docval(*get_docval(SweepSequences.add_sweep_sequence),
+            returns='Integer index of the row that was added to SweepSequences',
+            rtype=int,
             allow_extra=True)
     def add_ic_sweep_sequence(self, **kwargs):
         """
         Add a new sweep sequence to the ic_sweep_sequences table
         """
         self._check_ic_sweep_sequences()
-        call_docval_func(self.ic_sweep_sequences.add_sweep_sequence, kwargs)
+        return call_docval_func(self.ic_sweep_sequences.add_sweep_sequence, kwargs)
 
     def _check_ic_runs(self):
         """
@@ -526,13 +728,15 @@ class ICEphysFile(NWBFile):
             self.ic_runs = Runs(self.ic_sweep_sequences)
 
     @docval(*get_docval(Runs.add_run),
+            returns='Integer index of the row that was added to Runs',
+            rtype=int,
             allow_extra=True)
     def add_ic_run(self, **kwargs):
         """
         Add a new run to the Runs table
         """
         self._check_ic_runs()
-        call_docval_func(self.ic_runs.add_run, kwargs)
+        return call_docval_func(self.ic_runs.add_run, kwargs)
 
     def _check_ic_conditions(self):
         """
@@ -544,10 +748,12 @@ class ICEphysFile(NWBFile):
             self.ic_conditions = Conditions(self.ic_runs)
 
     @docval(*get_docval(Conditions.add_condition),
+            returns='Integer index of the row that was added to Conditions',
+            rtype=int,
             allow_extra=True)
     def add_ic_condition(self, **kwargs):
         """
         Add a new condition to the Conditions table
         """
         self._check_ic_conditions()
-        call_docval_func(self.ic_conditions.add_condition, kwargs)
+        return call_docval_func(self.ic_conditions.add_condition, kwargs)

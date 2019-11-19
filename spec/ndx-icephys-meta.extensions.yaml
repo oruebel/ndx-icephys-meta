@@ -143,6 +143,14 @@ groups:
     groups:
     - name: intracellular_ephys
       doc: expand definition from NWBFile
+      datasets:
+      - name: filtering
+        dtype: text
+        doc: '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description
+          of filtering used. Includes filtering type and parameters, frequency fall-off,
+          etc. If this changes between TimeSeries, filter description should be stored
+          as a text attribute for each TimeSeries.'
+        quantity: '?'
       groups:
       - name: intracellular_recordings
         neurodata_type_inc: IntracellularRecordings
