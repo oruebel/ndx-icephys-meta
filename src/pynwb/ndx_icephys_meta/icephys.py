@@ -651,12 +651,18 @@ class ICEphysFile(NWBFile):
                               DeprecationWarning)
             self._update_sweep_table(nwbdata)
 
-    def _check_intracellular_recordings(self):
+    @docval(returns='The NWBFile.intracellular_recordings table', rtype=IntracellularRecordings)
+    def get_intracellular_recordings(self):
         """
-        Create IntracellularRecordings table if not yet done
+        Get the NWBFile.intracellular_recordings table.
+
+        In contrast to NWBFile.intracellular_recordings, this function will create the
+        IntracellularRecordings table if not yet done, whereas NWBFile.intracellular_recordings
+        will return None if the table is currently not being used.
         """
         if self.intracellular_recordings is None:
             self.intracellular_recordings = IntracellularRecordings()
+        return self.intracellular_recordings
 
     @docval(*get_docval(IntracellularRecordings.add_recording),
             returns='Integer index of the row that was added to IntracellularRecordings',
@@ -676,18 +682,22 @@ class ICEphysFile(NWBFile):
             self.add_acquisition(response, use_sweep_table=False)
         if electrode.name not in self.ic_electrodes:
             self.add_ic_electrode(electrode)
-        # make sure the intracellular recordings table exists and if not create it
-        self._check_intracellular_recordings()
+        # make sure the intracellular recordings table exists and if not create it using get_intracellular_recordings
         # Add the recoding to the intracellular_recordings table
-        return call_docval_func(self.intracellular_recordings.add_recording, kwargs)
+        return call_docval_func(self.get_intracellular_recordings().add_recording, kwargs)
 
-    def _check_ic_sweeps(self):
+    @docval(returns='The NWBFile.ic_sweeps table', rtype=Sweeps)
+    def get_ic_sweeps(self):
         """
-        Create the Sweeps (and IntracellularRecordings) table if not yet done
+        Get the NWBFile.ic_sweeps table.
+
+        In contrast to NWBFile.ic_sweeps, this function will create the
+        Sweeps table if not yet done, whereas NWBFile.ic_sweeps
+        will return None if the table is currently not being used.
         """
         if self.ic_sweeps is None:
-            self._check_intracellular_recordings()
-            self.ic_sweeps = Sweeps(self.intracellular_recordings)
+            self.ic_sweeps = Sweeps(self.get_intracellular_recordings())
+        return self.ic_sweeps
 
     @docval(*get_docval(Sweeps.add_sweep),
             returns='Integer index of the row that was added to Sweeps',
@@ -697,16 +707,20 @@ class ICEphysFile(NWBFile):
         """
         Add a new sweep to the ic_sweeps table
         """
-        self._check_ic_sweeps()
-        return call_docval_func(self.ic_sweeps.add_sweep, kwargs)
+        return call_docval_func(self.get_ic_sweeps().add_sweep, kwargs)
 
-    def _check_ic_sweep_sequences(self):
+    @docval(returns='The NWBFile.ic_sweep_sequences table', rtype=SweepSequences)
+    def get_ic_sweep_sequences(self):
         """
-        Create the SweepSequences (and dependent Sweeps and IntracellularRecordings) table if not yet done
+         Get the NWBFile.ic_sweep_sequences table.
+
+        In contrast to NWBFile.ic_sweep_sequences, this function will create the
+        IntracellularRecordings table if not yet done, whereas NWBFile.ic_sweep_sequences
+        will return None if the table is currently not being used.
         """
         if self.ic_sweep_sequences is None:
-            self._check_ic_sweeps()
-            self.ic_sweep_sequences = SweepSequences(self.ic_sweeps)
+            self.ic_sweep_sequences = SweepSequences(self.get_ic_sweeps())
+        return self.ic_sweep_sequences
 
     @docval(*get_docval(SweepSequences.add_sweep_sequence),
             returns='Integer index of the row that was added to SweepSequences',
@@ -716,16 +730,21 @@ class ICEphysFile(NWBFile):
         """
         Add a new sweep sequence to the ic_sweep_sequences table
         """
-        self._check_ic_sweep_sequences()
+        self.get_ic_sweep_sequences()
         return call_docval_func(self.ic_sweep_sequences.add_sweep_sequence, kwargs)
 
-    def _check_ic_runs(self):
+    @docval(returns='The NWBFile.ic_runs table', rtype=Runs)
+    def get_ic_runs(self):
         """
-        Create the Runs (and dependent SweepSequences, Sweeps, and IntracellularRecrodings) table if not yet done
+        Get the NWBFile.ic_runs table.
+
+        In contrast to NWBFile.ic_runs, this function will create the
+        Runs table if not yet done, whereas NWBFile.ic_runs
+        will return None if the table is currently not being used.
         """
         if self.ic_runs is None:
-            self._check_ic_sweep_sequences()
-            self.ic_runs = Runs(self.ic_sweep_sequences)
+            self.ic_runs = Runs(self.get_ic_sweep_sequences())
+        return self.ic_runs
 
     @docval(*get_docval(Runs.add_run),
             returns='Integer index of the row that was added to Runs',
@@ -735,17 +754,20 @@ class ICEphysFile(NWBFile):
         """
         Add a new run to the Runs table
         """
-        self._check_ic_runs()
-        return call_docval_func(self.ic_runs.add_run, kwargs)
+        return call_docval_func(self.get_ic_runs().add_run, kwargs)
 
-    def _check_ic_conditions(self):
+    @docval(returns='The NWBFile.ic_conditions table', rtype=Conditions)
+    def get_ic_conditions(self):
         """
-        Create the Conditions (and dependent Runs, SweepSequences, Sweeps, and IntracellularRecrodings)
-        table if not yet done
+        Get the NWBFile.ic_conditions table.
+
+        In contrast to NWBFile.ic_conditions, this function will create the
+        Runs table if not yet done, whereas NWBFile.ic_conditions
+        will return None if the table is currently not being used.
         """
         if self.ic_conditions is None:
-            self._check_ic_runs()
-            self.ic_conditions = Conditions(self.ic_runs)
+            self.ic_conditions = Conditions(self.get_ic_runs())
+        return self.ic_conditions
 
     @docval(*get_docval(Conditions.add_condition),
             returns='Integer index of the row that was added to Conditions',
@@ -755,5 +777,4 @@ class ICEphysFile(NWBFile):
         """
         Add a new condition to the Conditions table
         """
-        self._check_ic_conditions()
-        return call_docval_func(self.ic_conditions.add_condition, kwargs)
+        return call_docval_func(self.get_ic_conditions().add_condition, kwargs)
