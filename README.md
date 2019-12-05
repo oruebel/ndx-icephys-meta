@@ -1,5 +1,7 @@
 # ndx-icephys-meta Extension for NWB:N
 
+This extension implements the icephys extension proposal described [here](https://docs.google.com/document/d/1cAgsXv26BmQoVfa7Greyxs0oc4IGH-t5aJsm-AwUAAE/edit). The extension is intended to evaluate and explore the practical use of the proposed changes as well as to provide a reference implementation with the goal to ease integration of the proposed changes with NWB.
+
 ## Install
 
 ```
