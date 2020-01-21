@@ -1,6 +1,7 @@
 from pynwb import register_class
 from pynwb.file import NWBFile
-from pynwb.icephys import PatchClampSeries, IntracellularElectrode
+from pynwb.icephys import IntracellularElectrode
+from pynwb.base import TimeSeries
 from hdmf.common import DynamicTable, DynamicTableRegion
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
@@ -226,11 +227,13 @@ class IntracellularRecordings(DynamicTable):
     @docval({'name': 'electrode', 'type': IntracellularElectrode, 'doc': 'The intracellular electrode used'},
             {'name': 'stimulus_start_index', 'type': 'int', 'doc': 'Start index of the stimulus', 'default': -1},
             {'name': 'stimulus_index_count', 'type': 'int', 'doc': 'Stop index of the stimulus', 'default': -1},
-            {'name': 'stimulus', 'type': PatchClampSeries, 'doc': 'The PatchClampSeries with the stimulus',
+            {'name': 'stimulus', 'type': TimeSeries,
+             'doc': 'The TimeSeries (usually a PatchClampSeries) with the stimulus',
              'default': None},
             {'name': 'response_start_index', 'type': 'int', 'doc': 'Start index of the response', 'default': -1},
             {'name': 'response_index_count', 'type': 'int', 'doc': 'Stop index of the response', 'default': -1},
-            {'name': 'response', 'type': PatchClampSeries, 'doc': 'The PatchClampSeries with the response',
+            {'name': 'response', 'type': TimeSeries,
+             'doc': 'The TimeSeries (usually a PatchClampSeries) with the response',
              'default': None},
             returns='Integer index of the row that was added to this table',
             rtype=int,
@@ -287,7 +290,7 @@ class IntracellularRecordings(DynamicTable):
                 if (response_start_index + response_index_count) > response_num_samples:
                     raise IndexError("response_start_index+response_index_count out of range")
 
-        # If either stimulus or response are None, then set them to the same PatchClampSeries to keep the I/O happy
+        # If either stimulus or response are None, then set them to the same TimeSeries to keep the I/O happy
         response = response if response is not None else stimulus
         stimulus = stimulus if stimulus is not None else response
 
