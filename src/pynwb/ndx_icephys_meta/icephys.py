@@ -676,11 +676,11 @@ class ICEphysFile(NWBFile):
         """
         # Add the stimulus, response, and electrode to the file if they don't exist yet
         stimulus, response, electrode = getargs('stimulus', 'response', 'electrode', kwargs)
-        if stimulus.name not in self.stimulus:
+        if stimulus is not None and stimulus.name not in self.stimulus:
             self.add_stimulus(stimulus, use_sweep_table=False)
-        if response.name not in self.acquisition:
+        if response is not None and response.name not in self.acquisition:
             self.add_acquisition(response, use_sweep_table=False)
-        if electrode.name not in self.ic_electrodes:
+        if electrode is not None and electrode.name not in self.ic_electrodes:
             self.add_ic_electrode(electrode)
         # make sure the intracellular recordings table exists and if not create it using get_intracellular_recordings
         # Add the recoding to the intracellular_recordings table
