@@ -5,10 +5,18 @@ import os
 from setuptools import setup, find_packages
 from shutil import copy2
 
+try:
+    with open('README.rst', 'r') as fp:
+        readme = fp.read()
+except:
+    readme = ""
+
 setup_args = {
     'name': 'ndx-icephys-meta',
     'version': '0.1.0',
-    'description': 'Implement proposal for hierarchical metadata strucutre for intracellular electrophysiology data ',
+    'description': 'Implement proposal for hierarchical metadata structure for intracellular electrophysiology data ',
+    'long_description': readme,
+    'long_description_content_type': 'text/x-rst; charset=UTF-8',
     'author': ' Oliver Ruebel, Ryan Ly, Benjamin Dichter, Thomas Braun, Andrew Tritt',
     'author_email': 'oruebel@lbl.gov',
     'url': '',
