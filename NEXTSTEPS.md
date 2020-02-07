@@ -60,19 +60,25 @@ your extension.
     - You may need to modify `setup.py`
     - If your extension version is 0.1.0, then this page should exist: https://pypi.org/project/ndx-icephys-meta/0.1.0
 
+    Once your GitHub release and ``setup.py`` are ready, publishing on PyPi:
+    ```bash
+    python setup.py sdist bdist_wheel
+    twine upload dist/*
+    ```
+
 10. Go to https://github.com/nwb-extensions/staged-extensions and fork the
 repository.
 
-10. Clone the fork onto your local filesystem.
+11. Clone the fork onto your local filesystem.
 
-10. Copy the directory `staged-extensions/example` to a new directory
+12. Copy the directory `staged-extensions/example` to a new directory
 `staged-extensions/ndx-icephys-meta`:
 
     ```bash
-cp -r staged-extensions/example staged-extensions/ndx-icephys-meta
-```
+    cp -r staged-extensions/example staged-extensions/ndx-icephys-meta
+    ```
 
-11. Edit `staged-extensions/ndx-icephys-meta/ndx-meta.yaml`
+13. Edit `staged-extensions/ndx-icephys-meta/ndx-meta.yaml`
 with information on where to find your NWB extension.
     - The YAML file MUST contain a dict with the following keys:
       - name: extension namespace name
@@ -95,7 +101,7 @@ maintainers:
   - oruebel
 ```
 
-12. Edit `staged-extensions/ndx-icephys-meta/README.md`
+14. Edit `staged-extensions/ndx-icephys-meta/README.md`
 to add information about your extension. You may copy it from
 `ndx-icephys-meta/README.md`.
 
@@ -103,13 +109,13 @@ to add information about your extension. You may copy it from
 cp ndx-icephys-meta/README.md staged-extensions/ndx-icephys-meta/README.md
 ```
 
-13. Git commit and push your changes to GitHub.
+15. Git commit and push your changes to GitHub.
 
-14. Open a pull request. Building of your extension will be tested on Windows,
+16. Open a pull request. Building of your extension will be tested on Windows,
 Mac, and Linux. The technical team will review your extension shortly after
 and provide feedback and request changes, if any.
 
-15. When your pull request is merged, a new repository, called
+17. When your pull request is merged, a new repository, called
 ndx-icephys-meta-feedstock will be created in the nwb-extensions
 GitHub organization and you will be added as a maintainer for that repository.
 
