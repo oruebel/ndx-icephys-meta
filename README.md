@@ -8,6 +8,12 @@ This extension implements the icephys extension proposal described [here](https:
 python setup.py develop
 ```
 
+The extension is now also available on pip and can be installed via:
+
+```
+pip install ndx-icephys-meta
+```
+
 ## Examples
 
 Examples for the Python extension are available at ``src/pynwb/examples``. The unit tests in ``src/pynwb/ndx_icephys_meta/test`` can serve as additional examples.
