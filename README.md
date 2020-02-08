@@ -50,7 +50,7 @@ python src/pynwb/ndx_icephys_meta/test/test_icephys.py
 
 The following shows a simple example. The steps with (A) - (E) in the comments are the main new steps for this extension. The other parts of the code are standard NWB code.
 
-```
+```python
 from datetime import datetime
 from dateutil.tz import tzlocal
 import numpy as np
