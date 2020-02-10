@@ -2,7 +2,7 @@ from pynwb import register_class
 from pynwb.file import NWBFile
 from pynwb.icephys import IntracellularElectrode
 from pynwb.base import TimeSeries
-from hdmf.common import DynamicTable, DynamicTableRegion
+from pynwb.core import DynamicTable, DynamicTableRegion
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
 import pandas as pd
