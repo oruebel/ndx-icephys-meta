@@ -14,9 +14,8 @@ The extension is now also available on pip and can be installed via:
 pip install ndx-icephys-meta
 ```
 
-## Examples
+The extension is also listed in the (NDX catalog)[https://nwb-extensions.github.io/]. See [here](https://github.com/nwb-extensions/ndx-icephys-meta-record) for the catalog metadata record.
 
-Examples for the Python extension are available at ``src/pynwb/examples``. The unit tests in ``src/pynwb/ndx_icephys_meta/test`` can serve as additional examples.
 
 ## Building the spec documentation
 
@@ -47,6 +46,8 @@ python src/pynwb/ndx_icephys_meta/test/test_icephys.py
 
 
 ## Example
+
+Examples for the Python extension are available at ``src/pynwb/examples``. The unit tests in ``src/pynwb/ndx_icephys_meta/test`` can also serve as additional examples.
 
 The following shows a simple example. The steps with (A) - (E) in the comments are the main new steps for this extension. The other parts of the code are standard NWB code.
 
