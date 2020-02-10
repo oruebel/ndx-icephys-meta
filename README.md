@@ -78,8 +78,7 @@ stimulus = VoltageClampStimulusSeries(
             starting_time=123.6,
             rate=10e3,
             electrode=electrode,
-            gain=0.02,
-            sweep_number=15)
+            gain=0.02)
 
 # Create an ic-response
 response = VoltageClampSeries(
@@ -92,25 +91,24 @@ response = VoltageClampSeries(
             electrode=electrode,
             gain=0.02,
             capacitance_slow=100e-12,
-            resistance_comp_correction=70.0,
-            sweep_number=15)
+            resistance_comp_correction=70.0)
 
 # (A) Add an intracellular recording to the file
-nwbfile.add_intracellular_recording(electrode=electrode,
-                                    stimulus=stimulus,
-                                    response=response)
+ir_index = nwbfile.add_intracellular_recording(electrode=electrode,
+                                               stimulus=stimulus,
+                                               response=response)
 
 # (B) Add a list of sweeps to the sweeps table
-nwbfile.add_ic_sweep(recordings=[0])
+sweep_index = nwbfile.add_ic_sweep(recordings=[ir_index, ])
 
 # (C) Add a list of sweep table indices as a sweep sequence
-nwbfile.add_ic_sweep_sequence(sweeps=[0])
+sequence_index = nwbfile.add_ic_sweep_sequence(sweeps=[sweep_index, ])
 
 # (D) Add a list of sweep sequence table indices as a run
-nwbfile.add_ic_run(sweep_sequences=[0])
+run_index = nwbfile.add_ic_run(sweep_sequences=[sequence_index, ])
 
 # (E) Add a list of run table indices as a condition
-nwbfile.add_ic_condition(runs=[0])
+nwbfile.add_ic_condition(runs=[run_index, ])
 
 # Write our test file
 testpath = "test_icephys_file.h5"
@@ -121,4 +119,5 @@ with NWBHDF5IO(testpath, 'w') as io:
 with NWBHDF5IO(testpath, 'r') as io:
     infile = io.read()
     print(infile)
+
 ```
