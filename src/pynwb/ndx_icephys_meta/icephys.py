@@ -637,6 +637,23 @@ class ICEphysFile(NWBFile):
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
+    @docval(*get_docval(NWBFile.add_stimulus),
+            {'name': 'use_sweep_table', 'type': bool, 'default': False, 'doc': 'Use the deprecated SweepTable'})
+    def add_stimulus_template(self, **kwargs):
+        """
+        Overwrite behavior from NWBFile to avoid use of the deprecated SweepTable
+        """
+        timeseries = popargs('timeseries', kwargs)
+        self._add_stimulus_template_internal(timeseries)
+        use_sweep_table = popargs('use_sweep_table', kwargs)
+        if use_sweep_table:
+            if self.sweep_table is None:
+                warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordings, "
+                              "Sweeps tables instead. See the add_intracellular_recordings, "
+                              "add_sweep, add_sweep_sequence, add_run, add_ic_condition functions.",
+                              DeprecationWarning)
+            self._update_sweep_table(timeseries)
+
     @docval(*get_docval(NWBFile.add_acquisition),
             {'name': 'use_sweep_table', 'type': bool, 'default': False, 'doc': 'Use the deprecated SweepTable'})
     def add_acquisition(self, **kwargs):
@@ -679,7 +696,9 @@ class ICEphysFile(NWBFile):
         """
         # Add the stimulus, response, and electrode to the file if they don't exist yet
         stimulus, response, electrode = getargs('stimulus', 'response', 'electrode', kwargs)
-        if stimulus is not None and stimulus.name not in self.stimulus:
+        if (stimulus is not None and
+                (stimulus.name not in self.stimulus and
+                 stimulus.name not in self.stimulus_template)):
             self.add_stimulus(stimulus, use_sweep_table=False)
         if response is not None and response.name not in self.acquisition:
             self.add_acquisition(response, use_sweep_table=False)

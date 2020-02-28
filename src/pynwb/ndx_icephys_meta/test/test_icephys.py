@@ -422,6 +422,53 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir)
 
+    def test_write_with_stimulus_template(self):
+        """
+        Populate, write, and read the Sweeps container and other required containers
+        """
+        local_nwbfile = ICEphysFile(
+                session_description='my first synthetic recording',
+                identifier='EXAMPLE_ID',
+                session_start_time=datetime.now(tzlocal()),
+                experimenter='Dr. Bilbo Baggins',
+                lab='Bag End Laboratory',
+                institution='University of Middle Earth at the Shire',
+                experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+                session_id='LONELYMTN')
+        # Add a device
+        local_device = local_nwbfile.create_device(name='Heka ITC-1600')
+        local_electrode = local_nwbfile.create_ic_electrode(
+            name="elec0",
+            description='a mock intracellular electrode',
+            device=local_device)
+        local_stimulus = VoltageClampStimulusSeries(name="ccss",
+                                                    data=[1, 2, 3, 4, 5],
+                                                    starting_time=123.6,
+                                                    rate=10e3,
+                                                    electrode=local_electrode,
+                                                    gain=0.02,
+                                                    sweep_number=np.uint64(15))
+        local_response = VoltageClampSeries(name='vcs',
+                                            data=[0.1, 0.2, 0.3, 0.4, 0.5],
+                                            conversion=1e-12,
+                                            resolution=np.nan,
+                                            starting_time=123.6,
+                                            rate=20e3,
+                                            electrode=local_electrode,
+                                            gain=0.02,
+                                            capacitance_slow=100e-12,
+                                            resistance_comp_correction=70.0,
+                                            sweep_number=np.uint64(15))
+        local_nwbfile.add_stimulus_template(local_stimulus)
+        row_index = local_nwbfile.add_intracellular_recording(electrode=local_electrode,
+                                                              stimulus=local_stimulus,
+                                                              response=local_response,
+                                                              id=np.int64(10))
+        self.assertEqual(row_index, 0)
+        # Write our test file
+        with NWBHDF5IO(self.path, 'w') as io:
+            io.write(local_nwbfile)
+
 
 class SweepsTests(ICEphysMetaTestBase):
     """
