@@ -145,12 +145,12 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                               description='some integer tag for a sweep')
 
         # Add sweep sequences
-        nwbfile.add_icephys_sweep_sequence(sweeps=[0, 1], id=np.int64(1000))
-        nwbfile.add_icephys_sweep_sequence(sweeps=[2, ], id=np.int64(1001))
-        nwbfile.add_icephys_sweep_sequence(sweeps=[3, ], id=np.int64(1002))
-        nwbfile.add_icephys_sweep_sequence(sweeps=[4, 5], id=np.int64(1003))
-        nwbfile.add_icephys_sweep_sequence(sweeps=[6, ], id=np.int64(1004))
-        nwbfile.add_icephys_sweep_sequence(sweeps=[7, ], id=np.int64(1005))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[0, 1], id=np.int64(1000), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(sweeps=[2, ], id=np.int64(1001), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(sweeps=[3, ], id=np.int64(1002), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(sweeps=[4, 5], id=np.int64(1003), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(sweeps=[6, ], id=np.int64(1004), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(sweeps=[7, ], id=np.int64(1005), stimulus_type="MyStimulusType")
         if add_custom_columns:
             nwbfile.icephys_sweep_sequences.add_column(name='type',
                                                        data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
@@ -603,7 +603,7 @@ class SweepSequencesTests(ICEphysMetaTestBase):
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        row_index = sws.add_sweep_sequence(sweeps=[0, ])
+        row_index = sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
         self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw, sws=sws)
 
@@ -619,9 +619,9 @@ class SweepSequencesTests(ICEphysMetaTestBase):
         sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ], id=np.int64(10))
+        sws.add_sweep_sequence(sweeps=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
         with self.assertRaises(ValueError):
-            sws.add_sweep_sequence(sweeps=[0, ], id=np.int64(10))
+            sws.add_sweep_sequence(sweeps=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
 
 
 class RunsTests(ICEphysMetaTestBase):
@@ -662,7 +662,7 @@ class RunsTests(ICEphysMetaTestBase):
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        row_index = sws.add_sweep_sequence(sweeps=[0, ])
+        row_index = sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
         self.assertEqual(row_index, 0)
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
@@ -680,7 +680,7 @@ class RunsTests(ICEphysMetaTestBase):
         sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ])
+        sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ], id=np.int64(10))
         with self.assertRaises(ValueError):
@@ -726,7 +726,7 @@ class ConditionsTests(ICEphysMetaTestBase):
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        row_index = sws.add_sweep_sequence(sweeps=[0, ])
+        row_index = sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
         self.assertEqual(row_index, 0)
         runs = Runs(sweep_sequences_table=sws)
         row_index = runs.add_run(sweep_sequences=[0, ])
@@ -748,7 +748,7 @@ class ConditionsTests(ICEphysMetaTestBase):
         sw = Sweeps(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ])
+        sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
         cond = Conditions(runs_table=runs)
@@ -987,7 +987,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               Sweeps)
         # Add a sweep_sequence and check that it is now our top table
-        _ = local_nwbfile.add_icephys_sweep_sequence(sweeps=[0])
+        _ = local_nwbfile.add_icephys_sweep_sequence(sweeps=[0], stimulus_type="MyStimulusType")
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               SweepSequences)
         # Add a run and check that it is now our top table
@@ -1071,7 +1071,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Confirm that our SweepSequences table does not yet exist
         self.assertIsNone(nwbfile.icephys_sweep_sequences)
         # Add a sweep
-        nwbfile.add_icephys_sweep_sequence(sweeps=[0], id=np.int64(15))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[0], id=np.int64(15), stimulus_type="MyStimulusType")
         # Check that the Sweeps table has been added
         self.assertIsNotNone(nwbfile.icephys_sweep_sequences)
         # Check that the values for our Sweeps table are correct

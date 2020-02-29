@@ -93,6 +93,10 @@ groups:
   - name: sweeps_index
     neurodata_type_inc: VectorIndex
     doc: Index dataset for the sweeps column.
+  - name: stimulus_type
+    neurodata_type_inc: VectorData
+    dtype: text
+    doc: The type of stimulus used for the sweep sequence
 - neurodata_type_def: Runs
   neurodata_type_inc: DynamicTable
   name: runs
