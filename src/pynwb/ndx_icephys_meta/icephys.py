@@ -653,7 +653,8 @@ class ICEphysFile(NWBFile):
             if self.sweep_table is None:
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
-                              "add_simultaneous_recording, add_sequential_recording, add_repetition, add_icephys_condition functions.",
+                              "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
+                              "add_icephys)repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -670,7 +671,8 @@ class ICEphysFile(NWBFile):
             if self.sweep_table is None:
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
-                              "add_simultaneous_recording, add_sequential_recording, add_repetition, add_icephys_condition functions.",
+                              "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
+                              "add_icephys)repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -687,7 +689,8 @@ class ICEphysFile(NWBFile):
             if self.sweep_table is None:
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
-                              "add_simultaneous_recording, add_sequential_recording, add_repetition, add_icephys_condition functions.",
+                              "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
+                              "add_icephys)repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(nwbdata)
 
