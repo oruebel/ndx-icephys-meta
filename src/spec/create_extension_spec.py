@@ -45,10 +45,10 @@ def main():
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
     icephys_recordings_table_spec = NWBGroupSpec(
         name='intracellular_recordings',
-        neurodata_type_def='IntracellularRecordings',
+        neurodata_type_def='IntracellularRecordingsTable',
         neurodata_type_inc='DynamicTable',
-        doc='A table to group together a stimulus and response from a single electrode and a single sweep. '
-            'Each row in the table represents a single recording consisting typically of a stimulus and a '
+        doc='A table to group together a stimulus and response from a single electrode and a single simultaneous '
+            'recording. Each row in the table represents a single recording consisting typically of a stimulus and a '
             'corresponding response. In some cases, however, only a stimulus or a response are recorded as '
             'as part of an experiment. In this case both, the stimulus and resposne will point to the same '
             'TimeSeries while the idx_start and count of the invalid column will be set to -1, thus, '
@@ -71,24 +71,25 @@ def main():
                                                   reftype='object'))]
     )
 
-    # Create a Sweeps (similar to trials) table to group Intracellular Electrophysiology Recording that were
+    # Create a SimultaneousRecordingsTable (similar to trials) table to group
+    # intracellular electrophysiology recording that were
     # recorded at the same time and belong together
-    sweeps_table_spec = NWBGroupSpec(
-        name='sweeps',
-        neurodata_type_def='Sweeps',
+    simultaneous_recordings_table_spec = NWBGroupSpec(
+        name='simultaneous_recordings',
+        neurodata_type_def='SimultaneousRecordingsTable',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recordings from the '
-            'IntracellularRecordings table together that were recorded simultaneously '
+            'IntracellularRecordingsTable table together that were recorded simultaneously '
             'from different electrodes',
         datasets=[NWBDatasetSpec(name='recordings',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the IntracellularRecordings table.',
+                                 doc='A reference to one or more rows in the IntracellularRecordingsTable table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
-                                        dtype=NWBRefSpec(target_type='IntracellularRecordings',
+                                        dtype=NWBRefSpec(target_type='IntracellularRecordingsTable',
                                                          reftype='object'),
-                                        doc='Reference to the IntracellularRecordings table that '
+                                        doc='Reference to the IntracellularRecordingsTable table that '
                                             'this table region applies to. This specializes the '
                                             'attribute inherited from DynamicTableRegion to fix '
                                             'the type of table that can be referenced here.'
@@ -99,91 +100,92 @@ def main():
                   ]
         )
 
-    # Create the SweepSequences table to group different Sweeps together
-    sweepsequences_table_spec = NWBGroupSpec(
-        name='sweep_sequences',
-        neurodata_type_def='SweepSequences',
+    # Create the SequentialRecordingsTable table to group different SimultaneousRecordingsTable together
+    sequentialrecordings_table_spec = NWBGroupSpec(
+        name='sequential_recordings',
+        neurodata_type_def='SequentialRecordingsTable',
         neurodata_type_inc='DynamicTable',
-        doc='A table for grouping different intracellular recording sweeps from the '
-            'Sweeps table together. This is typically used to group together sweeps '
-            'where the a sequence of stimuli of the same type with varying parameters '
+        doc='A table for grouping different sequential recordings from the '
+            'SimultaneousRecordingsTable table together. This is typically '
+            'used to group together sequential recordings where the a sequence '
+            'of stimuli of the same type with varying parameters '
             'have been presented in a sequence.',
-        datasets=[NWBDatasetSpec(name='sweeps',
+        datasets=[NWBDatasetSpec(name='simultaneous_recordings',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the Sweeps table.',
+                                 doc='A reference to one or more rows in the SimultaneousRecordingsTable table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
-                                        dtype=NWBRefSpec(target_type='Sweeps',
+                                        dtype=NWBRefSpec(target_type='SimultaneousRecordingsTable',
                                                          reftype='object'),
-                                        doc='Reference to the Sweeps table that this table region '
+                                        doc='Reference to the SimultaneousRecordingsTable table that this table region '
                                             'applies to. This specializes the attribute inherited '
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
                                  ]),
-                  NWBDatasetSpec(name='sweeps_index',
+                  NWBDatasetSpec(name='simultaneous_recordings_index',
                                  neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the sweeps column.'),
+                                 doc='Index dataset for the simultaneous_recordings column.'),
                   NWBDatasetSpec(name='stimulus_type',
                                  neurodata_type_inc='VectorData',
-                                 doc='The type of stimulus used for the sweep sequence',
+                                 doc='The type of stimulus used for the sequential recording',
                                  dtype='text')
                   ]
         )
 
-    # Create the Runs table to group different SweepSequences together
-    runs_table_spec = NWBGroupSpec(
-        name='runs',
-        neurodata_type_def='Runs',
+    # Create the RepetitionsTable table to group different SequentialRecordingsTable together
+    repetitions_table_spec = NWBGroupSpec(
+        name='repetitions',
+        neurodata_type_def='RepetitionsTable',
         neurodata_type_inc='DynamicTable',
-        doc='A table for grouping different intracellular recording sweep sequences together. '
-            'With each SweepSequence typically representing a particular type of stimulus, the '
-            'Runs table is typically used to group sets of stimuli applied in sequence.',
-        datasets=[NWBDatasetSpec(name='sweep_sequences',
+        doc='A table for grouping different sequential intracellular recordings together. '
+            'With each SequentialRecording typically representing a particular type of stimulus, the '
+            'RepetitionsTable table is typically used to group sets of stimuli applied in sequence.',
+        datasets=[NWBDatasetSpec(name='sequential_recordings',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the SweepSequences table.',
+                                 doc='A reference to one or more rows in the SequentialRecordingsTable table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
-                                        dtype=NWBRefSpec(target_type='SweepSequences',
+                                        dtype=NWBRefSpec(target_type='SequentialRecordingsTable',
                                                          reftype='object'),
-                                        doc='Reference to the SweepSequences table that this table region '
+                                        doc='Reference to the SequentialRecordingsTable table that this table region '
                                             'applies to. This specializes the attribute inherited '
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
                                  ]),
-                  NWBDatasetSpec(name='sweep_sequences_index',
+                  NWBDatasetSpec(name='sequential_recordings_index',
                                  neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the sweep_sequences column.')
+                                 doc='Index dataset for the sequential_recordings column.')
                   ]
         )
 
-    # Create Conditions tbale for grouping different Runs together
-    conditions_table_spec = NWBGroupSpec(
-        name='conditions',
-        neurodata_type_def='Conditions',
+    # Create ExperimentalConditionsTable tbale for grouping different RepetitionsTable together
+    experimental_conditions_table_spec = NWBGroupSpec(
+        name='experimental_conditions',
+        neurodata_type_def='ExperimentalConditionsTable',
         neurodata_type_inc='DynamicTable',
-        doc='A table for grouping different intracellular recording runs together that '
-            'belong to the same experimental conditions.',
-        datasets=[NWBDatasetSpec(name='runs',
+        doc='A table for grouping different intracellular recording repetitions together that '
+            'belong to the same experimental experimental_conditions.',
+        datasets=[NWBDatasetSpec(name='repetitions',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the Runs table.',
+                                 doc='A reference to one or more rows in the RepetitionsTable table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
-                                        dtype=NWBRefSpec(target_type='Runs',
+                                        dtype=NWBRefSpec(target_type='RepetitionsTable',
                                                          reftype='object'),
-                                        doc='Reference to the Runs table that this table region '
+                                        doc='Reference to the RepetitionsTable table that this table region '
                                             'applies to. This specializes the attribute inherited '
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
                                  ]),
-                  NWBDatasetSpec(name='runs_index',
+                  NWBDatasetSpec(name='repetitions_index',
                                  neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the runs column.')
+                                 doc='Index dataset for the repetitions column.')
                   ]
         )
 
@@ -203,32 +205,33 @@ def main():
          doc='expand definition of general from NWBFile',
          groups=[NWBGroupSpec(name='intracellular_ephys',
                               doc='expand definition from NWBFile',
-                              groups=[NWBGroupSpec(neurodata_type_inc='IntracellularRecordings',
+                              groups=[NWBGroupSpec(neurodata_type_inc='IntracellularRecordingsTable',
                                                    doc=icephys_recordings_table_spec.doc,
                                                    name='intracellular_recordings',
                                                    quantity='?'),
-                                      NWBGroupSpec(neurodata_type_inc='Sweeps',
-                                                   doc=sweeps_table_spec.doc,
-                                                   name='sweeps',
+                                      NWBGroupSpec(neurodata_type_inc='SimultaneousRecordingsTable',
+                                                   doc=simultaneous_recordings_table_spec.doc,
+                                                   name='simultaneous_recordings',
                                                    quantity='?'),
-                                      NWBGroupSpec(neurodata_type_inc='SweepSequences',
-                                                   doc=sweepsequences_table_spec.doc,
-                                                   name='sweep_sequences',
+                                      NWBGroupSpec(neurodata_type_inc='SequentialRecordingsTable',
+                                                   doc=sequentialrecordings_table_spec.doc,
+                                                   name='sequential_recordings',
                                                    quantity='?'),
-                                      NWBGroupSpec(neurodata_type_inc='Runs',
-                                                   doc=runs_table_spec.doc,
-                                                   name='runs',
+                                      NWBGroupSpec(neurodata_type_inc='RepetitionsTable',
+                                                   doc=repetitions_table_spec.doc,
+                                                   name='repetitions',
                                                    quantity='?'),
-                                      NWBGroupSpec(neurodata_type_inc='Conditions',
-                                                   doc=conditions_table_spec.doc,
-                                                   name='conditions',
+                                      NWBGroupSpec(neurodata_type_inc='ExperimentalConditionsTable',
+                                                   doc=experimental_conditions_table_spec.doc,
+                                                   name='experimental_conditions',
                                                    quantity='?'),
                                       # Update doc on SweepTable to declare it as deprecated
                                       NWBGroupSpec(neurodata_type_inc='SweepTable',
-                                                   doc='[DEPRACATED] Table used to group different PatchClampSeries '
-                                                       'SweepTable is being replaced with the IntracellularRecordings '
-                                                       'and Sweeps type tabel (and corresponding SweepSequences, Runs '
-                                                       'and Consitions tables.',
+                                                   doc='[DEPRACATED] Table used to group different PatchClampSeries.'
+                                                       'SweepTable is being replaced by IntracellularRecordingsTable '
+                                                       'and SimultaneousRecordingsTable tabels (and corresponding '
+                                                       'SequentialRecordingsTable, RepetitionsTable and '
+                                                       'ExperimentalConditions tables.',
                                                    name='sweep_table',
                                                    quantity='?')
                                       ],
@@ -260,10 +263,10 @@ def main():
 
     # Add our new data types to this list
     new_data_types = [icephys_recordings_table_spec,
-                      sweeps_table_spec,
-                      sweepsequences_table_spec,
-                      runs_table_spec,
-                      conditions_table_spec,
+                      simultaneous_recordings_table_spec,
+                      sequentialrecordings_table_spec,
+                      repetitions_table_spec,
+                      experimental_conditions_table_spec,
                       icephys_file_spec]
 
     # Export the spec

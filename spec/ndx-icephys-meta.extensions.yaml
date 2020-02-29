@@ -1,13 +1,13 @@
 groups:
-- neurodata_type_def: IntracellularRecordings
+- neurodata_type_def: IntracellularRecordingsTable
   neurodata_type_inc: DynamicTable
   name: intracellular_recordings
   doc: A table to group together a stimulus and response from a single electrode and
-    a single sweep. Each row in the table represents a single recording consisting
-    typically of a stimulus and a corresponding response. In some cases, however,
-    only a stimulus or a response are recorded as as part of an experiment. In this
-    case both, the stimulus and resposne will point to the same TimeSeries while the
-    idx_start and count of the invalid column will be set to -1, thus, indicating
+    a single simultaneous recording. Each row in the table represents a single recording
+    consisting typically of a stimulus and a corresponding response. In some cases,
+    however, only a stimulus or a response are recorded as as part of an experiment.
+    In this case both, the stimulus and resposne will point to the same TimeSeries
+    while the idx_start and count of the invalid column will be set to -1, thus, indicating
     that no values have been recorded for the stimulus or response, respectively.
     Note, a recording MUST contain at least a stimulus or a response. Typically the
     stimulus and response are PatchClampSeries. However, the use of AD/DA channels
@@ -52,92 +52,94 @@ groups:
       target_type: IntracellularElectrode
       reftype: object
     doc: Column for storing the reference to the intracellular electrode
-- neurodata_type_def: Sweeps
+- neurodata_type_def: SimultaneousRecordingsTable
   neurodata_type_inc: DynamicTable
-  name: sweeps
-  doc: A table for grouping different intracellular recordings from the IntracellularRecordings
+  name: simultaneous_recordings
+  doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
     table together that were recorded simultaneously from different electrodes
   datasets:
   - name: recordings
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the IntracellularRecordings table.
+    doc: A reference to one or more rows in the IntracellularRecordingsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: IntracellularRecordings
+        target_type: IntracellularRecordingsTable
         reftype: object
-      doc: Reference to the IntracellularRecordings table that this table region applies
-        to. This specializes the attribute inherited from DynamicTableRegion to fix
-        the type of table that can be referenced here.
+      doc: Reference to the IntracellularRecordingsTable table that this table region
+        applies to. This specializes the attribute inherited from DynamicTableRegion
+        to fix the type of table that can be referenced here.
   - name: recordings_index
     neurodata_type_inc: VectorIndex
     doc: Index dataset for the recordings column.
-- neurodata_type_def: SweepSequences
+- neurodata_type_def: SequentialRecordingsTable
   neurodata_type_inc: DynamicTable
-  name: sweep_sequences
-  doc: A table for grouping different intracellular recording sweeps from the Sweeps
-    table together. This is typically used to group together sweeps where the a sequence
-    of stimuli of the same type with varying parameters have been presented in a sequence.
+  name: sequential_recordings
+  doc: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
+    table together. This is typically used to group together sequential recordings
+    where the a sequence of stimuli of the same type with varying parameters have
+    been presented in a sequence.
   datasets:
-  - name: sweeps
+  - name: simultaneous_recordings
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the Sweeps table.
+    doc: A reference to one or more rows in the SimultaneousRecordingsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: Sweeps
+        target_type: SimultaneousRecordingsTable
         reftype: object
-      doc: Reference to the Sweeps table that this table region applies to. This specializes
-        the attribute inherited from DynamicTableRegion to fix the type of table that
-        can be referenced here.
-  - name: sweeps_index
+      doc: Reference to the SimultaneousRecordingsTable table that this table region
+        applies to. This specializes the attribute inherited from DynamicTableRegion
+        to fix the type of table that can be referenced here.
+  - name: simultaneous_recordings_index
     neurodata_type_inc: VectorIndex
-    doc: Index dataset for the sweeps column.
+    doc: Index dataset for the simultaneous_recordings column.
   - name: stimulus_type
     neurodata_type_inc: VectorData
     dtype: text
-    doc: The type of stimulus used for the sweep sequence
-- neurodata_type_def: Runs
+    doc: The type of stimulus used for the sequential recording
+- neurodata_type_def: RepetitionsTable
   neurodata_type_inc: DynamicTable
-  name: runs
-  doc: A table for grouping different intracellular recording sweep sequences together.
-    With each SweepSequence typically representing a particular type of stimulus,
-    the Runs table is typically used to group sets of stimuli applied in sequence.
+  name: repetitions
+  doc: A table for grouping different sequential intracellular recordings together.
+    With each SequentialRecording typically representing a particular type of stimulus,
+    the RepetitionsTable table is typically used to group sets of stimuli applied
+    in sequence.
   datasets:
-  - name: sweep_sequences
+  - name: sequential_recordings
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the SweepSequences table.
+    doc: A reference to one or more rows in the SequentialRecordingsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: SweepSequences
+        target_type: SequentialRecordingsTable
         reftype: object
-      doc: Reference to the SweepSequences table that this table region applies to.
-        This specializes the attribute inherited from DynamicTableRegion to fix the
-        type of table that can be referenced here.
-  - name: sweep_sequences_index
+      doc: Reference to the SequentialRecordingsTable table that this table region
+        applies to. This specializes the attribute inherited from DynamicTableRegion
+        to fix the type of table that can be referenced here.
+  - name: sequential_recordings_index
     neurodata_type_inc: VectorIndex
-    doc: Index dataset for the sweep_sequences column.
-- neurodata_type_def: Conditions
+    doc: Index dataset for the sequential_recordings column.
+- neurodata_type_def: ExperimentalConditionsTable
   neurodata_type_inc: DynamicTable
-  name: conditions
-  doc: A table for grouping different intracellular recording runs together that belong
-    to the same experimental conditions.
+  name: experimental_conditions
+  doc: A table for grouping different intracellular recording repetitions together
+    that belong to the same experimental experimental_conditions.
   datasets:
-  - name: runs
+  - name: repetitions
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the Runs table.
+    doc: A reference to one or more rows in the RepetitionsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: Runs
+        target_type: RepetitionsTable
         reftype: object
-      doc: Reference to the Runs table that this table region applies to. This specializes
-        the attribute inherited from DynamicTableRegion to fix the type of table that
-        can be referenced here.
-  - name: runs_index
+      doc: Reference to the RepetitionsTable table that this table region applies
+        to. This specializes the attribute inherited from DynamicTableRegion to fix
+        the type of table that can be referenced here.
+  - name: repetitions_index
     neurodata_type_inc: VectorIndex
-    doc: Index dataset for the runs column.
+    doc: Index dataset for the repetitions column.
 - neurodata_type_def: ICEphysFile
   neurodata_type_inc: NWBFile
   doc: 'Extension of the NWBFile class to allow placing the new icephys metadata types
@@ -160,47 +162,48 @@ groups:
         quantity: '?'
       groups:
       - name: intracellular_recordings
-        neurodata_type_inc: IntracellularRecordings
+        neurodata_type_inc: IntracellularRecordingsTable
         doc: A table to group together a stimulus and response from a single electrode
-          and a single sweep. Each row in the table represents a single recording
-          consisting typically of a stimulus and a corresponding response. In some
-          cases, however, only a stimulus or a response are recorded as as part of
-          an experiment. In this case both, the stimulus and resposne will point to
-          the same TimeSeries while the idx_start and count of the invalid column
-          will be set to -1, thus, indicating that no values have been recorded for
-          the stimulus or response, respectively. Note, a recording MUST contain at
-          least a stimulus or a response. Typically the stimulus and response are
+          and a single simultaneous recording. Each row in the table represents a
+          single recording consisting typically of a stimulus and a corresponding
+          response. In some cases, however, only a stimulus or a response are recorded
+          as as part of an experiment. In this case both, the stimulus and resposne
+          will point to the same TimeSeries while the idx_start and count of the invalid
+          column will be set to -1, thus, indicating that no values have been recorded
+          for the stimulus or response, respectively. Note, a recording MUST contain
+          at least a stimulus or a response. Typically the stimulus and response are
           PatchClampSeries. However, the use of AD/DA channels that are not associated
           to an electrode is also common in intracellular electrophysiology, in which
           case other TimeSeries may be used.
         quantity: '?'
-      - name: sweeps
-        neurodata_type_inc: Sweeps
-        doc: A table for grouping different intracellular recordings from the IntracellularRecordings
+      - name: simultaneous_recordings
+        neurodata_type_inc: SimultaneousRecordingsTable
+        doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
           table together that were recorded simultaneously from different electrodes
         quantity: '?'
-      - name: sweep_sequences
-        neurodata_type_inc: SweepSequences
-        doc: A table for grouping different intracellular recording sweeps from the
-          Sweeps table together. This is typically used to group together sweeps where
-          the a sequence of stimuli of the same type with varying parameters have
-          been presented in a sequence.
+      - name: sequential_recordings
+        neurodata_type_inc: SequentialRecordingsTable
+        doc: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
+          table together. This is typically used to group together sequential recordings
+          where the a sequence of stimuli of the same type with varying parameters
+          have been presented in a sequence.
         quantity: '?'
-      - name: runs
-        neurodata_type_inc: Runs
-        doc: A table for grouping different intracellular recording sweep sequences
-          together. With each SweepSequence typically representing a particular type
-          of stimulus, the Runs table is typically used to group sets of stimuli applied
-          in sequence.
+      - name: repetitions
+        neurodata_type_inc: RepetitionsTable
+        doc: A table for grouping different sequential intracellular recordings together.
+          With each SequentialRecording typically representing a particular type of
+          stimulus, the RepetitionsTable table is typically used to group sets of
+          stimuli applied in sequence.
         quantity: '?'
-      - name: conditions
-        neurodata_type_inc: Conditions
-        doc: A table for grouping different intracellular recording runs together
-          that belong to the same experimental conditions.
+      - name: experimental_conditions
+        neurodata_type_inc: ExperimentalConditionsTable
+        doc: A table for grouping different intracellular recording repetitions together
+          that belong to the same experimental experimental_conditions.
         quantity: '?'
       - name: sweep_table
         neurodata_type_inc: SweepTable
-        doc: '[DEPRACATED] Table used to group different PatchClampSeries SweepTable
-          is being replaced with the IntracellularRecordings and Sweeps type tabel
-          (and corresponding SweepSequences, Runs and Consitions tables.'
+        doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
+          is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
+          tabels (and corresponding SequentialRecordingsTable, RepetitionsTable and
+          ExperimentalConditions tables.'
         quantity: '?'
