@@ -15,7 +15,7 @@ def main():
     ns_builder = NWBNamespaceBuilder(doc='Implement proposal for hierarchical metadata structure '
                                          'for intracellular electrophysiology data ',
                                      name='ndx-icephys-meta',
-                                     version='0.1.0',
+                                     version='0.2.0',
                                      author=['Oliver Ruebel',
                                              'Ryan Ly',
                                              'Benjamin Dichter',

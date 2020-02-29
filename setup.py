@@ -13,7 +13,7 @@ except:
 
 setup_args = {
     'name': 'ndx-icephys-meta',
-    'version': '0.1.0',
+    'version': '0.2.0',
     'description': 'Implement proposal for hierarchical metadata structure for intracellular electrophysiology data ',
     'long_description': readme,
     'long_description_content_type': 'text/x-rst; charset=UTF-8',
