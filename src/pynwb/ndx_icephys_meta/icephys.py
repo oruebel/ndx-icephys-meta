@@ -419,8 +419,8 @@ class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
                 raise ValueError('sweeps_table constructor argument required')
 
     @docval({'name': 'stimulus_type',
-              'type': str,
-              'doc': 'the type of stimulus used for the sweep sequence'},
+             'type': str,
+             'doc': 'the type of stimulus used for the sweep sequence'},
             {'name': 'sweeps',
              'type': 'array_data',
              'doc': 'the indices of the sweeps belonging to this sweep sequence',
@@ -754,7 +754,7 @@ class ICEphysFile(NWBFile):
     @docval(returns='The NWBFile.icephys_sweep_sequences table', rtype=SweepSequences)
     def get_icephys_sweep_sequences(self):
         """
-         Get the NWBFile.icephys_sweep_sequences table.
+        Get the NWBFile.icephys_sweep_sequences table.
 
         In contrast to NWBFile.icephys_sweep_sequences, this function will create the
         IntracellularRecordings table if not yet done, whereas NWBFile.icephys_sweep_sequences
