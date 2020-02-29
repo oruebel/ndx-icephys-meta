@@ -144,7 +144,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                               data=np.arange(8),
                                               description='some integer tag for a sweep')
 
-        # Add sweep sequences
+        # Add sequential recordings
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0, 1], id=np.int64(1000), stimulus_type="MyStimulusType")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[2, ], id=np.int64(1001), stimulus_type="MyStimulusType")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[3, ], id=np.int64(1002), stimulus_type="MyStimulusType")
@@ -154,7 +154,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
         if add_custom_columns:
             nwbfile.icephys_sequential_recordings.add_column(name='type',
                                                        data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
-                                                       description='type of the sweep sequence')
+                                                       description='type of the sequential recording')
 
         # Add repetitions
         nwbfile.add_icephys_repetition(sequential_recordings=[0, ], id=np.int64(10000))
@@ -164,7 +164,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
         if add_custom_columns:
             nwbfile.icephys_repetitions.add_column(name='type',
                                             data=['R1', 'R2', 'R1', 'R2'],
-                                            description='some run type indicator')
+                                            description='some repetition type indicator')
 
         # Add experimental_conditions
         nwbfile.add_icephys_experimental_condition(repetitions=[0, 1], id=np.int64(100000))
@@ -639,7 +639,7 @@ class RunsTests(ICEphysMetaTestBase):
         _ = RepetitionsTable(sequential_recordings_table=sws)
         self.assertTrue(True)
 
-    def test_missing_sweepsequences_on_init(self):
+    def test_missing_sequential_recordings_on_init(self):
         """
         Test that ValueError is raised when sequential_recordings is missing. This is
         allowed only on read where the sequential_recordings table is already set
@@ -990,7 +990,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         _ = local_nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0], stimulus_type="MyStimulusType")
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               SequentialRecordingsTable)
-        # Add a run and check that it is now our top table
+        # Add a repetition and check that it is now our top table
         _ = local_nwbfile.add_icephys_repetition(sequential_recordings=[0])
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               RepetitionsTable)
@@ -1086,7 +1086,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #############################################
         # Confirm that our RepetitionsTable table does not yet exist
         self.assertIsNone(nwbfile.icephys_repetitions)
-        # Add a run
+        # Add a repetition
         nwbfile.add_icephys_repetition(sequential_recordings=[0], id=np.int64(17))
         # Check that the SimultaneousRecordingsTable table has been added
         self.assertIsNotNone(nwbfile.icephys_repetitions)
@@ -1094,7 +1094,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         res = nwbfile.icephys_repetitions[0]
         # check the id value
         self.assertEqual(res.index[0], 17)
-        # Check that our run contains 1 SweepSequence
+        # Check that our repetition contains 1 SweepSequence
         self.assertEqual(len(res.iloc[0]['sequential_recordings']), 1)
 
         #############################################
@@ -1110,7 +1110,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         res = nwbfile.icephys_experimental_conditions[0]
         # check the id value
         self.assertEqual(res.index[0], 19)
-        # Check that our run contains 1 run
+        # Check that our repetition contains 1 repetition
         self.assertEqual(len(res.iloc[0]['repetitions']), 1)
 
         #############################################
