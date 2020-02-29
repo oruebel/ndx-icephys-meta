@@ -124,7 +124,11 @@ def main():
                                  ]),
                   NWBDatasetSpec(name='sweeps_index',
                                  neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the sweeps column.')
+                                 doc='Index dataset for the sweeps column.'),
+                  NWBDatasetSpec(name='stimulus_type',
+                                 neurodata_type_inc='VectorData',
+                                 doc='The type of stimulus used for the sweep sequence',
+                                 dtype='text')
                   ]
         )
 
