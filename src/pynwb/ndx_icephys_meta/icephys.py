@@ -388,6 +388,11 @@ class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
          'required': True,
          'index': True,
          'table': True},
+        {'name': 'stimulus_type',
+         'description': 'Column storing the type of stimulus used for the sweep sequence',
+         'required': True,
+         'index': False,
+         'table': False}
     )
 
     @docval({'name': 'sweeps_table',
@@ -413,7 +418,10 @@ class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
             else:
                 raise ValueError('sweeps_table constructor argument required')
 
-    @docval({'name': 'sweeps',
+    @docval({'name': 'stimulus_type',
+              'type': str,
+              'doc': 'the type of stimulus used for the sweep sequence'},
+            {'name': 'sweeps',
              'type': 'array_data',
              'doc': 'the indices of the sweeps belonging to this sweep sequence',
              'default': None},
