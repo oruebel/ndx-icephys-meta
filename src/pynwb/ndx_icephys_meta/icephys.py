@@ -803,3 +803,29 @@ class ICEphysFile(NWBFile):
         Add a new condition to the Conditions table
         """
         return call_docval_func(self.get_ic_conditions().add_condition, kwargs)
+
+    def get_ic_meta_parent_table(self):
+        """
+        Get the top-most table in the intracellular ephys metadata table hierarchy that exists in this NWBFile.
+
+        The intracellular ephys metadata consists of a hierarchy of DynamicTables, i.e.,
+        conditions --> runs --> sweep_sequence --> sweeps --> intracellular_recordings etc.
+        In a given NWBFile not all tables may exist. This convenience functions returns the top-most
+        table that exists in this file. E.g., if the file contains only the sweeps and intracellular_recordings
+        tables then the function would return the sweeps table. Similarly, if the file contains all tables
+        then it will return the conditions table.
+
+        :returns: DynamicTable object or None
+        """
+        if self.ic_conditions is not None:
+            return self.ic_conditions
+        elif self.ic_runs is not None:
+            return self.ic_runs
+        elif self.ic_sweep_sequences is not None:
+            return self.ic_sweep_sequences
+        elif self.ic_sweeps is not None:
+            return self.ic_sweeps
+        elif self.intracellular_recordings is not None:
+            return self.intracellular_recordings
+        else:
+            return None

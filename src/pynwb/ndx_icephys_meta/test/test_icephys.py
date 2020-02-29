@@ -892,6 +892,69 @@ class ICEphysFileTests(ICEphysMetaTestBase):
                 assert issubclass(w[-1].category, DeprecationWarning)
                 self.assertEqual(infile.ic_filtering, 'test filtering')
 
+    def test_get_ic_meta_parent_table(self):
+        """
+        Create the table hierarchy step-by-step and check that as we add tables the get_ic_meta_parent_table
+        returns the expected top table
+        """
+        local_nwbfile = ICEphysFile(
+                session_description='my first synthetic recording',
+                identifier='EXAMPLE_ID',
+                session_start_time=datetime.now(tzlocal()),
+                experimenter='Dr. Bilbo Baggins',
+                lab='Bag End Laboratory',
+                institution='University of Middle Earth at the Shire',
+                experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
+                session_id='LONELYMTN')
+        # Add a device
+        local_device = local_nwbfile.create_device(name='Heka ITC-1600')
+        local_electrode = local_nwbfile.create_ic_electrode(
+            name="elec0",
+            description='a mock intracellular electrode',
+            device=local_device)
+        local_stimulus = VoltageClampStimulusSeries(name="ccss",
+                                                    data=[1, 2, 3, 4, 5],
+                                                    starting_time=123.6,
+                                                    rate=10e3,
+                                                    electrode=local_electrode,
+                                                    gain=0.02,
+                                                    sweep_number=np.uint64(15))
+        local_response = VoltageClampSeries(name='vcs',
+                                            data=[0.1, 0.2, 0.3, 0.4, 0.5],
+                                            conversion=1e-12,
+                                            resolution=np.nan,
+                                            starting_time=123.6,
+                                            rate=20e3,
+                                            electrode=local_electrode,
+                                            gain=0.02,
+                                            capacitance_slow=100e-12,
+                                            resistance_comp_correction=70.0,
+                                            sweep_number=np.uint64(15))
+        local_nwbfile.add_stimulus_template(local_stimulus)
+        # Add a recording and confirm that intracellular_recordings is the top table
+        _ = local_nwbfile.add_intracellular_recording(electrode=local_electrode,
+                                                      stimulus=local_stimulus,
+                                                      response=local_response,
+                                                      id=np.int64(10))
+        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+                              IntracellularRecordings)
+        # Add a sweep and check that the sweeps table is the top table
+        _ = local_nwbfile.add_ic_sweep(recordings=[0])
+        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+                              Sweeps)
+        # Add a sweep_sequence and check that it is now our top table
+        _ = local_nwbfile.add_ic_sweep_sequence(sweeps=[0])
+        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+                              SweepSequences)
+        # Add a run and check that it is now our top table
+        _ = local_nwbfile.add_ic_run(sweep_sequences=[0])
+        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+                              Runs)
+        # Add a condition and check that it is now our top table
+        _ = local_nwbfile.add_ic_condition(runs=[0])
+        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+                              Conditions)
+
     def test_add_icephys_meta_full_roundtrip(self):
         """
         This test adds all data and then constructs step-by-step the full table structure
