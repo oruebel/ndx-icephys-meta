@@ -11,7 +11,7 @@ class ICEphysFileMap(NWBFileMap):
     """
     Customize object mapping for ICEphysFile to define the mapping
     for our custom icephys tables, i.e., InteracellularRecordings, SimultaneousRecordingsTable,
-    SequentialRecordingsTable, Runs, and Conditions
+    SequentialRecordingsTable, RepetitionsTable, and Conditions
     """
     def __init__(self, spec):
         super(ICEphysFileMap, self).__init__(spec)
@@ -20,6 +20,6 @@ class ICEphysFileMap(NWBFileMap):
         self.map_spec('intracellular_recordings', icephys_spec.get_neurodata_type('IntracellularRecordingsTable'))
         self.map_spec('icephys_simultaneous_recordings', icephys_spec.get_neurodata_type('SimultaneousRecordingsTable'))
         self.map_spec('icephys_sequential_recordings', icephys_spec.get_neurodata_type('SequentialRecordingsTable'))
-        self.map_spec('icephys_runs', icephys_spec.get_neurodata_type('Runs'))
+        self.map_spec('icephys_repetitions', icephys_spec.get_neurodata_type('RepetitionsTable'))
         self.map_spec('icephys_conditions', icephys_spec.get_neurodata_type('Conditions'))
         self.map_spec('ic_filtering', icephys_spec.get_dataset('filtering'))

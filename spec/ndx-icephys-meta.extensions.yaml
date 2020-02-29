@@ -98,12 +98,13 @@ groups:
     neurodata_type_inc: VectorData
     dtype: text
     doc: The type of stimulus used for the sweep sequence
-- neurodata_type_def: Runs
+- neurodata_type_def: RepetitionsTable
   neurodata_type_inc: DynamicTable
-  name: runs
+  name: repetitions
   doc: A table for grouping different intracellular recording sweep sequences together.
     With each SweepSequence typically representing a particular type of stimulus,
-    the Runs table is typically used to group sets of stimuli applied in sequence.
+    the RepetitionsTable table is typically used to group sets of stimuli applied
+    in sequence.
   datasets:
   - name: sequential_recordings
     neurodata_type_inc: DynamicTableRegion
@@ -122,23 +123,23 @@ groups:
 - neurodata_type_def: Conditions
   neurodata_type_inc: DynamicTable
   name: conditions
-  doc: A table for grouping different intracellular recording runs together that belong
-    to the same experimental conditions.
+  doc: A table for grouping different intracellular recording repetitions together
+    that belong to the same experimental conditions.
   datasets:
-  - name: runs
+  - name: repetitions
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the Runs table.
+    doc: A reference to one or more rows in the RepetitionsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: Runs
+        target_type: RepetitionsTable
         reftype: object
-      doc: Reference to the Runs table that this table region applies to. This specializes
-        the attribute inherited from DynamicTableRegion to fix the type of table that
-        can be referenced here.
-  - name: runs_index
+      doc: Reference to the RepetitionsTable table that this table region applies
+        to. This specializes the attribute inherited from DynamicTableRegion to fix
+        the type of table that can be referenced here.
+  - name: repetitions_index
     neurodata_type_inc: VectorIndex
-    doc: Index dataset for the runs column.
+    doc: Index dataset for the repetitions column.
 - neurodata_type_def: ICEphysFile
   neurodata_type_inc: NWBFile
   doc: 'Extension of the NWBFile class to allow placing the new icephys metadata types
@@ -187,22 +188,22 @@ groups:
           where the a sequence of stimuli of the same type with varying parameters
           have been presented in a sequence.
         quantity: '?'
-      - name: runs
-        neurodata_type_inc: Runs
+      - name: repetitions
+        neurodata_type_inc: RepetitionsTable
         doc: A table for grouping different intracellular recording sweep sequences
           together. With each SweepSequence typically representing a particular type
-          of stimulus, the Runs table is typically used to group sets of stimuli applied
-          in sequence.
+          of stimulus, the RepetitionsTable table is typically used to group sets
+          of stimuli applied in sequence.
         quantity: '?'
       - name: conditions
         neurodata_type_inc: Conditions
-        doc: A table for grouping different intracellular recording runs together
+        doc: A table for grouping different intracellular recording repetitions together
           that belong to the same experimental conditions.
         quantity: '?'
       - name: sweep_table
         neurodata_type_inc: SweepTable
         doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
           is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
-          tabels (and corresponding SequentialRecordingsTable, Runs and Consitions
-          tables.'
+          tabels (and corresponding SequentialRecordingsTable, RepetitionsTable and
+          Consitions tables.'
         quantity: '?'
