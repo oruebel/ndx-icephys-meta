@@ -74,9 +74,10 @@ nwbfile = ICEphysFile(session_description='my first recording',
 device = nwbfile.create_device(name='Heka ITC-1600')
 
 # Add an intracellular electrode
-electrode = nwbfile.create_ic_electrode(name="elec0",
-                                        description='a mock intracellular electrode',
-                                        device=device)
+electrode = nwbfile.create_icephys_electrode(
+    name="elec0",
+    description='a mock intracellular electrode',
+    device=device)
 
 # Create an ic-ephys stimulus
 stimulus = VoltageClampStimulusSeries(
@@ -110,16 +111,18 @@ ir_index = nwbfile.add_intracellular_recording(electrode=electrode,
                                                response=response)
 
 # (B) Add a list of sweeps to the sweeps table
-sweep_index = nwbfile.add_ic_sweep(recordings=[ir_index, ])
+sweep_index = nwbfile.add_icephys_simultaneous_recording(recordings=[ir_index, ])
 
-# (C) Add a list of sweep table indices as a sweep sequence
-sequence_index = nwbfile.add_ic_sweep_sequence(sweeps=[sweep_index, ], stimulus_type='square')
+# (C) Add a list of simultaneous recordings table indices as a sequential recording
+sequence_index = nwbfile.add_icephys_sequential_recording(
+    simultaneous_recordings=[sweep_index, ],
+    stimulus_type='square')
 
-# (D) Add a list of sweep sequence table indices as a run
-run_index = nwbfile.add_ic_run(sweep_sequences=[sequence_index, ])
+# (D) Add a list of sequential recordings table indices as a repetition
+run_index = nwbfile.add_icephys_repetition(sequential_recordings=[sequence_index, ])
 
-# (E) Add a list of run table indices as a condition
-nwbfile.add_ic_condition(runs=[run_index, ])
+# (E) Add a list of repetition table indices as a experimental condition
+nwbfile.add_icephys_experimental_condition(repetitions=[run_index, ])
 
 # Write our test file
 testpath = "test_icephys_file.h5"
@@ -130,5 +133,4 @@ with NWBHDF5IO(testpath, 'w') as io:
 with NWBHDF5IO(testpath, 'r') as io:
     infile = io.read()
     print(infile)
-
 ```
