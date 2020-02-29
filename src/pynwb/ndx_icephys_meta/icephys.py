@@ -490,7 +490,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         """
         Add a run (i.e., one row)  consisting of one-or-more recording sweep sequences
         and associated custom run  metadata to the table.
-  """
+        """
         # Check recordings
         sequential_recordings = getargs('sequential_recordings', kwargs)
         if sequential_recordings is None:
@@ -499,8 +499,8 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         return len(self.id) - 1
 
 
-@register_class('Conditions', namespace)
-class Conditions(DynamicTable, HierarchicalDynamicTableMixin):
+@register_class('ExperimentalConditionsTable', namespace)
+class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording repetitions together that
     belong to the same experimental conditions.
@@ -522,11 +522,11 @@ class Conditions(DynamicTable, HierarchicalDynamicTableMixin):
     def __init__(self, **kwargs):
         repetitions_table = popargs('repetitions_table', kwargs)
         # Define default name and description settings
-        kwargs['name'] = 'conditions'
+        kwargs['name'] = 'experimental_conditions'
         kwargs['description'] = ('A table for grouping different intracellular recording repetitions together that '
-                                 'belong to the same experimental conditions.')
+                                 'belong to the same experimental experimental_conditions.')
         # Initialize the DynamicTable
-        call_docval_func(super(Conditions, self).__init__, kwargs)
+        call_docval_func(super(ExperimentalConditionsTable, self).__init__, kwargs)
         if self['repetitions'].target.table is None:
             if repetitions_table is not None:
                 self['repetitions'].target.table = repetitions_table
@@ -543,13 +543,13 @@ class Conditions(DynamicTable, HierarchicalDynamicTableMixin):
     def add_condition(self, **kwargs):
         """
         Add a condition (i.e., one row)  consisting of one-or-more recording repetitions of sweep sequences
-        and associated custom conditions  metadata to the table.
+        and associated custom experimental_conditions  metadata to the table.
         """
         # Check recordings
         repetitions = getargs('repetitions', kwargs)
         if repetitions is None:
             kwargs['repetitions'] = []
-        _ = super(Conditions, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super(ExperimentalConditionsTable, self).add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -587,11 +587,11 @@ class ICEphysFile(NWBFile):
                       'doc': 'A table for grouping different intracellular recording sweep sequences together.'
                              'With each SweepSequence typically representing a particular type of stimulus, the '
                              'RepetitionsTable table is typically used to group sets of stimuli applied in sequence.'},
-                     {'name': 'icephys_conditions',
+                     {'name': 'icephys_experimental_conditions',
                       'child': True,
-                      'required_name': 'conditions',
+                      'required_name': 'experimental_conditions',
                       'doc': 'A table for grouping different intracellular recording repetitions together that '
-                             'belong to the same experimental conditions.'},
+                             'belong to the same experimental experimental_conditions.'},
                      )
 
     @docval(*get_docval(NWBFile.__init__),
@@ -603,8 +603,8 @@ class ICEphysFile(NWBFile):
              'doc': 'the SequentialRecordingsTable table that belongs to this NWBFile'},
             {'name': 'icephys_repetitions', 'type': RepetitionsTable, 'default': None,
              'doc': 'the RepetitionsTable table that belongs to this NWBFile'},
-            {'name': 'icephys_conditions', 'type': Conditions, 'default': None,
-             'doc': 'the Conditions table that belongs to this NWBFile'},
+            {'name': 'icephys_experimental_conditions', 'type': ExperimentalConditionsTable, 'default': None,
+             'doc': 'the ExperimentalConditionsTable table that belongs to this NWBFile'},
             {'name': 'ic_filtering', 'type': str, 'default': None,
              'doc': '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description of filtering used.'})
     def __init__(self, **kwargs):
@@ -613,10 +613,10 @@ class ICEphysFile(NWBFile):
         icephys_simultaneous_recordings = kwargs.pop('icephys_simultaneous_recordings', None)
         icephys_sequential_recordings = kwargs.pop('icephys_sequential_recordings', None)
         icephys_repetitions = kwargs.pop('icephys_repetitions', None)
-        icephys_conditions = kwargs.pop('icephys_conditions', None)
+        icephys_experimental_conditions = kwargs.pop('icephys_experimental_conditions', None)
         if kwargs.get('sweep_table') is not None:
             warnings.warn("Use of SweepTable is deprecated. Use the intracellular_recordings, "
-                          "simultaneous_recordings, sequential_recordings, repetitions and/or conditions table(s) instead.", DeprecationWarning)
+                          "simultaneous_recordings, sequential_recordings, repetitions and/or experimental_conditions table(s) instead.", DeprecationWarning)
         # Initialize the NWBFile parent class
         pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
         super(ICEphysFile, self).__init__(*pargs, **pkwargs)
@@ -627,7 +627,7 @@ class ICEphysFile(NWBFile):
         setattr(self, 'icephys_simultaneous_recordings', icephys_simultaneous_recordings)
         setattr(self, 'icephys_sequential_recordings', icephys_sequential_recordings)
         setattr(self, 'icephys_repetitions', icephys_repetitions)
-        setattr(self, 'icephys_conditions', icephys_conditions)
+        setattr(self, 'icephys_experimental_conditions', icephys_experimental_conditions)
 
     @property
     def ic_filtering(self):
@@ -798,44 +798,44 @@ class ICEphysFile(NWBFile):
         """
         return call_docval_func(self.get_icephys_repetitions().add_run, kwargs)
 
-    @docval(returns='The NWBFile.icephys_conditions table', rtype=Conditions)
-    def get_icephys_conditions(self):
+    @docval(returns='The NWBFile.icephys_experimental_conditions table', rtype=ExperimentalConditionsTable)
+    def get_icephys_experimental_conditions(self):
         """
-        Get the NWBFile.icephys_conditions table.
+        Get the NWBFile.icephys_experimental_conditions table.
 
-        In contrast to NWBFile.icephys_conditions, this function will create the
-        RepetitionsTable table if not yet done, whereas NWBFile.icephys_conditions
+        In contrast to NWBFile.icephys_experimental_conditions, this function will create the
+        RepetitionsTable table if not yet done, whereas NWBFile.icephys_experimental_conditions
         will return None if the table is currently not being used.
         """
-        if self.icephys_conditions is None:
-            self.icephys_conditions = Conditions(self.get_icephys_repetitions())
-        return self.icephys_conditions
+        if self.icephys_experimental_conditions is None:
+            self.icephys_experimental_conditions = ExperimentalConditionsTable(self.get_icephys_repetitions())
+        return self.icephys_experimental_conditions
 
-    @docval(*get_docval(Conditions.add_condition),
-            returns='Integer index of the row that was added to Conditions',
+    @docval(*get_docval(ExperimentalConditionsTable.add_condition),
+            returns='Integer index of the row that was added to ExperimentalConditionsTable',
             rtype=int,
             allow_extra=True)
     def add_icephys_condition(self, **kwargs):
         """
-        Add a new condition to the Conditions table
+        Add a new condition to the ExperimentalConditionsTable table
         """
-        return call_docval_func(self.get_icephys_conditions().add_condition, kwargs)
+        return call_docval_func(self.get_icephys_experimental_conditions().add_condition, kwargs)
 
     def get_icephys_meta_parent_table(self):
         """
         Get the top-most table in the intracellular ephys metadata table hierarchy that exists in this NWBFile.
 
         The intracellular ephys metadata consists of a hierarchy of DynamicTables, i.e.,
-        conditions --> repetitions --> sweep_sequence --> simultaneous_recordings --> intracellular_recordings etc.
+        experimental_conditions --> repetitions --> sweep_sequence --> simultaneous_recordings --> intracellular_recordings etc.
         In a given NWBFile not all tables may exist. This convenience functions returns the top-most
         table that exists in this file. E.g., if the file contains only the simultaneous_recordings and intracellular_recordings
         tables then the function would return the simultaneous_recordings table. Similarly, if the file contains all tables
-        then it will return the conditions table.
+        then it will return the experimental_conditions table.
 
         :returns: DynamicTable object or None
         """
-        if self.icephys_conditions is not None:
-            return self.icephys_conditions
+        if self.icephys_experimental_conditions is not None:
+            return self.icephys_experimental_conditions
         elif self.icephys_repetitions is not None:
             return self.icephys_repetitions
         elif self.icephys_sequential_recordings is not None:

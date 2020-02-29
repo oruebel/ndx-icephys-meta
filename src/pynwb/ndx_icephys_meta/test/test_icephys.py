@@ -14,7 +14,7 @@ try:
                                           SimultaneousRecordingsTable,
                                           SequentialRecordingsTable,
                                           RepetitionsTable,
-                                          Conditions,
+                                          ExperimentalConditionsTable,
                                           ICEphysFile)
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
@@ -25,7 +25,7 @@ except ImportError:
                                           SimultaneousRecordingsTable,
                                           SequentialRecordingsTable,
                                           RepetitionsTable,
-                                          Conditions,
+                                          ExperimentalConditionsTable,
                                           ICEphysFile)
 
 
@@ -166,11 +166,11 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                             data=['R1', 'R2', 'R1', 'R2'],
                                             description='some run type indicator')
 
-        # Add conditions
+        # Add experimental_conditions
         nwbfile.add_icephys_condition(repetitions=[0, 1], id=np.int64(100000))
         nwbfile.add_icephys_condition(repetitions=[2, 3], id=np.int64(100001))
         if add_custom_columns:
-            nwbfile.icephys_conditions.add_column(name='temperature',
+            nwbfile.icephys_experimental_conditions.add_column(name='temperature',
                                                   data=[32., 24.],
                                                   description='Temperatur in C')
 
@@ -239,8 +239,8 @@ class ICEphysMetaTestBase(unittest.TestCase):
              'doc': 'RepetitionsTable table to be added to the file before write',
              'default': None},
             {'name': 'cond',
-             'type': Conditions,
-             'doc': 'Conditions table to be added to the file before write',
+             'type': ExperimentalConditionsTable,
+             'doc': 'ExperimentalConditionsTable table to be added to the file before write',
              'default': None})
     def write_test_helper(self, **kwargs):
         ir, sw, sws, repetitions, cond = popargs('ir', 'sw', 'sws', 'repetitions', 'cond', kwargs)
@@ -278,7 +278,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                 in_repetitions = infile.get_processing_module('icephys_meta_module').get('repetitions')  # noqa F841
                 # TODO compare the data in repetitions with in_repetitions to make sure the data was written and read correctly
             if cond is not None:
-                in_con = infile.get_processing_module('icephys_meta_module').get('conditions')  # noqa F841
+                in_con = infile.get_processing_module('icephys_meta_module').get('experimental_conditions')  # noqa F841
                 # TODO compare the data in cond with in_cond to make sure the data was written and read correctly
 
 
@@ -689,18 +689,18 @@ class RunsTests(ICEphysMetaTestBase):
 
 class ConditionsTests(ICEphysMetaTestBase):
     """
-    Test class for testing the Conditions Container class
+    Test class for testing the ExperimentalConditionsTable Container class
     """
 
     def test_init(self):
         """
-        Test  __init__ to make sure we can instantiate the Conditions container
+        Test  __init__ to make sure we can instantiate the ExperimentalConditionsTable container
         """
         ir = IntracellularRecordingsTable()
         sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         sws = SequentialRecordingsTable(simultaneous_recordings_table=sw)
         repetitions = RepetitionsTable(sequential_recordings_table=sws)
-        _ = Conditions(repetitions_table=repetitions)
+        _ = ExperimentalConditionsTable(repetitions_table=repetitions)
         self.assertTrue(True)
 
     def test_missing_repetitions_on_init(self):
@@ -710,11 +710,11 @@ class ConditionsTests(ICEphysMetaTestBase):
         from the file.
         """
         with self.assertRaises(ValueError):
-            _ = Conditions()
+            _ = ExperimentalConditionsTable()
 
     def test_basic_write(self):
         """
-        Populate, write, and read the Conditions container and other required containers
+        Populate, write, and read the ExperimentalConditionsTable container and other required containers
         """
         ir = IntracellularRecordingsTable()
         row_index = ir.add_recording(electrode=self.electrode,
@@ -731,7 +731,7 @@ class ConditionsTests(ICEphysMetaTestBase):
         repetitions = RepetitionsTable(sequential_recordings_table=sws)
         row_index = repetitions.add_run(sequential_recordings=[0, ])
         self.assertEqual(row_index, 0)
-        cond = Conditions(repetitions_table=repetitions)
+        cond = ExperimentalConditionsTable(repetitions_table=repetitions)
         row_index = cond.add_condition(repetitions=[0, ])
         self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw, sws=sws, repetitions=repetitions, cond=cond)
@@ -751,7 +751,7 @@ class ConditionsTests(ICEphysMetaTestBase):
         sws.add_sweep_sequence(simultaneous_recordings=[0, ], stimulus_type='MyStimStype')
         repetitions = RepetitionsTable(sequential_recordings_table=sws)
         repetitions.add_run(sequential_recordings=[0, ])
-        cond = Conditions(repetitions_table=repetitions)
+        cond = ExperimentalConditionsTable(repetitions_table=repetitions)
         cond.add_condition(repetitions=[0, ], id=np.int64(10))
         with self.assertRaises(ValueError):
             cond.add_condition(repetitions=[0, ], id=np.int64(10))
@@ -905,9 +905,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(nwbfile.ic_filtering, 'test filtering')
 
     @unittest.skip("Test not implemented yet")
-    def test_add_icephys_conditions_column(self):
+    def test_add_icephys_experimental_conditions_column(self):
         """
-        Test that we can add a dynamic column to the conditions via nwb.add_icephys_conditions_column(...)
+        Test that we can add a dynamic column to the experimental_conditions via nwb.add_icephys_experimental_conditions_column(...)
         """
         pass
 
@@ -997,7 +997,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Add a condition and check that it is now our top table
         _ = local_nwbfile.add_icephys_condition(repetitions=[0])
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
-                              Conditions)
+                              ExperimentalConditionsTable)
 
     def test_add_icephys_meta_full_roundtrip(self):
         """
@@ -1101,13 +1101,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a Condition
         #############################################
         # Confirm that our RepetitionsTable table does not yet exist
-        self.assertIsNone(nwbfile.icephys_conditions)
+        self.assertIsNone(nwbfile.icephys_experimental_conditions)
         # Add a condition
         nwbfile.add_icephys_condition(repetitions=[0], id=np.int64(19))
-        # Check that the Conditions table has been added
-        self.assertIsNotNone(nwbfile.icephys_conditions)
-        # Check that the values for our Conditions table are correct
-        res = nwbfile.icephys_conditions[0]
+        # Check that the ExperimentalConditionsTable table has been added
+        self.assertIsNotNone(nwbfile.icephys_experimental_conditions)
+        # Check that the values for our ExperimentalConditionsTable table are correct
+        res = nwbfile.icephys_experimental_conditions[0]
         # check the id value
         self.assertEqual(res.index[0], 19)
         # Check that our run contains 1 run
@@ -1180,11 +1180,11 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(res.iloc[0]['sequential_recordings'].index[0], 15)  # Check id of the sweep_sequence row
 
             ############################################################################
-            #  Test that the Conditions table has been written correctly
+            #  Test that the ExperimentalConditionsTable table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.icephys_conditions)
-            self.assertEqual(len(infile.icephys_conditions), 1)
-            res = nwbfile.icephys_conditions[0]
+            self.assertIsNotNone(infile.icephys_experimental_conditions)
+            self.assertEqual(len(infile.icephys_experimental_conditions), 1)
+            res = nwbfile.icephys_experimental_conditions[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 19)
             self.assertEqual(len(res.iloc[0]['repetitions']), 1)

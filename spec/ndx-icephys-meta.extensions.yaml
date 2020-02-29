@@ -120,11 +120,11 @@ groups:
   - name: sequential_recordings_index
     neurodata_type_inc: VectorIndex
     doc: Index dataset for the sequential_recordings column.
-- neurodata_type_def: Conditions
+- neurodata_type_def: ExperimentalConditionsTable
   neurodata_type_inc: DynamicTable
-  name: conditions
+  name: experimental_conditions
   doc: A table for grouping different intracellular recording repetitions together
-    that belong to the same experimental conditions.
+    that belong to the same experimental experimental_conditions.
   datasets:
   - name: repetitions
     neurodata_type_inc: DynamicTableRegion
@@ -195,10 +195,10 @@ groups:
           of stimulus, the RepetitionsTable table is typically used to group sets
           of stimuli applied in sequence.
         quantity: '?'
-      - name: conditions
-        neurodata_type_inc: Conditions
+      - name: experimental_conditions
+        neurodata_type_inc: ExperimentalConditionsTable
         doc: A table for grouping different intracellular recording repetitions together
-          that belong to the same experimental conditions.
+          that belong to the same experimental experimental_conditions.
         quantity: '?'
       - name: sweep_table
         neurodata_type_inc: SweepTable

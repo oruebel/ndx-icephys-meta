@@ -161,13 +161,13 @@ def main():
                   ]
         )
 
-    # Create Conditions tbale for grouping different RepetitionsTable together
-    conditions_table_spec = NWBGroupSpec(
-        name='conditions',
-        neurodata_type_def='Conditions',
+    # Create ExperimentalConditionsTable tbale for grouping different RepetitionsTable together
+    experimental_conditions_table_spec = NWBGroupSpec(
+        name='experimental_conditions',
+        neurodata_type_def='ExperimentalConditionsTable',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recording repetitions together that '
-            'belong to the same experimental conditions.',
+            'belong to the same experimental experimental_conditions.',
         datasets=[NWBDatasetSpec(name='repetitions',
                                  neurodata_type_inc='DynamicTableRegion',
                                  doc='A reference to one or more rows in the RepetitionsTable table.',
@@ -220,9 +220,9 @@ def main():
                                                    doc=repetitions_table_spec.doc,
                                                    name='repetitions',
                                                    quantity='?'),
-                                      NWBGroupSpec(neurodata_type_inc='Conditions',
-                                                   doc=conditions_table_spec.doc,
-                                                   name='conditions',
+                                      NWBGroupSpec(neurodata_type_inc='ExperimentalConditionsTable',
+                                                   doc=experimental_conditions_table_spec.doc,
+                                                   name='experimental_conditions',
                                                    quantity='?'),
                                       # Update doc on SweepTable to declare it as deprecated
                                       NWBGroupSpec(neurodata_type_inc='SweepTable',
@@ -264,7 +264,7 @@ def main():
                       simultaneous_recordings_table_spec,
                       sequentialrecordings_table_spec,
                       repetitions_table_spec,
-                      conditions_table_spec,
+                      experimental_conditions_table_spec,
                       icephys_file_spec]
 
     # Export the spec
