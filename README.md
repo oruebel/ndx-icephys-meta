@@ -4,11 +4,9 @@ This extension implements the icephys extension proposal described [here](https:
 
 ## Install
 
-```
-python setup.py develop
-```
+### pip install
 
-The extension is now also available on pip and can be installed via:
+The extension is available on pip and can be installed via:
 
 ```
 pip install ndx-icephys-meta
@@ -16,6 +14,14 @@ pip install ndx-icephys-meta
 
 The extension is also listed in the (NDX catalog)[https://nwb-extensions.github.io/]. See [here](https://github.com/nwb-extensions/ndx-icephys-meta-record) for the catalog metadata record.
 
+### developer install
+
+```
+python setup.py develop
+```
+**NOTE:** The development version requires:
+* [NeurodataWithoutBorders/pynwb#1200](https://github.com/NeurodataWithoutBorders/pynwb/pull/1200)
+* [hdmf-dev/hdmf#301](https://github.com/hdmf-dev/hdmf/pull/301)
 
 ## Building the spec documentation
 
