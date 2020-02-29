@@ -560,26 +560,26 @@ class ICEphysFile(NWBFile):
                       'required_name': 'intracellular_recordings',
                       'doc': 'IntracellularRecordings table to group together a stimulus and response '
                              'from a single intracellular electrode and a single sweep.'},
-                     {'name': 'ic_sweeps',
+                     {'name': 'icephys_sweeps',
                       'child': True,
                       'required_name': 'sweeps',
                       'doc': 'Sweeps table for grouping different intracellular recordings from the '
                               'IntracellularRecordings table together that were recorded simultaneously '
                               'from different electrodes'},
-                     {'name': 'ic_sweep_sequences',
+                     {'name': 'icephys_sweep_sequences',
                       'child': True,
                       'required_name': 'sweep_sequences',
                       'doc': 'A table for grouping different intracellular recording sweeps from the '
                              'Sweeps table together. This is typically used to group together sweeps '
                              'where the a sequence of stimuli of the same type with varying parameters '
                              'have been presented in a sequence.'},
-                     {'name': 'ic_runs',
+                     {'name': 'icephys_runs',
                       'child': True,
                       'required_name': 'runs',
                       'doc': 'A table for grouping different intracellular recording sweep sequences together.'
                              'With each SweepSequence typically representing a particular type of stimulus, the '
                              'Runs table is typically used to group sets of stimuli applied in sequence.'},
-                     {'name': 'ic_conditions',
+                     {'name': 'icephys_conditions',
                       'child': True,
                       'required_name': 'conditions',
                       'doc': 'A table for grouping different intracellular recording runs together that '
@@ -589,23 +589,23 @@ class ICEphysFile(NWBFile):
     @docval(*get_docval(NWBFile.__init__),
             {'name': 'intracellular_recordings', 'type': IntracellularRecordings,  'default': None,
              'doc': 'the IntracellularRecordings table that belongs to this NWBFile'},
-            {'name': 'ic_sweeps', 'type': Sweeps, 'default': None,
+            {'name': 'icephys_sweeps', 'type': Sweeps, 'default': None,
              'doc': 'the Sweeps table that belongs to this NWBFile'},
-            {'name': 'ic_sweep_sequences', 'type': SweepSequences, 'default': None,
+            {'name': 'icephys_sweep_sequences', 'type': SweepSequences, 'default': None,
              'doc': 'the SweepSequences table that belongs to this NWBFile'},
-            {'name': 'ic_runs', 'type': Runs, 'default': None,
+            {'name': 'icephys_runs', 'type': Runs, 'default': None,
              'doc': 'the Runs table that belongs to this NWBFile'},
-            {'name': 'ic_conditions', 'type': Conditions, 'default': None,
+            {'name': 'icephys_conditions', 'type': Conditions, 'default': None,
              'doc': 'the Conditions table that belongs to this NWBFile'},
             {'name': 'ic_filtering', 'type': str, 'default': None,
              'doc': '[DEPRECATED] Use IntracellularElectrode.filtering instead. Description of filtering used.'})
     def __init__(self, **kwargs):
         # Get the arguments to pass to NWBFile and remove arguments custum to this class
         intracellular_recordings = kwargs.pop('intracellular_recordings', None)
-        ic_sweeps = kwargs.pop('ic_sweeps', None)
-        ic_sweep_sequences = kwargs.pop('ic_sweep_sequences', None)
-        ic_runs = kwargs.pop('ic_runs', None)
-        ic_conditions = kwargs.pop('ic_conditions', None)
+        icephys_sweeps = kwargs.pop('icephys_sweeps', None)
+        icephys_sweep_sequences = kwargs.pop('icephys_sweep_sequences', None)
+        icephys_runs = kwargs.pop('icephys_runs', None)
+        icephys_conditions = kwargs.pop('icephys_conditions', None)
         if kwargs.get('sweep_table') is not None:
             warnings.warn("Use of SweepTable is deprecated. Use the intracellular_recordings, "
                           "sweeps, sweep_sequences, runs and/or conditions table(s) instead.", DeprecationWarning)
@@ -616,10 +616,10 @@ class ICEphysFile(NWBFile):
         self.ic_filtering = kwargs.get('ic_filtering')
         # Set the intracellular_recordings if available
         setattr(self, 'intracellular_recordings', intracellular_recordings)
-        setattr(self, 'ic_sweeps', ic_sweeps)
-        setattr(self, 'ic_sweep_sequences', ic_sweep_sequences)
-        setattr(self, 'ic_runs', ic_runs)
-        setattr(self, 'ic_conditions', ic_conditions)
+        setattr(self, 'icephys_sweeps', icephys_sweeps)
+        setattr(self, 'icephys_sweep_sequences', icephys_sweep_sequences)
+        setattr(self, 'icephys_runs', icephys_runs)
+        setattr(self, 'icephys_conditions', icephys_conditions)
 
     @property
     def ic_filtering(self):
@@ -645,7 +645,7 @@ class ICEphysFile(NWBFile):
             if self.sweep_table is None:
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordings, "
                               "Sweeps tables instead. See the add_intracellular_recordings, "
-                              "add_sweep, add_sweep_sequence, add_run, add_ic_condition functions.",
+                              "add_sweep, add_sweep_sequence, add_run, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -662,7 +662,7 @@ class ICEphysFile(NWBFile):
             if self.sweep_table is None:
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordings, "
                               "Sweeps tables instead. See the add_intracellular_recordings, "
-                              "add_sweep, add_sweep_sequence, add_run, add_ic_condition functions.",
+                              "add_sweep, add_sweep_sequence, add_run, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -679,7 +679,7 @@ class ICEphysFile(NWBFile):
             if self.sweep_table is None:
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordings, "
                               "Sweeps tables instead. See the add_intracellular_recordings, "
-                              "add_sweep, add_sweep_sequence, add_run, add_ic_condition functions.",
+                              "add_sweep, add_sweep_sequence, add_run, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(nwbdata)
 
@@ -714,106 +714,106 @@ class ICEphysFile(NWBFile):
             self.add_stimulus(stimulus, use_sweep_table=False)
         if response is not None and response.name not in self.acquisition:
             self.add_acquisition(response, use_sweep_table=False)
-        if electrode is not None and electrode.name not in self.ic_electrodes:
-            self.add_ic_electrode(electrode)
+        if electrode is not None and electrode.name not in self.icephys_electrodes:
+            self.add_icephys_electrode(electrode)
         # make sure the intracellular recordings table exists and if not create it using get_intracellular_recordings
         # Add the recoding to the intracellular_recordings table
         return call_docval_func(self.get_intracellular_recordings().add_recording, kwargs)
 
-    @docval(returns='The NWBFile.ic_sweeps table', rtype=Sweeps)
-    def get_ic_sweeps(self):
+    @docval(returns='The NWBFile.icephys_sweeps table', rtype=Sweeps)
+    def get_icephys_sweeps(self):
         """
-        Get the NWBFile.ic_sweeps table.
+        Get the NWBFile.icephys_sweeps table.
 
-        In contrast to NWBFile.ic_sweeps, this function will create the
-        Sweeps table if not yet done, whereas NWBFile.ic_sweeps
+        In contrast to NWBFile.icephys_sweeps, this function will create the
+        Sweeps table if not yet done, whereas NWBFile.icephys_sweeps
         will return None if the table is currently not being used.
         """
-        if self.ic_sweeps is None:
-            self.ic_sweeps = Sweeps(self.get_intracellular_recordings())
-        return self.ic_sweeps
+        if self.icephys_sweeps is None:
+            self.icephys_sweeps = Sweeps(self.get_intracellular_recordings())
+        return self.icephys_sweeps
 
     @docval(*get_docval(Sweeps.add_sweep),
             returns='Integer index of the row that was added to Sweeps',
             rtype=int,
             allow_extra=True)
-    def add_ic_sweep(self, **kwargs):
+    def add_icephys_sweep(self, **kwargs):
         """
-        Add a new sweep to the ic_sweeps table
+        Add a new sweep to the icephys_sweeps table
         """
-        return call_docval_func(self.get_ic_sweeps().add_sweep, kwargs)
+        return call_docval_func(self.get_icephys_sweeps().add_sweep, kwargs)
 
-    @docval(returns='The NWBFile.ic_sweep_sequences table', rtype=SweepSequences)
-    def get_ic_sweep_sequences(self):
+    @docval(returns='The NWBFile.icephys_sweep_sequences table', rtype=SweepSequences)
+    def get_icephys_sweep_sequences(self):
         """
-         Get the NWBFile.ic_sweep_sequences table.
+         Get the NWBFile.icephys_sweep_sequences table.
 
-        In contrast to NWBFile.ic_sweep_sequences, this function will create the
-        IntracellularRecordings table if not yet done, whereas NWBFile.ic_sweep_sequences
+        In contrast to NWBFile.icephys_sweep_sequences, this function will create the
+        IntracellularRecordings table if not yet done, whereas NWBFile.icephys_sweep_sequences
         will return None if the table is currently not being used.
         """
-        if self.ic_sweep_sequences is None:
-            self.ic_sweep_sequences = SweepSequences(self.get_ic_sweeps())
-        return self.ic_sweep_sequences
+        if self.icephys_sweep_sequences is None:
+            self.icephys_sweep_sequences = SweepSequences(self.get_icephys_sweeps())
+        return self.icephys_sweep_sequences
 
     @docval(*get_docval(SweepSequences.add_sweep_sequence),
             returns='Integer index of the row that was added to SweepSequences',
             rtype=int,
             allow_extra=True)
-    def add_ic_sweep_sequence(self, **kwargs):
+    def add_icephys_sweep_sequence(self, **kwargs):
         """
-        Add a new sweep sequence to the ic_sweep_sequences table
+        Add a new sweep sequence to the icephys_sweep_sequences table
         """
-        self.get_ic_sweep_sequences()
-        return call_docval_func(self.ic_sweep_sequences.add_sweep_sequence, kwargs)
+        self.get_icephys_sweep_sequences()
+        return call_docval_func(self.icephys_sweep_sequences.add_sweep_sequence, kwargs)
 
-    @docval(returns='The NWBFile.ic_runs table', rtype=Runs)
-    def get_ic_runs(self):
+    @docval(returns='The NWBFile.icephys_runs table', rtype=Runs)
+    def get_icephys_runs(self):
         """
-        Get the NWBFile.ic_runs table.
+        Get the NWBFile.icephys_runs table.
 
-        In contrast to NWBFile.ic_runs, this function will create the
-        Runs table if not yet done, whereas NWBFile.ic_runs
+        In contrast to NWBFile.icephys_runs, this function will create the
+        Runs table if not yet done, whereas NWBFile.icephys_runs
         will return None if the table is currently not being used.
         """
-        if self.ic_runs is None:
-            self.ic_runs = Runs(self.get_ic_sweep_sequences())
-        return self.ic_runs
+        if self.icephys_runs is None:
+            self.icephys_runs = Runs(self.get_icephys_sweep_sequences())
+        return self.icephys_runs
 
     @docval(*get_docval(Runs.add_run),
             returns='Integer index of the row that was added to Runs',
             rtype=int,
             allow_extra=True)
-    def add_ic_run(self, **kwargs):
+    def add_icephys_run(self, **kwargs):
         """
         Add a new run to the Runs table
         """
-        return call_docval_func(self.get_ic_runs().add_run, kwargs)
+        return call_docval_func(self.get_icephys_runs().add_run, kwargs)
 
-    @docval(returns='The NWBFile.ic_conditions table', rtype=Conditions)
-    def get_ic_conditions(self):
+    @docval(returns='The NWBFile.icephys_conditions table', rtype=Conditions)
+    def get_icephys_conditions(self):
         """
-        Get the NWBFile.ic_conditions table.
+        Get the NWBFile.icephys_conditions table.
 
-        In contrast to NWBFile.ic_conditions, this function will create the
-        Runs table if not yet done, whereas NWBFile.ic_conditions
+        In contrast to NWBFile.icephys_conditions, this function will create the
+        Runs table if not yet done, whereas NWBFile.icephys_conditions
         will return None if the table is currently not being used.
         """
-        if self.ic_conditions is None:
-            self.ic_conditions = Conditions(self.get_ic_runs())
-        return self.ic_conditions
+        if self.icephys_conditions is None:
+            self.icephys_conditions = Conditions(self.get_icephys_runs())
+        return self.icephys_conditions
 
     @docval(*get_docval(Conditions.add_condition),
             returns='Integer index of the row that was added to Conditions',
             rtype=int,
             allow_extra=True)
-    def add_ic_condition(self, **kwargs):
+    def add_icephys_condition(self, **kwargs):
         """
         Add a new condition to the Conditions table
         """
-        return call_docval_func(self.get_ic_conditions().add_condition, kwargs)
+        return call_docval_func(self.get_icephys_conditions().add_condition, kwargs)
 
-    def get_ic_meta_parent_table(self):
+    def get_icephys_meta_parent_table(self):
         """
         Get the top-most table in the intracellular ephys metadata table hierarchy that exists in this NWBFile.
 
@@ -826,14 +826,14 @@ class ICEphysFile(NWBFile):
 
         :returns: DynamicTable object or None
         """
-        if self.ic_conditions is not None:
-            return self.ic_conditions
-        elif self.ic_runs is not None:
-            return self.ic_runs
-        elif self.ic_sweep_sequences is not None:
-            return self.ic_sweep_sequences
-        elif self.ic_sweeps is not None:
-            return self.ic_sweeps
+        if self.icephys_conditions is not None:
+            return self.icephys_conditions
+        elif self.icephys_runs is not None:
+            return self.icephys_runs
+        elif self.icephys_sweep_sequences is not None:
+            return self.icephys_sweep_sequences
+        elif self.icephys_sweeps is not None:
+            return self.icephys_sweeps
         elif self.intracellular_recordings is not None:
             return self.intracellular_recordings
         else:

@@ -101,13 +101,15 @@ class ICEphysMetaTestBase(unittest.TestCase):
         # Add a device
         device = nwbfile.create_device(name='Heka ITC-1600')
         # Add an intracellular electrode
-        electrode0 = nwbfile.create_ic_electrode(name="elec0",
-                                                 description='a mock intracellular electrode',
-                                                 device=device)
+        electrode0 = nwbfile.create_icephys_electrode(
+            name="elec0",
+            description='a mock intracellular electrode',
+            device=device)
         # Add an intracellular electrode
-        electrode1 = nwbfile.create_ic_electrode(name="elec1",
-                                                 description='another mock intracellular electrode',
-                                                 device=device)
+        electrode1 = nwbfile.create_icephys_electrode(
+            name="elec1",
+            description='another mock intracellular electrode',
+            device=device)
         # Add the intracelluar recordings
         for sweep_number in range(20):
             elec = (electrode0 if (sweep_number % 2 == 0) else electrode1)
@@ -129,48 +131,48 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                                           'D1', 'D2', 'D3'],
                                                     description='String indicating the type of stimulus applied')
         # Add sweeps
-        nwbfile.add_ic_sweep(recordings=[0, 1], id=np.int64(100))
-        nwbfile.add_ic_sweep(recordings=[2, 3], id=np.int64(101))
-        nwbfile.add_ic_sweep(recordings=[4, 5, 6], id=np.int64(102))
-        nwbfile.add_ic_sweep(recordings=[7, 8, 9], id=np.int64(103))
-        nwbfile.add_ic_sweep(recordings=[10, 11], id=np.int64(104))
-        nwbfile.add_ic_sweep(recordings=[12, 13], id=np.int64(105))
-        nwbfile.add_ic_sweep(recordings=[14, 15, 16], id=np.int64(106))
-        nwbfile.add_ic_sweep(recordings=[17, 18, 19], id=np.int64(107))
+        nwbfile.add_icephys_sweep(recordings=[0, 1], id=np.int64(100))
+        nwbfile.add_icephys_sweep(recordings=[2, 3], id=np.int64(101))
+        nwbfile.add_icephys_sweep(recordings=[4, 5, 6], id=np.int64(102))
+        nwbfile.add_icephys_sweep(recordings=[7, 8, 9], id=np.int64(103))
+        nwbfile.add_icephys_sweep(recordings=[10, 11], id=np.int64(104))
+        nwbfile.add_icephys_sweep(recordings=[12, 13], id=np.int64(105))
+        nwbfile.add_icephys_sweep(recordings=[14, 15, 16], id=np.int64(106))
+        nwbfile.add_icephys_sweep(recordings=[17, 18, 19], id=np.int64(107))
         if add_custom_columns:
-            nwbfile.ic_sweeps.add_column(name='tag',
-                                         data=np.arange(8),
-                                         description='some integer tag for a sweep')
+            nwbfile.icephys_sweeps.add_column(name='tag',
+                                              data=np.arange(8),
+                                              description='some integer tag for a sweep')
 
         # Add sweep sequences
-        nwbfile.add_ic_sweep_sequence(sweeps=[0, 1], id=np.int64(1000))
-        nwbfile.add_ic_sweep_sequence(sweeps=[2, ], id=np.int64(1001))
-        nwbfile.add_ic_sweep_sequence(sweeps=[3, ], id=np.int64(1002))
-        nwbfile.add_ic_sweep_sequence(sweeps=[4, 5], id=np.int64(1003))
-        nwbfile.add_ic_sweep_sequence(sweeps=[6, ], id=np.int64(1004))
-        nwbfile.add_ic_sweep_sequence(sweeps=[7, ], id=np.int64(1005))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[0, 1], id=np.int64(1000))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[2, ], id=np.int64(1001))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[3, ], id=np.int64(1002))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[4, 5], id=np.int64(1003))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[6, ], id=np.int64(1004))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[7, ], id=np.int64(1005))
         if add_custom_columns:
-            nwbfile.ic_sweep_sequences.add_column(name='type',
-                                                  data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
-                                                  description='type of the sweep sequence')
+            nwbfile.icephys_sweep_sequences.add_column(name='type',
+                                                       data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
+                                                       description='type of the sweep sequence')
 
         # Add runs
-        nwbfile.add_ic_run(sweep_sequences=[0, ], id=np.int64(10000))
-        nwbfile.add_ic_run(sweep_sequences=[1, 2], id=np.int64(10001))
-        nwbfile.add_ic_run(sweep_sequences=[3, ], id=np.int64(10002))
-        nwbfile.add_ic_run(sweep_sequences=[4, 5], id=np.int64(10003))
+        nwbfile.add_icephys_run(sweep_sequences=[0, ], id=np.int64(10000))
+        nwbfile.add_icephys_run(sweep_sequences=[1, 2], id=np.int64(10001))
+        nwbfile.add_icephys_run(sweep_sequences=[3, ], id=np.int64(10002))
+        nwbfile.add_icephys_run(sweep_sequences=[4, 5], id=np.int64(10003))
         if add_custom_columns:
-            nwbfile.ic_runs.add_column(name='type',
-                                       data=['R1', 'R2', 'R1', 'R2'],
-                                       description='some run type indicator')
+            nwbfile.icephys_runs.add_column(name='type',
+                                            data=['R1', 'R2', 'R1', 'R2'],
+                                            description='some run type indicator')
 
         # Add conditions
-        nwbfile.add_ic_condition(runs=[0, 1], id=np.int64(100000))
-        nwbfile.add_ic_condition(runs=[2, 3], id=np.int64(100001))
+        nwbfile.add_icephys_condition(runs=[0, 1], id=np.int64(100000))
+        nwbfile.add_icephys_condition(runs=[2, 3], id=np.int64(100001))
         if add_custom_columns:
-            nwbfile.ic_conditions.add_column(name='temperature',
-                                             data=[32., 24.],
-                                             description='Temperatur in C')
+            nwbfile.icephys_conditions.add_column(name='temperature',
+                                                  data=[32., 24.],
+                                                  description='Temperatur in C')
 
         # Write our test file
         if filename is not None:
@@ -192,9 +194,9 @@ class ICEphysMetaTestBase(unittest.TestCase):
             experiment_description='I went on an adventure with thirteen dwarves to reclaim vast treasures.',
             session_id='LONELYMTN')
         self.device = self.nwbfile.create_device(name='Heka ITC-1600')
-        self.electrode = self.nwbfile.create_ic_electrode(name="elec0",
-                                                          description='a mock intracellular electrode',
-                                                          device=self.device)
+        self.electrode = self.nwbfile.create_icephys_electrode(name="elec0",
+                                                               description='a mock intracellular electrode',
+                                                               device=self.device)
         self.stimulus = VoltageClampStimulusSeries(name="ccss",
                                                    data=[1, 2, 3, 4, 5],
                                                    starting_time=123.6,
@@ -479,7 +481,7 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
                 session_id='LONELYMTN')
         # Add a device
         local_device = local_nwbfile.create_device(name='Heka ITC-1600')
-        local_electrode = local_nwbfile.create_ic_electrode(
+        local_electrode = local_nwbfile.create_icephys_electrode(
             name="elec0",
             description='a mock intracellular electrode',
             device=local_device)
@@ -785,9 +787,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         return icefile.create_device(name='Heka ITC-1600')
 
     def __add_electrode(self, icefile, device):
-        return icefile.create_ic_electrode(name="elec0",
-                                           description='a mock intracellular electrode',
-                                           device=device)
+        return icefile.create_icephys_electrode(name="elec0",
+                                                description='a mock intracellular electrode',
+                                                device=device)
 
     def __get_stimuls(self, electrode):
         """
@@ -903,9 +905,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertEqual(nwbfile.ic_filtering, 'test filtering')
 
     @unittest.skip("Test not implemented yet")
-    def test_add_ic_conditions_column(self):
+    def test_add_icephys_conditions_column(self):
         """
-        Test that we can add a dynamic column to the conditions via nwb.add_ic_conditions_column(...)
+        Test that we can add a dynamic column to the conditions via nwb.add_icephys_conditions_column(...)
         """
         pass
 
@@ -934,9 +936,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
                 assert issubclass(w[-1].category, DeprecationWarning)
                 self.assertEqual(infile.ic_filtering, 'test filtering')
 
-    def test_get_ic_meta_parent_table(self):
+    def test_get_icephys_meta_parent_table(self):
         """
-        Create the table hierarchy step-by-step and check that as we add tables the get_ic_meta_parent_table
+        Create the table hierarchy step-by-step and check that as we add tables the get_icephys_meta_parent_table
         returns the expected top table
         """
         local_nwbfile = ICEphysFile(
@@ -950,7 +952,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
                 session_id='LONELYMTN')
         # Add a device
         local_device = local_nwbfile.create_device(name='Heka ITC-1600')
-        local_electrode = local_nwbfile.create_ic_electrode(
+        local_electrode = local_nwbfile.create_icephys_electrode(
             name="elec0",
             description='a mock intracellular electrode',
             device=local_device)
@@ -978,23 +980,23 @@ class ICEphysFileTests(ICEphysMetaTestBase):
                                                       stimulus=local_stimulus,
                                                       response=local_response,
                                                       id=np.int64(10))
-        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+        self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               IntracellularRecordings)
         # Add a sweep and check that the sweeps table is the top table
-        _ = local_nwbfile.add_ic_sweep(recordings=[0])
-        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+        _ = local_nwbfile.add_icephys_sweep(recordings=[0])
+        self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               Sweeps)
         # Add a sweep_sequence and check that it is now our top table
-        _ = local_nwbfile.add_ic_sweep_sequence(sweeps=[0])
-        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+        _ = local_nwbfile.add_icephys_sweep_sequence(sweeps=[0])
+        self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               SweepSequences)
         # Add a run and check that it is now our top table
-        _ = local_nwbfile.add_ic_run(sweep_sequences=[0])
-        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+        _ = local_nwbfile.add_icephys_run(sweep_sequences=[0])
+        self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               Runs)
         # Add a condition and check that it is now our top table
-        _ = local_nwbfile.add_ic_condition(runs=[0])
-        self.assertIsInstance(local_nwbfile.get_ic_meta_parent_table(),
+        _ = local_nwbfile.add_icephys_condition(runs=[0])
+        self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               Conditions)
 
     def test_add_icephys_meta_full_roundtrip(self):
@@ -1051,13 +1053,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding Sweeps
         #############################################
         # Confirm that our Sweeps table does not yet exist
-        self.assertIsNone(nwbfile.ic_sweeps)
+        self.assertIsNone(nwbfile.icephys_sweeps)
         # Add a sweep
-        nwbfile.add_ic_sweep(recordings=[0], id=np.int64(12))
+        nwbfile.add_icephys_sweep(recordings=[0], id=np.int64(12))
         # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.ic_sweeps)
-        # Check that the values for our ic_sweeps table are correct
-        res = nwbfile.ic_sweeps[0]
+        self.assertIsNotNone(nwbfile.icephys_sweeps)
+        # Check that the values for our icephys_sweeps table are correct
+        res = nwbfile.icephys_sweeps[0]
         # check the id value
         self.assertEqual(res.index[0], 12)
         # Check that our sweep contains 1 IntracellularRecording
@@ -1067,13 +1069,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a SweepSequence
         #############################################
         # Confirm that our SweepSequences table does not yet exist
-        self.assertIsNone(nwbfile.ic_sweep_sequences)
+        self.assertIsNone(nwbfile.icephys_sweep_sequences)
         # Add a sweep
-        nwbfile.add_ic_sweep_sequence(sweeps=[0], id=np.int64(15))
+        nwbfile.add_icephys_sweep_sequence(sweeps=[0], id=np.int64(15))
         # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.ic_sweep_sequences)
+        self.assertIsNotNone(nwbfile.icephys_sweep_sequences)
         # Check that the values for our Sweeps table are correct
-        res = nwbfile.ic_sweep_sequences[0]
+        res = nwbfile.icephys_sweep_sequences[0]
         # check the id value
         self.assertEqual(res.index[0], 15)
         # Check that our sweep contains 1 IntracellularRecording
@@ -1083,13 +1085,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a Run
         #############################################
         # Confirm that our Runs table does not yet exist
-        self.assertIsNone(nwbfile.ic_runs)
+        self.assertIsNone(nwbfile.icephys_runs)
         # Add a run
-        nwbfile.add_ic_run(sweep_sequences=[0], id=np.int64(17))
+        nwbfile.add_icephys_run(sweep_sequences=[0], id=np.int64(17))
         # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.ic_runs)
+        self.assertIsNotNone(nwbfile.icephys_runs)
         # Check that the values for our Runs table are correct
-        res = nwbfile.ic_runs[0]
+        res = nwbfile.icephys_runs[0]
         # check the id value
         self.assertEqual(res.index[0], 17)
         # Check that our run contains 1 SweepSequence
@@ -1099,13 +1101,13 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         #  Test adding a Condition
         #############################################
         # Confirm that our Runs table does not yet exist
-        self.assertIsNone(nwbfile.ic_conditions)
+        self.assertIsNone(nwbfile.icephys_conditions)
         # Add a condition
-        nwbfile.add_ic_condition(runs=[0], id=np.int64(19))
+        nwbfile.add_icephys_condition(runs=[0], id=np.int64(19))
         # Check that the Conditions table has been added
-        self.assertIsNotNone(nwbfile.ic_conditions)
+        self.assertIsNotNone(nwbfile.icephys_conditions)
         # Check that the values for our Conditions table are correct
-        res = nwbfile.ic_conditions[0]
+        res = nwbfile.icephys_conditions[0]
         # check the id value
         self.assertEqual(res.index[0], 19)
         # Check that our run contains 1 run
@@ -1147,20 +1149,20 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the  Sweeps table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.ic_sweeps)
-            self.assertEqual(len(infile.ic_sweeps), 1)
-            res = nwbfile.ic_sweeps[0]
+            self.assertIsNotNone(infile.icephys_sweeps)
+            self.assertEqual(len(infile.icephys_sweeps), 1)
+            res = nwbfile.icephys_sweeps[0]
             # Check the ID and len of the intracellular_recordings column
             self.assertEqual(res.index[0], 12)
             self.assertEqual(len(res.iloc[0]['recordings']), 1)
-            self.assertEqual(res.iloc[0]['recordings'].index[0], 10)  # Check id of the references ic_recordings row
+            self.assertEqual(res.iloc[0]['recordings'].index[0], 10)  # Check id of the references recordings row
 
             ############################################################################
             #  Test that the  SweepSequences table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.ic_sweep_sequences)
-            self.assertEqual(len(infile.ic_sweep_sequences), 1)
-            res = nwbfile.ic_sweep_sequences[0]
+            self.assertIsNotNone(infile.icephys_sweep_sequences)
+            self.assertEqual(len(infile.icephys_sweep_sequences), 1)
+            res = nwbfile.icephys_sweep_sequences[0]
             # Check the ID and len of the sweeps column
             self.assertEqual(res.index[0], 15)
             self.assertEqual(len(res.iloc[0]['sweeps']), 1)
@@ -1169,9 +1171,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the  Runs table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.ic_runs)
-            self.assertEqual(len(infile.ic_runs), 1)
-            res = nwbfile.ic_runs[0]
+            self.assertIsNotNone(infile.icephys_runs)
+            self.assertEqual(len(infile.icephys_runs), 1)
+            res = nwbfile.icephys_runs[0]
             # Check the ID and len of the sweeps column
             self.assertEqual(res.index[0], 17)
             self.assertEqual(len(res.iloc[0]['sweep_sequences']), 1)
@@ -1180,9 +1182,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             ############################################################################
             #  Test that the Conditions table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.ic_conditions)
-            self.assertEqual(len(infile.ic_conditions), 1)
-            res = nwbfile.ic_conditions[0]
+            self.assertIsNotNone(infile.icephys_conditions)
+            self.assertEqual(len(infile.icephys_conditions), 1)
+            res = nwbfile.icephys_conditions[0]
             # Check the ID and len of the sweeps column
             self.assertEqual(res.index[0], 19)
             self.assertEqual(len(res.iloc[0]['runs']), 1)
@@ -1197,23 +1199,23 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         pass
 
     @unittest.skip("Test not implemented yet")
-    def test_add_ic_sweeps_column(self):
+    def test_add_icephys_sweeps_column(self):
         """
-        Test that we can add a dynamic column to the sweeps via nwbfile.add_ic_sweeps_column
-        """
-        pass
-
-    @unittest.skip("Test not implemented yet")
-    def test_add_ic_sweep_seqences_column(self):
-        """
-        Test that we can add a dynamic column to the sweep_sequences via nwbfile.add_ic_sweep_sequences_column
+        Test that we can add a dynamic column to the sweeps via nwbfile.add_icephys_sweeps_column
         """
         pass
 
     @unittest.skip("Test not implemented yet")
-    def test_add_ic_runs_column(self):
+    def test_add_icephys_sweep_seqences_column(self):
         """
-        Test that we can add a dynamic column to the runs via nwbfile.add_ic_runs_column
+        Test that we can add a dynamic column to the sweep_sequences via nwbfile.add_icephys_sweep_sequences_column
+        """
+        pass
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_icephys_runs_column(self):
+        """
+        Test that we can add a dynamic column to the runs via nwbfile.add_icephys_runs_column
         """
         pass
 
