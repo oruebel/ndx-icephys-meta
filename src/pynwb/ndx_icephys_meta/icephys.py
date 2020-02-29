@@ -297,6 +297,15 @@ class IntracellularRecordings(DynamicTable):
         response = response if response is not None else stimulus
         stimulus = stimulus if stimulus is not None else response
 
+        # Make sure the types are compatible
+        if ((response.neurodata_type.startswith("CurrentClamp") and
+                stimulus.neurodata_type.startswith("VoltageClamp")) or
+                (response.neurodata_type.startswith("VoltageClamp") and
+                 stimulus.neurodata_type.startswith("CurrentClamp"))):
+            raise ValueError("Incompatible types given for 'stimulus' and 'response' parameters.' "
+                             "'stimulus' is of type %s and 'response' is of type %s." %
+                             (stimulus.neurodata_type, response.neurodata_type))
+
         # Add the row to the table
         row_kwargs = {'electrode': electrode,
                       'stimulus': (stimulus_start_index, stimulus_index_count, stimulus),
