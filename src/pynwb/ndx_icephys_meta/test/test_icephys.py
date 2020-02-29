@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime
 from dateutil.tz import tzlocal
 from pynwb import NWBFile
-from pynwb.icephys import VoltageClampStimulusSeries, VoltageClampSeries, CurrentClampStimulusSeries
+from pynwb.icephys import VoltageClampStimulusSeries, VoltageClampSeries, CurrentClampStimulusSeries, IZeroClampSeries
 from pynwb.testing import remove_test_file
 from pynwb import NWBHDF5IO
 from hdmf.utils import docval, popargs
@@ -334,7 +334,7 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
 
     def test_add_row_incompatible_types(self):
         # Add a row that mixes CurrentClamp and VoltageClamp data
-        sweep_number = 10
+        sweep_number = 15
         local_stimulus = CurrentClampStimulusSeries(
             name="ccss_"+str(sweep_number),
             data=[1, 2, 3, 4, 5],
@@ -343,6 +343,40 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
             electrode=self.electrode,
             gain=0.1,
             sweep_number=np.uint64(sweep_number))
+        ir = IntracellularRecordingsTable()
+        with self.assertRaises(ValueError):
+            _ = ir.add_recording(electrode=self.electrode,
+                                 stimulus=local_stimulus,
+                                 response=self.response,
+                                 id=np.int64(10))
+
+    def test_warn_if_IZeroClampSeries_with_stimulus(self):
+        local_response = IZeroClampSeries(
+            name="ccss",
+            data=[1, 2, 3, 4, 5],
+            starting_time=123.6,
+            rate=10e3,
+            electrode=self.electrode,
+            gain=0.02,
+            sweep_number=np.uint64(100000))
+        ir = IntracellularRecordingsTable()
+        with self.assertRaises(ValueError):
+            _ = ir.add_recording(electrode=self.electrode,
+                                 stimulus=self.stimulus,
+                                 response=local_response,
+                                 id=np.int64(10))
+
+    def test_inconsistent_PatchClampSeries(self):
+        local_electrode = self.nwbfile.create_icephys_electrode(name="elec1",
+                                                                description='a mock intracellular electrode',
+                                                                device=self.device)
+        local_stimulus = VoltageClampStimulusSeries(name="ccss",
+                                                    data=[1, 2, 3, 4, 5],
+                                                    starting_time=123.6,
+                                                    rate=10e3,
+                                                    electrode=local_electrode,
+                                                    gain=0.02,
+                                                    sweep_number=np.uint64(100000))
         ir = IntracellularRecordingsTable()
         with self.assertRaises(ValueError):
             _ = ir.add_recording(electrode=self.electrode,

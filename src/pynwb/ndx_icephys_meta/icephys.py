@@ -1,6 +1,6 @@
 from pynwb import register_class
 from pynwb.file import NWBFile
-from pynwb.icephys import IntracellularElectrode
+from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
 try:
     from pynwb.core import DynamicTable, DynamicTableRegion
@@ -302,9 +302,21 @@ class IntracellularRecordingsTable(DynamicTable):
                 stimulus.neurodata_type.startswith("VoltageClamp")) or
                 (response.neurodata_type.startswith("VoltageClamp") and
                  stimulus.neurodata_type.startswith("CurrentClamp"))):
-            raise ValueError("Incompatible types given for 'stimulus' and 'response' parameters.' "
+            raise ValueError("Incompatible types given for 'stimulus' and 'response' parameters. "
                              "'stimulus' is of type %s and 'response' is of type %s." %
                              (stimulus.neurodata_type, response.neurodata_type))
+        if response.neurodata_type == 'IZeroClampSeries':
+            if stimulus is not None:
+                raise ValueError("stimulus should usually be None for IZeroClampSeries response")
+        if isinstance(response, PatchClampSeries) and isinstance(stimulus, PatchClampSeries):
+            # # We could also check sweep_number, but since it is mostly relevant to the deprecated SweepTable
+            # # we don't really need to enforce it here
+            # if response.sweep_number != stimulus.sweep_number:
+            #     warnings.warn("sweep_number are usually expected to be the same for PatchClampSeries type "
+            #                   "stimulus and response pairs in an intracellular recording.")
+            if response.electrode != stimulus.electrode:
+                raise ValueError("electrodes are usually expected to be the same for PatchClampSeries type "
+                                 "stimulus and response pairs in an intracellular recording.")
 
         # Add the row to the table
         row_kwargs = {'electrode': electrode,
