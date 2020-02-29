@@ -205,5 +205,5 @@ groups:
         doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
           is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
           tabels (and corresponding SequentialRecordingsTable, RepetitionsTable and
-          Consitions tables.'
+          ExperimentalConditions tables.'
         quantity: '?'

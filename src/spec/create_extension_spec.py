@@ -71,7 +71,8 @@ def main():
                                                   reftype='object'))]
     )
 
-    # Create a SimultaneousRecordingsTable (similar to trials) table to group Intracellular Electrophysiology Recording that were
+    # Create a SimultaneousRecordingsTable (similar to trials) table to group
+    # intracellular electrophysiology recording that were
     # recorded at the same time and belong together
     simultaneous_recordings_table_spec = NWBGroupSpec(
         name='simultaneous_recordings',
@@ -228,8 +229,9 @@ def main():
                                       NWBGroupSpec(neurodata_type_inc='SweepTable',
                                                    doc='[DEPRACATED] Table used to group different PatchClampSeries.'
                                                        'SweepTable is being replaced by IntracellularRecordingsTable '
-                                                       'and SimultaneousRecordingsTable tabels (and corresponding SequentialRecordingsTable, RepetitionsTable '
-                                                       'and Consitions tables.',
+                                                       'and SimultaneousRecordingsTable tabels (and corresponding '
+                                                       'SequentialRecordingsTable, RepetitionsTable and '
+                                                       'ExperimentalConditions tables.',
                                                    name='sweep_table',
                                                    quantity='?')
                                       ],
