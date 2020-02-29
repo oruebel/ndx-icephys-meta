@@ -1,5 +1,5 @@
 groups:
-- neurodata_type_def: IntracellularRecordings
+- neurodata_type_def: IntracellularRecordingsTable
   neurodata_type_inc: DynamicTable
   name: intracellular_recordings
   doc: A table to group together a stimulus and response from a single electrode and
@@ -55,20 +55,20 @@ groups:
 - neurodata_type_def: Sweeps
   neurodata_type_inc: DynamicTable
   name: sweeps
-  doc: A table for grouping different intracellular recordings from the IntracellularRecordings
+  doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
     table together that were recorded simultaneously from different electrodes
   datasets:
   - name: recordings
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the IntracellularRecordings table.
+    doc: A reference to one or more rows in the IntracellularRecordingsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: IntracellularRecordings
+        target_type: IntracellularRecordingsTable
         reftype: object
-      doc: Reference to the IntracellularRecordings table that this table region applies
-        to. This specializes the attribute inherited from DynamicTableRegion to fix
-        the type of table that can be referenced here.
+      doc: Reference to the IntracellularRecordingsTable table that this table region
+        applies to. This specializes the attribute inherited from DynamicTableRegion
+        to fix the type of table that can be referenced here.
   - name: recordings_index
     neurodata_type_inc: VectorIndex
     doc: Index dataset for the recordings column.
@@ -160,7 +160,7 @@ groups:
         quantity: '?'
       groups:
       - name: intracellular_recordings
-        neurodata_type_inc: IntracellularRecordings
+        neurodata_type_inc: IntracellularRecordingsTable
         doc: A table to group together a stimulus and response from a single electrode
           and a single sweep. Each row in the table represents a single recording
           consisting typically of a stimulus and a corresponding response. In some
@@ -176,7 +176,7 @@ groups:
         quantity: '?'
       - name: sweeps
         neurodata_type_inc: Sweeps
-        doc: A table for grouping different intracellular recordings from the IntracellularRecordings
+        doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
           table together that were recorded simultaneously from different electrodes
         quantity: '?'
       - name: sweep_sequences
@@ -201,6 +201,6 @@ groups:
       - name: sweep_table
         neurodata_type_inc: SweepTable
         doc: '[DEPRACATED] Table used to group different PatchClampSeries SweepTable
-          is being replaced with the IntracellularRecordings and Sweeps type tabel
-          (and corresponding SweepSequences, Runs and Consitions tables.'
+          is being replaced with the IntracellularRecordingsTable and Sweeps type
+          tabel (and corresponding SweepSequences, Runs and Consitions tables.'
         quantity: '?'

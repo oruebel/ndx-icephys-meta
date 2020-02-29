@@ -45,7 +45,7 @@ def main():
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
     icephys_recordings_table_spec = NWBGroupSpec(
         name='intracellular_recordings',
-        neurodata_type_def='IntracellularRecordings',
+        neurodata_type_def='IntracellularRecordingsTable',
         neurodata_type_inc='DynamicTable',
         doc='A table to group together a stimulus and response from a single electrode and a single sweep. '
             'Each row in the table represents a single recording consisting typically of a stimulus and a '
@@ -78,17 +78,17 @@ def main():
         neurodata_type_def='Sweeps',
         neurodata_type_inc='DynamicTable',
         doc='A table for grouping different intracellular recordings from the '
-            'IntracellularRecordings table together that were recorded simultaneously '
+            'IntracellularRecordingsTable table together that were recorded simultaneously '
             'from different electrodes',
         datasets=[NWBDatasetSpec(name='recordings',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the IntracellularRecordings table.',
+                                 doc='A reference to one or more rows in the IntracellularRecordingsTable table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
-                                        dtype=NWBRefSpec(target_type='IntracellularRecordings',
+                                        dtype=NWBRefSpec(target_type='IntracellularRecordingsTable',
                                                          reftype='object'),
-                                        doc='Reference to the IntracellularRecordings table that '
+                                        doc='Reference to the IntracellularRecordingsTable table that '
                                             'this table region applies to. This specializes the '
                                             'attribute inherited from DynamicTableRegion to fix '
                                             'the type of table that can be referenced here.'
@@ -203,7 +203,7 @@ def main():
          doc='expand definition of general from NWBFile',
          groups=[NWBGroupSpec(name='intracellular_ephys',
                               doc='expand definition from NWBFile',
-                              groups=[NWBGroupSpec(neurodata_type_inc='IntracellularRecordings',
+                              groups=[NWBGroupSpec(neurodata_type_inc='IntracellularRecordingsTable',
                                                    doc=icephys_recordings_table_spec.doc,
                                                    name='intracellular_recordings',
                                                    quantity='?'),
@@ -225,9 +225,9 @@ def main():
                                                    quantity='?'),
                                       # Update doc on SweepTable to declare it as deprecated
                                       NWBGroupSpec(neurodata_type_inc='SweepTable',
-                                                   doc='[DEPRACATED] Table used to group different PatchClampSeries '
-                                                       'SweepTable is being replaced with the IntracellularRecordings '
-                                                       'and Sweeps type tabel (and corresponding SweepSequences, Runs '
+                                                   doc='[DEPRACATED] Table used to group different PatchClampSeries.'
+                                                       'SweepTable is being replaced by IntracellularRecordingsTable '
+                                                       'and Sweeps tabels (and corresponding SweepSequences, Runs '
                                                        'and Consitions tables.',
                                                    name='sweep_table',
                                                    quantity='?')
