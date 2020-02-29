@@ -356,6 +356,30 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         # test that we get the correct row index back
         self.assertEqual(row_index, 0)
 
+    def test_add_row_no_stimulus(self):
+        ir = IntracellularRecordings()
+        row_index = ir.add_recording(electrode=self.electrode,
+                                     stimulus=None,
+                                     response=self.response,
+                                     id=np.int64(10))
+        res = ir[0]
+        # Check the ID
+        self.assertEqual(res.index[0], 10)
+        # Check the stimulus
+        self.assertEqual(res.iloc[0]['stimulus'][0], -1)
+        self.assertEqual(res.iloc[0]['stimulus'][1], -1)
+        self.assertIs(res.iloc[0]['stimulus'][2], self.response)
+        # Check the response
+        self.assertEqual(res.iloc[0]['response'][0], 0)
+        self.assertEqual(res.iloc[0]['response'][1], 5)
+        self.assertIs(res.iloc[0]['response'][2], self.response)
+        # Check the Intracellular electrode
+        self.assertIs(res.iloc[0]['electrode'], self.electrode)
+        # test writing out ir table
+        self.write_test_helper(ir)
+        # test that we get the correct row index back
+        self.assertEqual(row_index, 0)
+
     def test_add_row_index_out_of_range(self):
 
         # Stimulus/Response start_index to large
