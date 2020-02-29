@@ -373,8 +373,8 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         return len(self.id) - 1
 
 
-@register_class('SweepSequences', namespace)
-class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
+@register_class('SequentialRecordingsTable', namespace)
+class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
     """
     A table for grouping different intracellular recording simultaneous_recordings from the
     SimultaneousRecordingsTable table together. This is typically used to group together simultaneous_recordings
@@ -405,13 +405,13 @@ class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
     def __init__(self, **kwargs):
         simultaneous_recordings_table = popargs('simultaneous_recordings_table', kwargs)
         # Define defaultb name and description settings
-        kwargs['name'] = 'sweep_sequences'
+        kwargs['name'] = 'sequential_recordings'
         kwargs['description'] = ('A table for grouping different intracellular recording simultaneous_recordings from the '
                                  'SimultaneousRecordingsTable table together. This is typically used to group together simultaneous_recordings '
                                  'where the a sequence of stimuli of the same type with varying parameters '
                                  'have been presented in a sequence.')
         # Initialize the DynamicTable
-        call_docval_func(super(SweepSequences, self).__init__, kwargs)
+        call_docval_func(super(SequentialRecordingsTable, self).__init__, kwargs)
         if self['simultaneous_recordings'].target.table is None:
             if simultaneous_recordings_table is not None:
                 self['simultaneous_recordings'].target.table = simultaneous_recordings_table
@@ -437,7 +437,7 @@ class SweepSequences(DynamicTable, HierarchicalDynamicTableMixin):
         simultaneous_recordings = getargs('simultaneous_recordings', kwargs)
         if simultaneous_recordings is None:
             kwargs[''] = []
-        _ = super(SweepSequences, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super(SequentialRecordingsTable, self).add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -450,22 +450,22 @@ class Runs(DynamicTable, HierarchicalDynamicTableMixin):
     """
 
     __columns__ = (
-        {'name': 'sweep_sequences',
-         'description': 'Column with a references to one or more rows in the SweepSequences table',
+        {'name': 'sequential_recordings',
+         'description': 'Column with a references to one or more rows in the SequentialRecordingsTable table',
          'required': True,
          'index': True,
          'table': True},
     )
 
-    @docval({'name': 'sweep_sequences_table',
-             'type': SweepSequences,
-             'doc': 'the SweepSequences table that the sweep_sequences column indexes. May be None when '
+    @docval({'name': 'sequential_recordings_table',
+             'type': SequentialRecordingsTable,
+             'doc': 'the SequentialRecordingsTable table that the sequential_recordings column indexes. May be None when '
                     'reading the Container from file as the table attribute is already populated in this '
                     'case but otherwise this is required.',
              'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
-        sweep_sequences_table = popargs('sweep_sequences_table', kwargs)
+        sequential_recordings_table = popargs('sequential_recordings_table', kwargs)
         # Define default name and description settings
         kwargs['name'] = 'runs'
         kwargs['description'] = ('A table for grouping different intracellular recording sweep sequences together.'
@@ -473,13 +473,13 @@ class Runs(DynamicTable, HierarchicalDynamicTableMixin):
                                  'Runs table is typically used to group sets of stimuli applied in sequence.')
         # Initialize the DynamicTable
         call_docval_func(super(Runs, self).__init__, kwargs)
-        if self['sweep_sequences'].target.table is None:
-            if sweep_sequences_table is not None:
-                self['sweep_sequences'].target.table = sweep_sequences_table
+        if self['sequential_recordings'].target.table is None:
+            if sequential_recordings_table is not None:
+                self['sequential_recordings'].target.table = sequential_recordings_table
             else:
-                raise ValueError('sweep_sequences_table constructor argument required')
+                raise ValueError('sequential_recordings_table constructor argument required')
 
-    @docval({'name': 'sweep_sequences',
+    @docval({'name': 'sequential_recordings',
              'type': 'array_data',
              'doc': 'the indices of the sweep sequences belonging to this run',
              'default': None},
@@ -492,9 +492,9 @@ class Runs(DynamicTable, HierarchicalDynamicTableMixin):
         and associated custom run  metadata to the table.
   """
         # Check recordings
-        sweep_sequences = getargs('sweep_sequences', kwargs)
-        if sweep_sequences is None:
-            kwargs['sweep_sequences'] = []
+        sequential_recordings = getargs('sequential_recordings', kwargs)
+        if sequential_recordings is None:
+            kwargs['sequential_recordings'] = []
         _ = super(Runs, self).add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
@@ -574,9 +574,9 @@ class ICEphysFile(NWBFile):
                       'doc': 'SimultaneousRecordingsTable table for grouping different intracellular recordings from'
                              'the IntracellularRecordingsTable table together that were recorded simultaneously '
                              'from different electrodes'},
-                     {'name': 'icephys_sweep_sequences',
+                     {'name': 'icephys_sequential_recordings',
                       'child': True,
-                      'required_name': 'sweep_sequences',
+                      'required_name': 'sequential_recordings',
                       'doc': 'A table for grouping different simultaneous intracellular recording from the '
                              'SimultaneousRecordingsTable table together. This is typically used to group together simultaneous recordings '
                              'where the a sequence of stimuli of the same type with varying parameters '
@@ -599,8 +599,8 @@ class ICEphysFile(NWBFile):
              'doc': 'the IntracellularRecordingsTable table that belongs to this NWBFile'},
             {'name': 'icephys_simultaneous_recordings', 'type': SimultaneousRecordingsTable, 'default': None,
              'doc': 'the SimultaneousRecordingsTable table that belongs to this NWBFile'},
-            {'name': 'icephys_sweep_sequences', 'type': SweepSequences, 'default': None,
-             'doc': 'the SweepSequences table that belongs to this NWBFile'},
+            {'name': 'icephys_sequential_recordings', 'type': SequentialRecordingsTable, 'default': None,
+             'doc': 'the SequentialRecordingsTable table that belongs to this NWBFile'},
             {'name': 'icephys_runs', 'type': Runs, 'default': None,
              'doc': 'the Runs table that belongs to this NWBFile'},
             {'name': 'icephys_conditions', 'type': Conditions, 'default': None,
@@ -611,12 +611,12 @@ class ICEphysFile(NWBFile):
         # Get the arguments to pass to NWBFile and remove arguments custum to this class
         intracellular_recordings = kwargs.pop('intracellular_recordings', None)
         icephys_simultaneous_recordings = kwargs.pop('icephys_simultaneous_recordings', None)
-        icephys_sweep_sequences = kwargs.pop('icephys_sweep_sequences', None)
+        icephys_sequential_recordings = kwargs.pop('icephys_sequential_recordings', None)
         icephys_runs = kwargs.pop('icephys_runs', None)
         icephys_conditions = kwargs.pop('icephys_conditions', None)
         if kwargs.get('sweep_table') is not None:
             warnings.warn("Use of SweepTable is deprecated. Use the intracellular_recordings, "
-                          "simultaneous_recordings, sweep_sequences, runs and/or conditions table(s) instead.", DeprecationWarning)
+                          "simultaneous_recordings, sequential_recordings, runs and/or conditions table(s) instead.", DeprecationWarning)
         # Initialize the NWBFile parent class
         pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
         super(ICEphysFile, self).__init__(*pargs, **pkwargs)
@@ -625,7 +625,7 @@ class ICEphysFile(NWBFile):
         # Set the intracellular_recordings if available
         setattr(self, 'intracellular_recordings', intracellular_recordings)
         setattr(self, 'icephys_simultaneous_recordings', icephys_simultaneous_recordings)
-        setattr(self, 'icephys_sweep_sequences', icephys_sweep_sequences)
+        setattr(self, 'icephys_sequential_recordings', icephys_sequential_recordings)
         setattr(self, 'icephys_runs', icephys_runs)
         setattr(self, 'icephys_conditions', icephys_conditions)
 
@@ -751,29 +751,29 @@ class ICEphysFile(NWBFile):
         """
         return call_docval_func(self.get_icephys_simultaneous_recordings().add_sweep, kwargs)
 
-    @docval(returns='The NWBFile.icephys_sweep_sequences table', rtype=SweepSequences)
-    def get_icephys_sweep_sequences(self):
+    @docval(returns='The NWBFile.icephys_sequential_recordings table', rtype=SequentialRecordingsTable)
+    def get_icephys_sequential_recordings(self):
         """
-        Get the NWBFile.icephys_sweep_sequences table.
+        Get the NWBFile.icephys_sequential_recordings table.
 
-        In contrast to NWBFile.icephys_sweep_sequences, this function will create the
-        IntracellularRecordingsTable table if not yet done, whereas NWBFile.icephys_sweep_sequences
+        In contrast to NWBFile.icephys_sequential_recordings, this function will create the
+        IntracellularRecordingsTable table if not yet done, whereas NWBFile.icephys_sequential_recordings
         will return None if the table is currently not being used.
         """
-        if self.icephys_sweep_sequences is None:
-            self.icephys_sweep_sequences = SweepSequences(self.get_icephys_simultaneous_recordings())
-        return self.icephys_sweep_sequences
+        if self.icephys_sequential_recordings is None:
+            self.icephys_sequential_recordings = SequentialRecordingsTable(self.get_icephys_simultaneous_recordings())
+        return self.icephys_sequential_recordings
 
-    @docval(*get_docval(SweepSequences.add_sweep_sequence),
-            returns='Integer index of the row that was added to SweepSequences',
+    @docval(*get_docval(SequentialRecordingsTable.add_sweep_sequence),
+            returns='Integer index of the row that was added to SequentialRecordingsTable',
             rtype=int,
             allow_extra=True)
     def add_icephys_sweep_sequence(self, **kwargs):
         """
-        Add a new sweep sequence to the icephys_sweep_sequences table
+        Add a new sweep sequence to the icephys_sequential_recordings table
         """
-        self.get_icephys_sweep_sequences()
-        return call_docval_func(self.icephys_sweep_sequences.add_sweep_sequence, kwargs)
+        self.get_icephys_sequential_recordings()
+        return call_docval_func(self.icephys_sequential_recordings.add_sweep_sequence, kwargs)
 
     @docval(returns='The NWBFile.icephys_runs table', rtype=Runs)
     def get_icephys_runs(self):
@@ -785,7 +785,7 @@ class ICEphysFile(NWBFile):
         will return None if the table is currently not being used.
         """
         if self.icephys_runs is None:
-            self.icephys_runs = Runs(self.get_icephys_sweep_sequences())
+            self.icephys_runs = Runs(self.get_icephys_sequential_recordings())
         return self.icephys_runs
 
     @docval(*get_docval(Runs.add_run),
@@ -838,8 +838,8 @@ class ICEphysFile(NWBFile):
             return self.icephys_conditions
         elif self.icephys_runs is not None:
             return self.icephys_runs
-        elif self.icephys_sweep_sequences is not None:
-            return self.icephys_sweep_sequences
+        elif self.icephys_sequential_recordings is not None:
+            return self.icephys_sequential_recordings
         elif self.icephys_simultaneous_recordings is not None:
             return self.icephys_simultaneous_recordings
         elif self.intracellular_recordings is not None:

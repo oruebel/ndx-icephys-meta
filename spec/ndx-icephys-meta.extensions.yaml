@@ -72,11 +72,11 @@ groups:
   - name: recordings_index
     neurodata_type_inc: VectorIndex
     doc: Index dataset for the recordings column.
-- neurodata_type_def: SweepSequences
+- neurodata_type_def: SequentialRecordingsTable
   neurodata_type_inc: DynamicTable
-  name: sweep_sequences
-  doc: A table for grouping different simultaneous recordings from the SimultaneousRecordingsTable
-    table together. This is typically used to group together simultaneous recordings
+  name: sequential_recordings
+  doc: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
+    table together. This is typically used to group together sequential recordings
     where the a sequence of stimuli of the same type with varying parameters have
     been presented in a sequence.
   datasets:
@@ -105,20 +105,20 @@ groups:
     With each SweepSequence typically representing a particular type of stimulus,
     the Runs table is typically used to group sets of stimuli applied in sequence.
   datasets:
-  - name: sweep_sequences
+  - name: sequential_recordings
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the SweepSequences table.
+    doc: A reference to one or more rows in the SequentialRecordingsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: SweepSequences
+        target_type: SequentialRecordingsTable
         reftype: object
-      doc: Reference to the SweepSequences table that this table region applies to.
-        This specializes the attribute inherited from DynamicTableRegion to fix the
-        type of table that can be referenced here.
-  - name: sweep_sequences_index
+      doc: Reference to the SequentialRecordingsTable table that this table region
+        applies to. This specializes the attribute inherited from DynamicTableRegion
+        to fix the type of table that can be referenced here.
+  - name: sequential_recordings_index
     neurodata_type_inc: VectorIndex
-    doc: Index dataset for the sweep_sequences column.
+    doc: Index dataset for the sequential_recordings column.
 - neurodata_type_def: Conditions
   neurodata_type_inc: DynamicTable
   name: conditions
@@ -180,10 +180,10 @@ groups:
         doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
           table together that were recorded simultaneously from different electrodes
         quantity: '?'
-      - name: sweep_sequences
-        neurodata_type_inc: SweepSequences
-        doc: A table for grouping different simultaneous recordings from the SimultaneousRecordingsTable
-          table together. This is typically used to group together simultaneous recordings
+      - name: sequential_recordings
+        neurodata_type_inc: SequentialRecordingsTable
+        doc: A table for grouping different sequential recordings from the SimultaneousRecordingsTable
+          table together. This is typically used to group together sequential recordings
           where the a sequence of stimuli of the same type with varying parameters
           have been presented in a sequence.
         quantity: '?'
@@ -203,5 +203,6 @@ groups:
         neurodata_type_inc: SweepTable
         doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
           is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
-          tabels (and corresponding SweepSequences, Runs and Consitions tables.'
+          tabels (and corresponding SequentialRecordingsTable, Runs and Consitions
+          tables.'
         quantity: '?'

@@ -99,14 +99,15 @@ def main():
                   ]
         )
 
-    # Create the SweepSequences table to group different SimultaneousRecordingsTable together
-    sweepsequences_table_spec = NWBGroupSpec(
-        name='sweep_sequences',
-        neurodata_type_def='SweepSequences',
+    # Create the SequentialRecordingsTable table to group different SimultaneousRecordingsTable together
+    sequentialrecordings_table_spec = NWBGroupSpec(
+        name='sequential_recordings',
+        neurodata_type_def='SequentialRecordingsTable',
         neurodata_type_inc='DynamicTable',
-        doc='A table for grouping different simultaneous recordings from the '
-            'SimultaneousRecordingsTable table together. This is typically used to group together simultaneous recordings '
-            'where the a sequence of stimuli of the same type with varying parameters '
+        doc='A table for grouping different sequential recordings from the '
+            'SimultaneousRecordingsTable table together. This is typically '
+            'used to group together sequential recordings where the a sequence '
+            'of stimuli of the same type with varying parameters '
             'have been presented in a sequence.',
         datasets=[NWBDatasetSpec(name='simultaneous_recordings',
                                  neurodata_type_inc='DynamicTableRegion',
@@ -132,7 +133,7 @@ def main():
                   ]
         )
 
-    # Create the Runs table to group different SweepSequences together
+    # Create the Runs table to group different SequentialRecordingsTable together
     runs_table_spec = NWBGroupSpec(
         name='runs',
         neurodata_type_def='Runs',
@@ -140,23 +141,23 @@ def main():
         doc='A table for grouping different intracellular recording sweep sequences together. '
             'With each SweepSequence typically representing a particular type of stimulus, the '
             'Runs table is typically used to group sets of stimuli applied in sequence.',
-        datasets=[NWBDatasetSpec(name='sweep_sequences',
+        datasets=[NWBDatasetSpec(name='sequential_recordings',
                                  neurodata_type_inc='DynamicTableRegion',
-                                 doc='A reference to one or more rows in the SweepSequences table.',
+                                 doc='A reference to one or more rows in the SequentialRecordingsTable table.',
                                  attributes=[
                                      NWBAttributeSpec(
                                         name='table',
-                                        dtype=NWBRefSpec(target_type='SweepSequences',
+                                        dtype=NWBRefSpec(target_type='SequentialRecordingsTable',
                                                          reftype='object'),
-                                        doc='Reference to the SweepSequences table that this table region '
+                                        doc='Reference to the SequentialRecordingsTable table that this table region '
                                             'applies to. This specializes the attribute inherited '
                                             'from DynamicTableRegion to fix the type of table that '
                                             'can be referenced here.'
                                      )
                                  ]),
-                  NWBDatasetSpec(name='sweep_sequences_index',
+                  NWBDatasetSpec(name='sequential_recordings_index',
                                  neurodata_type_inc='VectorIndex',
-                                 doc='Index dataset for the sweep_sequences column.')
+                                 doc='Index dataset for the sequential_recordings column.')
                   ]
         )
 
@@ -211,9 +212,9 @@ def main():
                                                    doc=simultaneous_recordings_table_spec.doc,
                                                    name='simultaneous_recordings',
                                                    quantity='?'),
-                                      NWBGroupSpec(neurodata_type_inc='SweepSequences',
-                                                   doc=sweepsequences_table_spec.doc,
-                                                   name='sweep_sequences',
+                                      NWBGroupSpec(neurodata_type_inc='SequentialRecordingsTable',
+                                                   doc=sequentialrecordings_table_spec.doc,
+                                                   name='sequential_recordings',
                                                    quantity='?'),
                                       NWBGroupSpec(neurodata_type_inc='Runs',
                                                    doc=runs_table_spec.doc,
@@ -227,7 +228,7 @@ def main():
                                       NWBGroupSpec(neurodata_type_inc='SweepTable',
                                                    doc='[DEPRACATED] Table used to group different PatchClampSeries.'
                                                        'SweepTable is being replaced by IntracellularRecordingsTable '
-                                                       'and SimultaneousRecordingsTable tabels (and corresponding SweepSequences, Runs '
+                                                       'and SimultaneousRecordingsTable tabels (and corresponding SequentialRecordingsTable, Runs '
                                                        'and Consitions tables.',
                                                    name='sweep_table',
                                                    quantity='?')
@@ -261,7 +262,7 @@ def main():
     # Add our new data types to this list
     new_data_types = [icephys_recordings_table_spec,
                       simultaneous_recordings_table_spec,
-                      sweepsequences_table_spec,
+                      sequentialrecordings_table_spec,
                       runs_table_spec,
                       conditions_table_spec,
                       icephys_file_spec]
