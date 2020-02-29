@@ -11,7 +11,7 @@ from hdmf.utils import docval, popargs
 
 try:
     from ndx_icephys_meta.icephys import (IntracellularRecordingsTable,
-                                          Sweeps,
+                                          SimultaneousRecordingsTable,
                                           SweepSequences,
                                           Runs,
                                           Conditions,
@@ -22,7 +22,7 @@ except ImportError:
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from ndx_icephys_meta.icephys import (IntracellularRecordingsTable,
-                                          Sweeps,
+                                          SimultaneousRecordingsTable,
                                           SweepSequences,
                                           Runs,
                                           Conditions,
@@ -130,7 +130,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                                           'C1', 'C2', 'C3',
                                                           'D1', 'D2', 'D3'],
                                                     description='String indicating the type of stimulus applied')
-        # Add sweeps
+        # Add simultaneous_recordings
         nwbfile.add_icephys_sweep(recordings=[0, 1], id=np.int64(100))
         nwbfile.add_icephys_sweep(recordings=[2, 3], id=np.int64(101))
         nwbfile.add_icephys_sweep(recordings=[4, 5, 6], id=np.int64(102))
@@ -140,17 +140,17 @@ class ICEphysMetaTestBase(unittest.TestCase):
         nwbfile.add_icephys_sweep(recordings=[14, 15, 16], id=np.int64(106))
         nwbfile.add_icephys_sweep(recordings=[17, 18, 19], id=np.int64(107))
         if add_custom_columns:
-            nwbfile.icephys_sweeps.add_column(name='tag',
+            nwbfile.icephys_simultaneous_recordings.add_column(name='tag',
                                               data=np.arange(8),
                                               description='some integer tag for a sweep')
 
         # Add sweep sequences
-        nwbfile.add_icephys_sweep_sequence(sweeps=[0, 1], id=np.int64(1000), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sweep_sequence(sweeps=[2, ], id=np.int64(1001), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sweep_sequence(sweeps=[3, ], id=np.int64(1002), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sweep_sequence(sweeps=[4, 5], id=np.int64(1003), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sweep_sequence(sweeps=[6, ], id=np.int64(1004), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sweep_sequence(sweeps=[7, ], id=np.int64(1005), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[0, 1], id=np.int64(1000), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[2, ], id=np.int64(1001), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[3, ], id=np.int64(1002), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[4, 5], id=np.int64(1003), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[6, ], id=np.int64(1004), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[7, ], id=np.int64(1005), stimulus_type="MyStimulusType")
         if add_custom_columns:
             nwbfile.icephys_sweep_sequences.add_column(name='type',
                                                        data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
@@ -227,8 +227,8 @@ class ICEphysMetaTestBase(unittest.TestCase):
              'doc': 'Intracellular recording to be added to the file before write',
              'default': None},
             {'name': 'sw',
-             'type': Sweeps,
-             'doc': 'Sweeps table to be added to the file before write',
+             'type': SimultaneousRecordingsTable,
+             'doc': 'SimultaneousRecordingsTable table to be added to the file before write',
              'default': None},
             {'name': 'sws',
              'type': SweepSequences,
@@ -269,7 +269,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                 in_ir = infile.get_processing_module('icephys_meta_module').get('intracellular_recordings')  # noqa F841
                 # TODO compare the data in ir with in_ir to make sure the data was written and read correctly
             if sw is not None:
-                in_sw = infile.get_processing_module('icephys_meta_module').get('sweeps')  # noqa F841
+                in_sw = infile.get_processing_module('icephys_meta_module').get('simultaneous_recordings')  # noqa F841
                 # TODO compare the data in sw with in_sw to make sure the data was written and read correctly
             if sws is not None:
                 in_sws = infile.get_processing_module('icephys_meta_module').get('sweep_sequences')  # noqa F841
@@ -456,7 +456,7 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
 
     def test_basic_write(self):
         """
-        Populate, write, and read the Sweeps container and other required containers
+        Populate, write, and read the SimultaneousRecordingsTable container and other required containers
         """
         ir = IntracellularRecordingsTable()
         row_index = ir.add_recording(electrode=self.electrode,
@@ -468,7 +468,7 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
 
     def test_write_with_stimulus_template(self):
         """
-        Populate, write, and read the Sweeps container and other required containers
+        Populate, write, and read the SimultaneousRecordingsTable container and other required containers
         """
         local_nwbfile = ICEphysFile(
                 session_description='my first synthetic recording',
@@ -516,15 +516,15 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
 
 class SweepsTests(ICEphysMetaTestBase):
     """
-    Test class for testing the Sweeps Container class
+    Test class for testing the SimultaneousRecordingsTable Container class
     """
 
     def test_init(self):
         """
-        Test  __init__ to make sure we can instantiate the Sweeps container
+        Test  __init__ to make sure we can instantiate the SimultaneousRecordingsTable container
         """
         ir = IntracellularRecordingsTable()
-        _ = Sweeps(intracellular_recordings_table=ir)
+        _ = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         self.assertTrue(True)
 
     def test_missing_intracellular_recordings_on_init(self):
@@ -534,11 +534,11 @@ class SweepsTests(ICEphysMetaTestBase):
         from the file.
         """
         with self.assertRaises(ValueError):
-            _ = Sweeps()
+            _ = SimultaneousRecordingsTable()
 
     def test_basic_write(self):
         """
-        Populate, write, and read the Sweeps container and other required containers
+        Populate, write, and read the SimultaneousRecordingsTable container and other required containers
         """
         ir = IntracellularRecordingsTable()
         row_index = ir.add_recording(electrode=self.electrode,
@@ -546,7 +546,7 @@ class SweepsTests(ICEphysMetaTestBase):
                                      response=self.response,
                                      id=np.int64(10))
         self.assertEqual(row_index, 0)
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw)
@@ -560,7 +560,7 @@ class SweepsTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=np.int64(10))
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0], id=np.int64(10))
         with self.assertRaises(ValueError):
             sw.add_sweep(recordings=[0], id=np.int64(10))
@@ -576,14 +576,14 @@ class SweepSequencesTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the SweepSequences container
         """
         ir = IntracellularRecordingsTable()
-        sw = Sweeps(intracellular_recordings_table=ir)
-        _ = SweepSequences(sweeps_table=sw)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
+        _ = SweepSequences(simultaneous_recordings_table=sw)
         self.assertTrue(True)
 
-    def test_missing_sweeps_on_init(self):
+    def test_missing_simultaneous_recordings_on_init(self):
         """
-        Test that ValueError is raised when sweeps is missing. This is
-        allowed only on read where the sweeps table is already set
+        Test that ValueError is raised when simultaneous_recordings is missing. This is
+        allowed only on read where the simultaneous_recordings table is already set
         from the file.
         """
         with self.assertRaises(ValueError):
@@ -599,11 +599,11 @@ class SweepSequencesTests(ICEphysMetaTestBase):
                                      response=self.response,
                                      id=np.int64(10))
         self.assertEqual(row_index, 0)
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        row_index = sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
+        row_index = sws.add_sweep_sequence(simultaneous_recordings=[0, ], stimulus_type='MyStimStype')
         self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir, sw=sw, sws=sws)
 
@@ -616,12 +616,12 @@ class SweepSequencesTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=np.int64(10))
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
+        sws.add_sweep_sequence(simultaneous_recordings=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
         with self.assertRaises(ValueError):
-            sws.add_sweep_sequence(sweeps=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
+            sws.add_sweep_sequence(simultaneous_recordings=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
 
 
 class RunsTests(ICEphysMetaTestBase):
@@ -634,8 +634,8 @@ class RunsTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the Runs container
         """
         ir = IntracellularRecordingsTable()
-        sw = Sweeps(intracellular_recordings_table=ir)
-        sws = SweepSequences(sweeps_table=sw)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
+        sws = SweepSequences(simultaneous_recordings_table=sw)
         _ = Runs(sweep_sequences_table=sws)
         self.assertTrue(True)
 
@@ -658,11 +658,11 @@ class RunsTests(ICEphysMetaTestBase):
                                      response=self.response,
                                      id=np.int64(10))
         self.assertEqual(row_index, 0)
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        row_index = sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
+        row_index = sws.add_sweep_sequence(simultaneous_recordings=[0, ], stimulus_type='MyStimStype')
         self.assertEqual(row_index, 0)
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
@@ -677,10 +677,10 @@ class RunsTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=np.int64(10))
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
+        sws.add_sweep_sequence(simultaneous_recordings=[0, ], stimulus_type='MyStimStype')
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ], id=np.int64(10))
         with self.assertRaises(ValueError):
@@ -697,8 +697,8 @@ class ConditionsTests(ICEphysMetaTestBase):
         Test  __init__ to make sure we can instantiate the Conditions container
         """
         ir = IntracellularRecordingsTable()
-        sw = Sweeps(intracellular_recordings_table=ir)
-        sws = SweepSequences(sweeps_table=sw)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
+        sws = SweepSequences(simultaneous_recordings_table=sw)
         runs = Runs(sweep_sequences_table=sws)
         _ = Conditions(runs_table=runs)
         self.assertTrue(True)
@@ -722,11 +722,11 @@ class ConditionsTests(ICEphysMetaTestBase):
                                      response=self.response,
                                      id=np.int64(10))
         self.assertEqual(row_index, 0)
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         row_index = sw.add_sweep(recordings=[0])
         self.assertEqual(row_index, 0)
         sws = SweepSequences(sw)
-        row_index = sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
+        row_index = sws.add_sweep_sequence(simultaneous_recordings=[0, ], stimulus_type='MyStimStype')
         self.assertEqual(row_index, 0)
         runs = Runs(sweep_sequences_table=sws)
         row_index = runs.add_run(sweep_sequences=[0, ])
@@ -745,10 +745,10 @@ class ConditionsTests(ICEphysMetaTestBase):
                          stimulus=self.stimulus,
                          response=self.response,
                          id=np.int64(10))
-        sw = Sweeps(intracellular_recordings_table=ir)
+        sw = SimultaneousRecordingsTable(intracellular_recordings_table=ir)
         sw.add_sweep(recordings=[0])
         sws = SweepSequences(sw)
-        sws.add_sweep_sequence(sweeps=[0, ], stimulus_type='MyStimStype')
+        sws.add_sweep_sequence(simultaneous_recordings=[0, ], stimulus_type='MyStimStype')
         runs = Runs(sweep_sequences_table=sws)
         runs.add_run(sweep_sequences=[0, ])
         cond = Conditions(runs_table=runs)
@@ -827,9 +827,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         """
         _ = self.__get_icephysfile()
 
-    def test_deprecate_sweeps_on_add_stimulus(self):
+    def test_deprecate_simultaneous_recordings_on_add_stimulus(self):
         """
-        Test that warnings are raised if the user tries to use a sweeps table
+        Test that warnings are raised if the user tries to use a simultaneous_recordings table
         """
         nwbfile = self.__get_icephysfile()
         device = self.__add_device(nwbfile)
@@ -846,7 +846,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             nwbfile.add_acquisition(responce, use_sweep_table=True)
             self.assertEqual(len(w), 1)
 
-    def test_deprecate_sweeps_on_add_acquistion(self):
+    def test_deprecate_sweepstable_on_add_acquistion(self):
         """
         Test that warnings are raised if the user tries to use a sweeps table
         """
@@ -864,7 +864,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             nwbfile.add_stimulus(stimulus, use_sweep_table=True)
             self.assertEqual(len(w), 1)
 
-    def test_deprecate_sweeps_on_init(self):
+    def test_deprecate_sweepstable_on_init(self):
         """
         Test that warnings are raised if the user tries to use a sweeps table
         """
@@ -982,12 +982,12 @@ class ICEphysFileTests(ICEphysMetaTestBase):
                                                       id=np.int64(10))
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               IntracellularRecordingsTable)
-        # Add a sweep and check that the sweeps table is the top table
+        # Add a sweep and check that the simultaneous_recordings table is the top table
         _ = local_nwbfile.add_icephys_sweep(recordings=[0])
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
-                              Sweeps)
+                              SimultaneousRecordingsTable)
         # Add a sweep_sequence and check that it is now our top table
-        _ = local_nwbfile.add_icephys_sweep_sequence(sweeps=[0], stimulus_type="MyStimulusType")
+        _ = local_nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[0], stimulus_type="MyStimulusType")
         self.assertIsInstance(local_nwbfile.get_icephys_meta_parent_table(),
                               SweepSequences)
         # Add a run and check that it is now our top table
@@ -1050,16 +1050,16 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         self.assertIs(res.iloc[0]['electrode'], electrode)
 
         #############################################
-        #  Test adding Sweeps
+        #  Test adding SimultaneousRecordingsTable
         #############################################
-        # Confirm that our Sweeps table does not yet exist
-        self.assertIsNone(nwbfile.icephys_sweeps)
+        # Confirm that our SimultaneousRecordingsTable table does not yet exist
+        self.assertIsNone(nwbfile.icephys_simultaneous_recordings)
         # Add a sweep
         nwbfile.add_icephys_sweep(recordings=[0], id=np.int64(12))
-        # Check that the Sweeps table has been added
-        self.assertIsNotNone(nwbfile.icephys_sweeps)
-        # Check that the values for our icephys_sweeps table are correct
-        res = nwbfile.icephys_sweeps[0]
+        # Check that the SimultaneousRecordingsTable table has been added
+        self.assertIsNotNone(nwbfile.icephys_simultaneous_recordings)
+        # Check that the values for our icephys_simultaneous_recordings table are correct
+        res = nwbfile.icephys_simultaneous_recordings[0]
         # check the id value
         self.assertEqual(res.index[0], 12)
         # Check that our sweep contains 1 IntracellularRecording
@@ -1071,15 +1071,15 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Confirm that our SweepSequences table does not yet exist
         self.assertIsNone(nwbfile.icephys_sweep_sequences)
         # Add a sweep
-        nwbfile.add_icephys_sweep_sequence(sweeps=[0], id=np.int64(15), stimulus_type="MyStimulusType")
-        # Check that the Sweeps table has been added
+        nwbfile.add_icephys_sweep_sequence(simultaneous_recordings=[0], id=np.int64(15), stimulus_type="MyStimulusType")
+        # Check that the SimultaneousRecordingsTable table has been added
         self.assertIsNotNone(nwbfile.icephys_sweep_sequences)
-        # Check that the values for our Sweeps table are correct
+        # Check that the values for our SimultaneousRecordingsTable table are correct
         res = nwbfile.icephys_sweep_sequences[0]
         # check the id value
         self.assertEqual(res.index[0], 15)
         # Check that our sweep contains 1 IntracellularRecording
-        self.assertEqual(len(res.iloc[0]['sweeps']), 1)
+        self.assertEqual(len(res.iloc[0]['simultaneous_recordings']), 1)
 
         #############################################
         #  Test adding a Run
@@ -1088,7 +1088,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         self.assertIsNone(nwbfile.icephys_runs)
         # Add a run
         nwbfile.add_icephys_run(sweep_sequences=[0], id=np.int64(17))
-        # Check that the Sweeps table has been added
+        # Check that the SimultaneousRecordingsTable table has been added
         self.assertIsNotNone(nwbfile.icephys_runs)
         # Check that the values for our Runs table are correct
         res = nwbfile.icephys_runs[0]
@@ -1147,11 +1147,11 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertIs(res.iloc[0]['electrode'], electrode)
 
             ############################################################################
-            #  Test that the  Sweeps table has been written correctly
+            #  Test that the  SimultaneousRecordingsTable table has been written correctly
             ############################################################################
-            self.assertIsNotNone(infile.icephys_sweeps)
-            self.assertEqual(len(infile.icephys_sweeps), 1)
-            res = nwbfile.icephys_sweeps[0]
+            self.assertIsNotNone(infile.icephys_simultaneous_recordings)
+            self.assertEqual(len(infile.icephys_simultaneous_recordings), 1)
+            res = nwbfile.icephys_simultaneous_recordings[0]
             # Check the ID and len of the intracellular_recordings column
             self.assertEqual(res.index[0], 12)
             self.assertEqual(len(res.iloc[0]['recordings']), 1)
@@ -1163,10 +1163,10 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertIsNotNone(infile.icephys_sweep_sequences)
             self.assertEqual(len(infile.icephys_sweep_sequences), 1)
             res = nwbfile.icephys_sweep_sequences[0]
-            # Check the ID and len of the sweeps column
+            # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 15)
-            self.assertEqual(len(res.iloc[0]['sweeps']), 1)
-            self.assertEqual(res.iloc[0]['sweeps'].index[0], 12)  # Check id of the references sweeps row
+            self.assertEqual(len(res.iloc[0]['simultaneous_recordings']), 1)
+            self.assertEqual(res.iloc[0]['simultaneous_recordings'].index[0], 12)  # Check id of the references simultaneous_recordings row
 
             ############################################################################
             #  Test that the  Runs table has been written correctly
@@ -1174,7 +1174,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertIsNotNone(infile.icephys_runs)
             self.assertEqual(len(infile.icephys_runs), 1)
             res = nwbfile.icephys_runs[0]
-            # Check the ID and len of the sweeps column
+            # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 17)
             self.assertEqual(len(res.iloc[0]['sweep_sequences']), 1)
             self.assertEqual(res.iloc[0]['sweep_sequences'].index[0], 15)  # Check id of the sweep_sequence row
@@ -1185,7 +1185,7 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             self.assertIsNotNone(infile.icephys_conditions)
             self.assertEqual(len(infile.icephys_conditions), 1)
             res = nwbfile.icephys_conditions[0]
-            # Check the ID and len of the sweeps column
+            # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 19)
             self.assertEqual(len(res.iloc[0]['runs']), 1)
             self.assertEqual(res.iloc[0]['runs'].index[0], 17)  # Check id of the referenced runs row
@@ -1199,9 +1199,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         pass
 
     @unittest.skip("Test not implemented yet")
-    def test_add_icephys_sweeps_column(self):
+    def test_add_icephys_simultaneous_recordings_column(self):
         """
-        Test that we can add a dynamic column to the sweeps via nwbfile.add_icephys_sweeps_column
+        Test that we can add a dynamic column to the simultaneous_recordings via nwbfile.add_icephys_simultaneous_recordings_column
         """
         pass
 

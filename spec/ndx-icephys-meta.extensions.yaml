@@ -52,9 +52,9 @@ groups:
       target_type: IntracellularElectrode
       reftype: object
     doc: Column for storing the reference to the intracellular electrode
-- neurodata_type_def: Sweeps
+- neurodata_type_def: SimultaneousRecordingsTable
   neurodata_type_inc: DynamicTable
-  name: sweeps
+  name: simultaneous_recordings
   doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
     table together that were recorded simultaneously from different electrodes
   datasets:
@@ -75,24 +75,25 @@ groups:
 - neurodata_type_def: SweepSequences
   neurodata_type_inc: DynamicTable
   name: sweep_sequences
-  doc: A table for grouping different intracellular recording sweeps from the Sweeps
-    table together. This is typically used to group together sweeps where the a sequence
-    of stimuli of the same type with varying parameters have been presented in a sequence.
+  doc: A table for grouping different simultaneous recordings from the SimultaneousRecordingsTable
+    table together. This is typically used to group together simultaneous recordings
+    where the a sequence of stimuli of the same type with varying parameters have
+    been presented in a sequence.
   datasets:
-  - name: sweeps
+  - name: simultaneous_recordings
     neurodata_type_inc: DynamicTableRegion
-    doc: A reference to one or more rows in the Sweeps table.
+    doc: A reference to one or more rows in the SimultaneousRecordingsTable table.
     attributes:
     - name: table
       dtype:
-        target_type: Sweeps
+        target_type: SimultaneousRecordingsTable
         reftype: object
-      doc: Reference to the Sweeps table that this table region applies to. This specializes
-        the attribute inherited from DynamicTableRegion to fix the type of table that
-        can be referenced here.
-  - name: sweeps_index
+      doc: Reference to the SimultaneousRecordingsTable table that this table region
+        applies to. This specializes the attribute inherited from DynamicTableRegion
+        to fix the type of table that can be referenced here.
+  - name: simultaneous_recordings_index
     neurodata_type_inc: VectorIndex
-    doc: Index dataset for the sweeps column.
+    doc: Index dataset for the simultaneous_recordings column.
   - name: stimulus_type
     neurodata_type_inc: VectorData
     dtype: text
@@ -174,17 +175,17 @@ groups:
           to an electrode is also common in intracellular electrophysiology, in which
           case other TimeSeries may be used.
         quantity: '?'
-      - name: sweeps
-        neurodata_type_inc: Sweeps
+      - name: simultaneous_recordings
+        neurodata_type_inc: SimultaneousRecordingsTable
         doc: A table for grouping different intracellular recordings from the IntracellularRecordingsTable
           table together that were recorded simultaneously from different electrodes
         quantity: '?'
       - name: sweep_sequences
         neurodata_type_inc: SweepSequences
-        doc: A table for grouping different intracellular recording sweeps from the
-          Sweeps table together. This is typically used to group together sweeps where
-          the a sequence of stimuli of the same type with varying parameters have
-          been presented in a sequence.
+        doc: A table for grouping different simultaneous recordings from the SimultaneousRecordingsTable
+          table together. This is typically used to group together simultaneous recordings
+          where the a sequence of stimuli of the same type with varying parameters
+          have been presented in a sequence.
         quantity: '?'
       - name: runs
         neurodata_type_inc: Runs
@@ -200,7 +201,7 @@ groups:
         quantity: '?'
       - name: sweep_table
         neurodata_type_inc: SweepTable
-        doc: '[DEPRACATED] Table used to group different PatchClampSeries SweepTable
-          is being replaced with the IntracellularRecordingsTable and Sweeps type
-          tabel (and corresponding SweepSequences, Runs and Consitions tables.'
+        doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
+          is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
+          tabels (and corresponding SweepSequences, Runs and Consitions tables.'
         quantity: '?'
