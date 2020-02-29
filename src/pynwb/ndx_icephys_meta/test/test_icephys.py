@@ -140,21 +140,35 @@ class ICEphysMetaTestBase(unittest.TestCase):
         nwbfile.add_icephys_simultaneous_recording(recordings=[14, 15, 16], id=np.int64(106))
         nwbfile.add_icephys_simultaneous_recording(recordings=[17, 18, 19], id=np.int64(107))
         if add_custom_columns:
-            nwbfile.icephys_simultaneous_recordings.add_column(name='tag',
-                                              data=np.arange(8),
-                                              description='some integer tag for a sweep')
+            nwbfile.icephys_simultaneous_recordings.add_column(
+                name='tag',
+                data=np.arange(8),
+                description='some integer tag for a sweep')
 
         # Add sequential recordings
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0, 1], id=np.int64(1000), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[2, ], id=np.int64(1001), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[3, ], id=np.int64(1002), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[4, 5], id=np.int64(1003), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[6, ], id=np.int64(1004), stimulus_type="MyStimulusType")
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[7, ], id=np.int64(1005), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0, 1],
+                                                 id=np.int64(1000),
+                                                 stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[2, ],
+                                                 id=np.int64(1001),
+                                                 stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[3, ],
+                                                 id=np.int64(1002),
+                                                 stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[4, 5],
+                                                 id=np.int64(1003),
+                                                 stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[6, ],
+                                                 id=np.int64(1004),
+                                                 stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[7, ],
+                                                 id=np.int64(1005),
+                                                 stimulus_type="MyStimulusType")
         if add_custom_columns:
-            nwbfile.icephys_sequential_recordings.add_column(name='type',
-                                                       data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
-                                                       description='type of the sequential recording')
+            nwbfile.icephys_sequential_recordings.add_column(
+                name='type',
+                data=['T1', 'T2', 'T3', 'T1', 'T2', 'T3'],
+                description='type of the sequential recording')
 
         # Add repetitions
         nwbfile.add_icephys_repetition(sequential_recordings=[0, ], id=np.int64(10000))
@@ -162,17 +176,19 @@ class ICEphysMetaTestBase(unittest.TestCase):
         nwbfile.add_icephys_repetition(sequential_recordings=[3, ], id=np.int64(10002))
         nwbfile.add_icephys_repetition(sequential_recordings=[4, 5], id=np.int64(10003))
         if add_custom_columns:
-            nwbfile.icephys_repetitions.add_column(name='type',
-                                            data=['R1', 'R2', 'R1', 'R2'],
-                                            description='some repetition type indicator')
+            nwbfile.icephys_repetitions.add_column(
+                name='type',
+                data=['R1', 'R2', 'R1', 'R2'],
+                description='some repetition type indicator')
 
         # Add experimental_conditions
         nwbfile.add_icephys_experimental_condition(repetitions=[0, 1], id=np.int64(100000))
         nwbfile.add_icephys_experimental_condition(repetitions=[2, 3], id=np.int64(100001))
         if add_custom_columns:
-            nwbfile.icephys_experimental_conditions.add_column(name='temperature',
-                                                  data=[32., 24.],
-                                                  description='Temperatur in C')
+            nwbfile.icephys_experimental_conditions.add_column(
+                name='temperature',
+                data=[32., 24.],
+                description='Temperatur in C')
 
         # Write our test file
         if filename is not None:
@@ -276,7 +292,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                 # TODO compare the data in sws with in_sws to make sure the data was written and read correctly
             if repetitions is not None:
                 in_repetitions = infile.get_processing_module('icephys_meta_module').get('repetitions')  # noqa F841
-                # TODO compare the data in repetitions with in_repetitions to make sure the data was written and read correctly
+                # TODO compare the data in repetitions with in_repetitions to ensure data was written/ read correctly
             if cond is not None:
                 in_con = infile.get_processing_module('icephys_meta_module').get('experimental_conditions')  # noqa F841
                 # TODO compare the data in cond with in_cond to make sure the data was written and read correctly
@@ -907,7 +923,8 @@ class ICEphysFileTests(ICEphysMetaTestBase):
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_experimental_conditions_column(self):
         """
-        Test that we can add a dynamic column to the experimental_conditions via nwb.add_icephys_experimental_conditions_column(...)
+        Test that we can add a dynamic column to the experimental_conditions
+        via nwb.add_icephys_experimental_conditions_column(...)
         """
         pass
 
@@ -1071,7 +1088,9 @@ class ICEphysFileTests(ICEphysMetaTestBase):
         # Confirm that our SequentialRecordingsTable table does not yet exist
         self.assertIsNone(nwbfile.icephys_sequential_recordings)
         # Add a sweep
-        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0], id=np.int64(15), stimulus_type="MyStimulusType")
+        nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0],
+                                                 id=np.int64(15),
+                                                 stimulus_type="MyStimulusType")
         # Check that the SimultaneousRecordingsTable table has been added
         self.assertIsNotNone(nwbfile.icephys_sequential_recordings)
         # Check that the values for our SimultaneousRecordingsTable table are correct
@@ -1166,7 +1185,8 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 15)
             self.assertEqual(len(res.iloc[0]['simultaneous_recordings']), 1)
-            self.assertEqual(res.iloc[0]['simultaneous_recordings'].index[0], 12)  # Check id of the references simultaneous_recordings row
+            # Check id of the references simultaneous_recordings row
+            self.assertEqual(res.iloc[0]['simultaneous_recordings'].index[0], 12)
 
             ############################################################################
             #  Test that the  RepetitionsTable table has been written correctly
@@ -1201,14 +1221,16 @@ class ICEphysFileTests(ICEphysMetaTestBase):
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_simultaneous_recordings_column(self):
         """
-        Test that we can add a dynamic column to the simultaneous_recordings via nwbfile.add_icephys_simultaneous_recordings_column
+        Test that we can add a dynamic column to the simultaneous_recordings via
+        nwbfile.add_icephys_simultaneous_recordings_column
         """
         pass
 
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_sweep_seqences_column(self):
         """
-        Test that we can add a dynamic column to the sequential_recordings via nwbfile.add_icephys_sequential_recordings_column
+        Test that we can add a dynamic column to the sequential_recordings via
+        nwbfile.add_icephys_sequential_recordings_column
         """
         pass
 

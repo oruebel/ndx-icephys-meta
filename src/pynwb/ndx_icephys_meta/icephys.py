@@ -223,8 +223,8 @@ class IntracellularRecordingsTable(DynamicTable):
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
         kwargs['description'] = ('A table to group together a stimulus and response from a single electrode and'
-                                 'a single simultaneous_recording. Each row in the table represents a single recording consisting'
-                                 'typically of a stimulus and a corresponding response.')
+                                 'a single simultaneous_recording. Each row in the table represents a single '
+                                 'recording consisting typically of a stimulus and a corresponding response.')
         call_docval_func(super(IntracellularRecordingsTable, self).__init__, kwargs)
 
     @docval({'name': 'electrode', 'type': IntracellularElectrode, 'doc': 'The intracellular electrode used'},
@@ -397,19 +397,19 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
     @docval({'name': 'simultaneous_recordings_table',
              'type': SimultaneousRecordingsTable,
-             'doc': 'the SimultaneousRecordingsTable table that the simultaneous_recordings column indexes. May be None when '
-                    'reading the Container from file as the table attribute is already '
-                    'populated in this case but otherwise this is required.',
+             'doc': 'the SimultaneousRecordingsTable table that the simultaneous_recordings '
+                    'column indexes. May be None when reading the Container from file as the '
+                    'table attribute is already populated in this case but otherwise this is required.',
              'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
         simultaneous_recordings_table = popargs('simultaneous_recordings_table', kwargs)
         # Define defaultb name and description settings
         kwargs['name'] = 'sequential_recordings'
-        kwargs['description'] = ('A table for grouping different intracellular recording simultaneous_recordings from the '
-                                 'SimultaneousRecordingsTable table together. This is typically used to group together simultaneous_recordings '
-                                 'where the a sequence of stimuli of the same type with varying parameters '
-                                 'have been presented in a sequence.')
+        kwargs['description'] = ('A table for grouping different intracellular recording simultaneous_recordings '
+                                 'from the SimultaneousRecordingsTable table together. This is typically used to '
+                                 'group together simultaneous_recordings where the a sequence of stimuli of the '
+                                 'same type with varying parameters have been presented in a sequence.')
         # Initialize the DynamicTable
         call_docval_func(super(SequentialRecordingsTable, self).__init__, kwargs)
         if self['simultaneous_recordings'].target.table is None:
@@ -459,18 +459,19 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
     @docval({'name': 'sequential_recordings_table',
              'type': SequentialRecordingsTable,
-             'doc': 'the SequentialRecordingsTable table that the sequential_recordings column indexes. May be None when '
-                    'reading the Container from file as the table attribute is already populated in this '
-                    'case but otherwise this is required.',
+             'doc': 'the SequentialRecordingsTable table that the sequential_recordings column indexes. May '
+                    'be None when reading the Container from file as the table attribute is already populated '
+                    'in this case but otherwise this is required.',
              'default': None},
             *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
         sequential_recordings_table = popargs('sequential_recordings_table', kwargs)
         # Define default name and description settings
         kwargs['name'] = 'repetitions'
-        kwargs['description'] = ('A table for grouping different intracellular recording sequential recordings together.'
-                                 'With each SweepSequence typically representing a particular type of stimulus, the '
-                                 'RepetitionsTable table is typically used to group sets of stimuli applied in sequence.')
+        kwargs['description'] = ('A table for grouping different intracellular recording sequential recordings '
+                                 'together. With each SimultaneousRecording typically representing a particular type '
+                                 'of stimulus, the RepetitionsTable table is typically used to group sets '
+                                 'of stimuli applied in sequence.')
         # Initialize the DynamicTable
         call_docval_func(super(RepetitionsTable, self).__init__, kwargs)
         if self['sequential_recordings'].target.table is None:
@@ -578,9 +579,9 @@ class ICEphysFile(NWBFile):
                       'child': True,
                       'required_name': 'sequential_recordings',
                       'doc': 'A table for grouping different simultaneous intracellular recording from the '
-                             'SimultaneousRecordingsTable table together. This is typically used to group together simultaneous recordings '
-                             'where the a sequence of stimuli of the same type with varying parameters '
-                             'have been presented in a sequence.'},
+                             'SimultaneousRecordingsTable table together. This is typically used to group '
+                             'together simultaneous recordings where the a sequence of stimuli of the same '
+                             'type with varying parameters have been presented in a sequence.'},
                      {'name': 'icephys_repetitions',
                       'child': True,
                       'required_name': 'repetitions',
@@ -616,7 +617,8 @@ class ICEphysFile(NWBFile):
         icephys_experimental_conditions = kwargs.pop('icephys_experimental_conditions', None)
         if kwargs.get('sweep_table') is not None:
             warnings.warn("Use of SweepTable is deprecated. Use the intracellular_recordings, "
-                          "simultaneous_recordings, sequential_recordings, repetitions and/or experimental_conditions table(s) instead.", DeprecationWarning)
+                          "simultaneous_recordings, sequential_recordings, repetitions and/or "
+                          "experimental_conditions table(s) instead.", DeprecationWarning)
         # Initialize the NWBFile parent class
         pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
         super(ICEphysFile, self).__init__(*pargs, **pkwargs)
@@ -829,11 +831,12 @@ class ICEphysFile(NWBFile):
         Get the top-most table in the intracellular ephys metadata table hierarchy that exists in this NWBFile.
 
         The intracellular ephys metadata consists of a hierarchy of DynamicTables, i.e.,
-        experimental_conditions --> repetitions --> sequential_recordings --> simultaneous_recordings --> intracellular_recordings etc.
+        experimental_conditions --> repetitions --> sequential_recordings -->
+        simultaneous_recordings --> intracellular_recordings etc.
         In a given NWBFile not all tables may exist. This convenience functions returns the top-most
-        table that exists in this file. E.g., if the file contains only the simultaneous_recordings and intracellular_recordings
-        tables then the function would return the simultaneous_recordings table. Similarly, if the file contains all tables
-        then it will return the experimental_conditions table.
+        table that exists in this file. E.g., if the file contains only the simultaneous_recordings
+        and intracellular_recordings tables then the function would return the simultaneous_recordings table.
+        Similarly, if the file contains all tables then it will return the experimental_conditions table.
 
         :returns: DynamicTable object or None
         """
