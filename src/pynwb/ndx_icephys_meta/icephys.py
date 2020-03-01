@@ -38,7 +38,7 @@ class HierarchicalDynamicTableMixin(object):
     def get_hierarchy_column_name(self):
         """
         Get the name of column that references another DynamicTable that
-        is itseflHierarchicalDynamicTableMixin table.
+        is itself a HierarchicalDynamicTableMixin table.
 
         :returns: String with the column name or None
         """
@@ -65,10 +65,10 @@ class HierarchicalDynamicTableMixin(object):
 
     def get_targets(self, include_self=False):
         """
-        Get a list of the full table hierachy, i.e., recursively list all
+        Get a list of the full table hierarchy, i.e., recursively list all
         tables referenced in the hierarchy.
 
-        Returns: List of DynamicTabl objects
+        Returns: List of DynamicTable objects
 
         """
         hcol_name = self.get_hierarchy_column_name()
