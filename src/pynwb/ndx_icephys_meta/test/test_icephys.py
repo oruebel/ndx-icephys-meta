@@ -954,14 +954,6 @@ class ICEphysFileTests(ICEphysMetaTestBase):
             assert issubclass(w[-1].category, DeprecationWarning)
             self.assertEqual(nwbfile.ic_filtering, 'test filtering')
 
-    @unittest.skip("Test not implemented yet")
-    def test_add_icephys_experimental_conditions_column(self):
-        """
-        Test that we can add a dynamic column to the experimental_conditions
-        via nwb.add_icephys_experimental_conditions_column(...)
-        """
-        pass
-
     def test_ic_filtering_roundtrip(self):
         # create the base file
         nwbfile = ICEphysFile(
@@ -1272,6 +1264,14 @@ class ICEphysFileTests(ICEphysMetaTestBase):
     def test_add_icephys_repetitions_column(self):
         """
         Test that we can add a dynamic column to the repetitions via nwbfile.add_icephys_repetitions_column
+        """
+        pass
+
+    @unittest.skip("Test not implemented yet")
+    def test_add_icephys_experimental_conditions_column(self):
+        """
+        Test that we can add a dynamic column to the experimental_conditions
+        via nwb.add_icephys_experimental_conditions_column(...)
         """
         pass
 
