@@ -1,6 +1,17 @@
+"""
+Unit test module for testing the HierarchicalDynamicTableMixin class
+
+To test the conversion of DynamicTables to pandas.DataFrame we store the expected pandas
+results in an HDF5 file on the side of the tests as setting up the tables manually can
+be tricky. If we have confirmed that the mixing is working as expected we can update
+the expected test results by enabling the test_generate_reference_testdata test function
+and running the tests.
+"""
 import unittest2 as unittest
 import numpy as np
 from hdmf.utils import docval, popargs, get_docval, call_docval_func
+import pandas
+import os
 
 try:
     from hdmf.common import DynamicTable
@@ -11,7 +22,6 @@ try:
     from ndx_icephys_meta.icephys import HierarchicalDynamicTableMixin
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
-    import os
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from ndx_icephys_meta.icephys import HierarchicalDynamicTableMixin
@@ -61,6 +71,7 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
         del self.table_level2
 
     def popolate_tables(self):
+        """Helper function to populate our tables generate in setUp with some simple data"""
         self.table_level0.add_row(id=10)
         self.table_level0.add_row(id=11)
         self.table_level0.add_row(id=12)
@@ -86,12 +97,48 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
                                      name='filter',
                                      description='filter value',
                                      index=False)
-        self.table_level2.add_column(data=[0, 1],
-                                     name='ref_level0',
-                                     description='additonal DynamicTableRegion for testing that also points to level0',
-                                     table=self.table_level0)
+
+    @unittest.skip("Enable this test if you want to generate a new reference test data for comparison")
+    def test_generate_reference_testdata(self):
+        """
+        Save reference results for the tests evaluating that the to_denormalized_dataframe
+        and to_hierarchical_dataframe functions are working. This test should be enabled
+        to regenerate the reference results. CAUTION: We should confirm first that the
+        functions produce the correct results.
+        """
+        self.popolate_tables()
+        ref_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'referencedata_test_hierarchical_dynamic_table_mixin.h5')
+        if os.path.exists(ref_filename):
+            os.remove(ref_filename)
+        print("\n Generating reference test data file %s" % ref_filename)
+        temp = self.table_level1.to_denormalized_dataframe(flat_column_index=False)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_denormalized_dataframe_table_level1')
+        temp = self.table_level2.to_denormalized_dataframe(flat_column_index=False)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_denormalized_dataframe_table_level2')
+        temp = self.table_level1.to_denormalized_dataframe(flat_column_index=True)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_denormalized_dataframe_flat_column_index_table_level1')
+        temp = self.table_level2.to_denormalized_dataframe(flat_column_index=True)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_denormalized_dataframe_flat_column_index_table_level2')
+        temp = self.table_level1.to_hierarchical_dataframe(flat_column_index=False)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_hierarchical_dataframe_table_level1')
+        temp = self.table_level2.to_hierarchical_dataframe(flat_column_index=False)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_hierarchical_dataframe_table_level2')
+        temp = self.table_level1.to_hierarchical_dataframe(flat_column_index=True)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_hierarchical_dataframe_flat_column_index_table_level1')
+        temp = self.table_level2.to_hierarchical_dataframe(flat_column_index=True)
+        temp.to_hdf(path_or_buf=ref_filename,
+                    key='test_to_hierarchical_dataframe_flat_column_index_table_level2')
 
     def test_populate_table_hierarchy(self):
+        """Test that just checks that populating the tables with data works correctly"""
         self.popolate_tables()
         # Check level0 data
         self.assertListEqual(self.table_level0.id[:], np.arange(10, 14, 1).tolist())
@@ -107,20 +154,22 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
         self.assertListEqual(self.table_level2.id[:], np.arange(0, 2, 1).tolist())
         self.assertListEqual(self.table_level2['filter'][:], [10, 12])
         self.assertTrue(self.table_level2['child_table_refs'].target.table is self.table_level1)
-        self.assertTrue(self.table_level2['ref_level0'].table is self.table_level0)
         self.assertEqual(len(self.table_level2['child_table_refs'].target.table), 3)
 
     def test_get_hierarchy_column_name(self):
+        """Test the get_hiearchy_column_name function"""
         self.popolate_tables()
         self.assertEqual(self.table_level1.get_hierarchy_column_name(), 'child_table_refs')
         self.assertEqual(self.table_level2.get_hierarchy_column_name(), 'child_table_refs')
 
     def test_get_referencing_column_names(self):
+        """test the get_referencing_column_names function"""
         self.popolate_tables()
         self.assertListEqual(self.table_level1.get_referencing_column_names(), ['child_table_refs'])
-        self.assertListEqual(self.table_level2.get_referencing_column_names(), ['child_table_refs', 'ref_level0'])
+        self.assertListEqual(self.table_level2.get_referencing_column_names(), ['child_table_refs'])
 
     def test_get_targets(self):
+        """test the get_targets function"""
         self.popolate_tables()
         # test level 1
         temp = self.table_level1.get_targets()
@@ -132,37 +181,89 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
         self.assertTrue(temp[0] is self.table_level1)
         self.assertTrue(temp[1] is self.table_level0)
 
-    @unittest.skip("Test not implemented yet")
     def test_to_denormalized_dataframe(self):
         """
         Test to_denormalized_dataframe(flat_column_index=False)
         for self.table_level1 and self.table_level2
         """
-        pass
+        ref_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'referencedata_test_hierarchical_dynamic_table_mixin.h5')
+        if not os.path.exists(ref_filename):
+            self.skipTest("Reference data file not found required for test. %s" & ref_filename)
+        self.popolate_tables()
+        # level 1
+        curr = self.table_level1.to_denormalized_dataframe(flat_column_index=False)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_denormalized_dataframe_table_level1')
+        pandas.testing.assert_frame_equal(curr, ref)
+        # level 2
+        curr = self.table_level2.to_denormalized_dataframe(flat_column_index=False)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_denormalized_dataframe_table_level2')
+        pandas.testing.assert_frame_equal(curr, ref)
 
-    @unittest.skip("Test not implemented yet")
     def test_to_denormalized_dataframe_flat_column_index(self):
         """
         Test to_denormalized_dataframe(flat_column_index=True)
         for self.table_level1 and self.table_level2
         """
-        pass
+        ref_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'referencedata_test_hierarchical_dynamic_table_mixin.h5')
+        if not os.path.exists(ref_filename):
+            self.skipTest("Reference data file not found required for test. %s" & ref_filename)
+        self.popolate_tables()
+        # test level 1
+        curr = self.table_level1.to_denormalized_dataframe(flat_column_index=True)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_denormalized_dataframe_flat_column_index_table_level1')
+        pandas.testing.assert_frame_equal(curr, ref)
+        # test level 2
+        curr = self.table_level2.to_denormalized_dataframe(flat_column_index=True)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_denormalized_dataframe_flat_column_index_table_level2')
+        pandas.testing.assert_frame_equal(curr, ref)
 
-    @unittest.skip("Test not implemented yet")
     def test_to_hierarchical_dataframe(self):
         """
         Test to_hierarchical_dataframe(flat_column_index=False)
         for self.table_level1 and self.table_level2
         """
-        pass
+        ref_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'referencedata_test_hierarchical_dynamic_table_mixin.h5')
+        if not os.path.exists(ref_filename):
+            self.skipTest("Reference data file not found required for test. %s" & ref_filename)
+        self.popolate_tables()
+        # test level 1
+        curr = self.table_level1.to_hierarchical_dataframe(flat_column_index=False)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_hierarchical_dataframe_table_level1')
+        pandas.testing.assert_frame_equal(curr, ref)
+        # test level 2
+        curr = self.table_level2.to_hierarchical_dataframe(flat_column_index=False)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_hierarchical_dataframe_table_level2')
+        pandas.testing.assert_frame_equal(curr, ref)
 
-    @unittest.skip("Test not implemented yet")
     def test_to_hierarchical_dataframe_flat_column_index(self):
         """
         Test to_hierarchical_dataframe(flat_column_index=True)
         for self.table_level1 and self.table_level2
         """
-        pass
+        ref_filename = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'referencedata_test_hierarchical_dynamic_table_mixin.h5')
+        if not os.path.exists(ref_filename):
+            self.skipTest("Reference data file not found required for test. %s" & ref_filename)
+        self.popolate_tables()
+        # test level 1
+        curr = self.table_level1.to_hierarchical_dataframe(flat_column_index=True)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_hierarchical_dataframe_flat_column_index_table_level1')
+        pandas.testing.assert_frame_equal(curr, ref)
+        # test level 2
+        curr = self.table_level2.to_hierarchical_dataframe(flat_column_index=True)
+        ref = pandas.read_hdf(path_or_buf=ref_filename,
+                              key='test_to_hierarchical_dataframe_flat_column_index_table_level2')
+        pandas.testing.assert_frame_equal(curr, ref)
 
 
 if __name__ == '__main__':
