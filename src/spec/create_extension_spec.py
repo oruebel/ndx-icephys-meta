@@ -8,6 +8,7 @@ from pynwb.spec import (
 )
 from hdmf.spec.write import export_spec
 import os
+from copy import deepcopy
 
 
 def main():
@@ -42,11 +43,40 @@ def main():
                      doc='The TimeSeries that this index applies to')
         ]
 
+    # Type for storing multiple dynamic tables
+    colgroup_attribute_spec = \
+        NWBAttributeSpec(name='colgroups',
+                         dtype='text',
+                         dims=('num_columns',),
+                         shape=None,
+                         doc='For each column specify the name of the category the column is in. '
+                             'The ordering of columns in the this dataset are expected to be the '
+                             'same as in the colnames attribute. Although not required, columns '
+                             'should be ordered such that columns in the same category appear '
+                             'in order.' )
+    grouped_dynamic_table_spec = NWBGroupSpec(
+        neurodata_type_def='GroupedDynamicTable',
+        neurodata_type_inc='DynamicTable',
+        doc='A DynamicTable that supports grouing of columns by a set of user-defined categories',
+        attributes=[colgroup_attribute_spec, ]
+    )
+
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
+    colgroup_attribute_spec_with_default = deepcopy(colgroup_attribute_spec)
+    colgroup_attribute_spec_with_default['default_value'] = ['electrode', 'stimulus', 'response']
+    colnames_attribute_spec_with_default =\
+        NWBAttributeSpec(name='colnames',
+                         dtype='text',
+                         dims=('num_columns',),
+                         shape=None,
+                         doc='The names of the columns in this table. This should be used '
+                             'to specify an order to the columns.',
+                         default_value = ['electrode', 'stimulus', 'response'])
+
     icephys_recordings_table_spec = NWBGroupSpec(
         name='intracellular_recordings',
         neurodata_type_def='IntracellularRecordingsTable',
-        neurodata_type_inc='DynamicTable',
+        neurodata_type_inc='GroupedDynamicTable',
         doc='A table to group together a stimulus and response from a single electrode and a single simultaneous '
             'recording. Each row in the table represents a single recording consisting typically of a stimulus and a '
             'corresponding response. In some cases, however, only a stimulus or a response are recorded as '
@@ -58,18 +88,24 @@ def main():
             'is also common in intracellular electrophysiology, in which case other TimeSeries may be used.',
         datasets=[NWBDatasetSpec(name='stimulus',
                                  neurodata_type_inc='VectorData',
-                                 doc='Column storing the reference to the recorded stimulus for the recording (rows)',
+                                 doc='Column storing the reference to the recorded stimulus for the recording (rows). '
+                                     'The column must have the assigned colgroup value "stimulus"',
                                  dtype=reference_timeseries_dtype),
                   NWBDatasetSpec(name='response',
                                  neurodata_type_inc='VectorData',
-                                 doc='Column storing the reference to the recorded response for the recording (rows)',
+                                 doc='Column storing the reference to the recorded response for the recording (rows) '
+                                     'The column must have the assigned colgroup value "response"',
                                  dtype=reference_timeseries_dtype),
                   NWBDatasetSpec(name='electrode',
                                  neurodata_type_inc='VectorData',
-                                 doc='Column for storing the reference to the intracellular electrode',
+                                 doc='Column for storing the reference to the intracellular electrode. '
+                                     'The column must have the assigned colgroup value "electrode"',
                                  dtype=NWBRefSpec(target_type='IntracellularElectrode',
-                                                  reftype='object'))]
-    )
+                                                  reftype='object'))],
+        # Define default values for the existing colnames and colgroup attributes
+        attributes=[colnames_attribute_spec_with_default,
+                    colgroup_attribute_spec_with_default]
+    ) # end icephys_recordings_table_spec = NWBGroupSpec
 
     # Create a SimultaneousRecordingsTable (similar to trials) table to group
     # intracellular electrophysiology recording that were
@@ -262,7 +298,8 @@ def main():
         ns_builder.include_type(type_name, namespace='core')
 
     # Add our new data types to this list
-    new_data_types = [icephys_recordings_table_spec,
+    new_data_types = [grouped_dynamic_table_spec,
+                      icephys_recordings_table_spec,
                       simultaneous_recordings_table_spec,
                       sequentialrecordings_table_spec,
                       repetitions_table_spec,

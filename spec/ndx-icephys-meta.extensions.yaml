@@ -1,6 +1,20 @@
 groups:
-- neurodata_type_def: IntracellularRecordingsTable
+- neurodata_type_def: GroupedDynamicTable
   neurodata_type_inc: DynamicTable
+  doc: A DynamicTable that supports grouing of columns by a set of user-defined categories
+  attributes:
+  - name: colgroups
+    dtype: text
+    dims:
+    - num_columns
+    shape:
+    - null
+    doc: For each column specify the name of the category the column is in. The ordering
+      of columns in the this dataset are expected to be the same as in the colnames
+      attribute. Columns should be ordered such that columns in the same category
+      appear in order
+- neurodata_type_def: IntracellularRecordingsTable
+  neurodata_type_inc: GroupedDynamicTable
   name: intracellular_recordings
   doc: A table to group together a stimulus and response from a single electrode and
     a single simultaneous recording. Each row in the table represents a single recording
@@ -13,6 +27,35 @@ groups:
     stimulus and response are PatchClampSeries. However, the use of AD/DA channels
     that are not associated to an electrode is also common in intracellular electrophysiology,
     in which case other TimeSeries may be used.
+  attributes:
+  - name: colnames
+    dtype: text
+    dims:
+    - num_columns
+    shape:
+    - null
+    default_value:
+    - electrode
+    - stimulus
+    - response
+    doc: The names of the columns in this table. This should be used to specify an
+      order to the columns.
+    required: false
+  - name: colgroups
+    dtype: text
+    dims:
+    - num_columns
+    shape:
+    - null
+    default_value:
+    - electrode
+    - stimulus
+    - response
+    doc: For each column specify the name of the category the column is in. The ordering
+      of columns in the this dataset are expected to be the same as in the colnames
+      attribute. Columns should be ordered such that columns in the same category
+      appear in order
+    required: false
   datasets:
   - name: stimulus
     neurodata_type_inc: VectorData
@@ -29,7 +72,8 @@ groups:
         target_type: TimeSeries
         reftype: object
       doc: The TimeSeries that this index applies to
-    doc: Column storing the reference to the recorded stimulus for the recording (rows)
+    doc: Column storing the reference to the recorded stimulus for the recording (rows).
+      The column must have the assigned colgroup value "stimulus"
   - name: response
     neurodata_type_inc: VectorData
     dtype:
@@ -46,12 +90,14 @@ groups:
         reftype: object
       doc: The TimeSeries that this index applies to
     doc: Column storing the reference to the recorded response for the recording (rows)
+      The column must have the assigned colgroup value "response"
   - name: electrode
     neurodata_type_inc: VectorData
     dtype:
       target_type: IntracellularElectrode
       reftype: object
-    doc: Column for storing the reference to the intracellular electrode
+    doc: Column for storing the reference to the intracellular electrode. The column
+      must have the assigned colgroup value "electrode"
 - neurodata_type_def: SimultaneousRecordingsTable
   neurodata_type_inc: DynamicTable
   name: simultaneous_recordings

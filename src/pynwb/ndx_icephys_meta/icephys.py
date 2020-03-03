@@ -87,7 +87,7 @@ class HierarchicalDynamicTableMixin(object):
         Shorthand for 'self.to_hierarchical_dataframe().reset_index()'
 
         The function denormalizes the hierarchical table and represents all data as
-        columns in the resulting dataframe.
+        columns in the resulting pandas DataFrame.
         """
         def get_first_prefix(instr, prefixs):
             """Internal helper function to find the first prefix that matches"""
@@ -196,8 +196,48 @@ class HierarchicalDynamicTableMixin(object):
         return out_df
 
 
+@register_class('GroupedDynamicTable', namespace)
+class GroupedDynamicTable(DynamicTable):
+    """
+    Base DynamicTable type that supports grouping of columns into categories
+    """
+    # TODO Need to mangle names for storage to allow columns with the same name in different groups
+    # TODO Need to update the __getitem__ to add the group names on the returned dataframe
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames', 'name', 'description'),
+            {'name': 'colgroups',
+             'type': 'array_data',
+             'doc': 'For each column in colnames define the group the column belongs to',
+             'default': []},
+             )
+    def __init__(self, **kwargs):
+        self.colgroups = tuple(popargs('colgroups', kwargs))
+        call_docval_func(super(GroupedDynamicTable, self).__init__, kwargs)
+
+
+    @docval(*get_docval(DynamicTable.add_column),
+            {'name': 'group', 'type': str, 'doc': 'The group/category the column should be added to'})
+    def add_column(self, **kwargs):
+        colgrp = popargs('group', kwargs)
+        call_docval_func(super(GroupedDynamicTable, self).add_column, kwargs)
+        print(self.colgroups)
+        self.colgroups = tuple(list(self.colgroups)+[colgrp])
+        print(self.colgroups)
+
+
+    @docval(*get_docval(DynamicTable.to_dataframe))
+    def to_dataframe(self, **kwargs):
+        """
+        Overwrites DynamicTable.to_dataframe to include the grouping of columns,
+        but otherwise behaves the same.
+        """
+        df = call_docval_func(super(GroupedDynamicTable, self).to_dataframe, kwargs)
+        df.columns = pd.MultiIndex.from_tuples([(self.colgroups[i], cn) for i, cn in enumerate(self.colnames)])
+        df = df.sort_index(axis=1)
+        return df
+
+
 @register_class('IntracellularRecordingsTable', namespace)
-class IntracellularRecordingsTable(DynamicTable):
+class IntracellularRecordingsTable(GroupedDynamicTable):
     """
     A table to group together a stimulus and response from a single electrode and
     a single simultaneous_recording. Each row in the table represents a single recording consisting
@@ -205,21 +245,28 @@ class IntracellularRecordingsTable(DynamicTable):
     """
 
     __columns__ = (
-        {'name': 'stimulus',
-         'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
-         'required': True,
-         'index': False},
-        {'name': 'response',
-         'description': 'Column storing the reference to the recorded response for the recording (rows)',
-         'required': True,
-         'index': False},
         {'name': 'electrode',
          'description': 'Column for storing the reference to the intracellular electrode',
          'required': True,
-         'index': False},
+         'index': False,
+         'group': 'electrode'},
+        {'name': 'stimulus',
+         'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
+         'required': True,
+         'index': False,
+         'group': 'stimulus'},
+        {'name': 'response',
+         'description': 'Column storing the reference to the recorded response for the recording (rows)',
+         'required': True,
+         'index': False,
+         'group': 'response'}
     )
 
-    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    @docval(*get_docval(GroupedDynamicTable.__init__, 'id', 'columns', 'colnames'),
+           {'name': 'colgroups',
+             'type': 'array_data',
+             'doc': 'For each column in colnames define the group the column belongs to',
+             'default': []})
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
         kwargs['description'] = ('A table to group together a stimulus and response from a single electrode and'
