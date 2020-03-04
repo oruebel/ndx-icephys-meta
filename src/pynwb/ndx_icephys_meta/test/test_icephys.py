@@ -8,6 +8,7 @@ from pynwb.icephys import VoltageClampStimulusSeries, VoltageClampSeries, Curren
 from pynwb.testing import remove_test_file
 from pynwb import NWBHDF5IO
 from hdmf.utils import docval, popargs
+from pandas.testing import assert_frame_equal
 
 try:
     from ndx_icephys_meta.icephys import (IntracellularRecordingsTable,
@@ -515,6 +516,20 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
                                      id=np.int64(10))
         self.assertEqual(row_index, 0)
         self.write_test_helper(ir=ir)
+
+    def test_round_trip_container_no_data(self):
+        """Test read and write the container by itself"""
+        curr =  IntracellularRecordingsTable()
+
+        with NWBHDF5IO(self.path, 'w') as io:
+            io.write(curr)
+
+        with NWBHDF5IO(self.path, 'r') as io:
+            incon = io.read()
+            self.assertListEqual(incon.categories, curr.categories)
+            for n in curr.categories:
+                assert_frame_equal(incon[n], curr[n])
+
 
     def test_write_with_stimulus_template(self):
         """
