@@ -197,8 +197,8 @@ class HierarchicalDynamicTableMixin(object):
         return out_df
 
 
-@register_class('AlignedDynamicTableContainer', namespace)
-class AlignedDynamicTableContainer(Container):
+@register_class('AlignedDynamicTable', namespace)
+class AlignedDynamicTable(Container):
     """
     Container for storing a collection of DynamicTables that are aligned by row index. I.e., all
     DynamicTables stored in this group MUST have the same number of rows. This type effectively
@@ -227,7 +227,7 @@ class AlignedDynamicTableContainer(Container):
         main_table = DynamicTable(name=self.__main_table_name__,
                                   description='The main table storing the global ids and other data '
                                                'belonging to the main table, rather than being part of '
-                                               'a particular subcategory in the the AlignedDynamicTableContainer '
+                                               'a particular subcategory in the the AlignedDynamicTable '
                                                'parent container')
         # If custom categories are provided we need to decide how to create our main table
         ignore_main_table = -1
@@ -307,10 +307,10 @@ class AlignedDynamicTableContainer(Container):
     @docval({'name': 'category', 'type': DynamicTable, 'doc': 'Add a new DynamicTable category'},)
     def add_category(self, **kwargs):
         """
-        Add a new DynamicTable to the AlignedDynamicTableContainer to create a new category in the table.
+        Add a new DynamicTable to the AlignedDynamicTable to create a new category in the table.
 
         NOTE: The table must align with (i.e, have the same number of rows as) the main data table (and
-        other category tables). I.e., if the AlignedDynamicTableContainer is already populated with data
+        other category tables). I.e., if the AlignedDynamicTable is already populated with data
         then we have to populate the new category with the corresponding data before adding it.
 
         :raises: ValueError is raised if the input table does not have the same number of rows as the main table
@@ -377,40 +377,97 @@ class AlignedDynamicTableContainer(Container):
             # get a column, row, or cell from a particular category
             return self.get_category(item[0])[item[1:]]
 
-# TODO Add functionality for our AlignedDynamicTableContainer
-# TODO Rename AlignedDynamicTableContainer to AlignedDynamicTables
-# TODO Need to update the IntracellularRecordingsTable to inherit from AlignedDynamicTableContainer and follow the new spec
+
+# TODO Rename dynamic_tables attribute of AlignedDynamicTable to category_tables
+# TODO Add functionality for our AlignedDynamicTable
+# TODO Implement add_row for AlignedDynamicTable and IntracellularRecordingsTable
+# TODO Add tests for the IntracellularElectrodesTable
+# TODO Add tests for the IntracellularStimuliTable
+# TODO Add tests for the IntracellularRecordingsTable
+# TODO Add simple round-trip tests for all classes (i.e., rountrip just the container without a NWBFile)
+
+@register_class('IntracellularElectrodesTable', namespace)
+class IntracellularElectrodesTable(DynamicTable):
+    """
+    Table for storing intracellular electrode related metadata'
+    """
+    __columns__ = (
+        {'name': 'electrode',
+         'description': 'Column for storing the reference to the intracellular electrode',
+         'required': True,
+         'index': False,
+         'table': False},
+    )
+
+    @docval( *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        # Define defaultb name and description settings
+        kwargs['name'] = 'electrodes'
+        kwargs['description'] = ('Table for storing intracellular electrode related metadata')
+        # Initialize the DynamicTable
+        call_docval_func(super().__init__, kwargs)
+
+
+@register_class('IntracellularStimuliTable', namespace)
+class IntracellularStimuliTable(DynamicTable):
+    """
+    Table for storing intracellular electrode related metadata'
+    """
+    __columns__ = (
+        {'name': 'stimulus',
+         'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
+         'required': True,
+         'index': False,
+         'table': False},
+    )
+
+    @docval( *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        # Define defaultb name and description settings
+        kwargs['name'] = 'stimuli'
+        kwargs['description'] = ('Table for storing intracellular stimulus related metadata')
+        # Initialize the DynamicTable
+        call_docval_func(super().__init__, kwargs)
+
+
+@register_class('IntracellularResponsesTable', namespace)
+class IntracellularResponsesTable(DynamicTable):
+    """
+    Table for storing intracellular electrode related metadata'
+    """
+    __columns__ = (
+        {'name': 'response',
+         'description': 'Column storing the reference to the recorded response for the recording (rows)',
+         'required': True,
+         'index': False,
+         'table': False},
+    )
+
+    @docval( *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        # Define defaultb name and description settings
+        kwargs['name'] = 'responses'
+        kwargs['description'] = ('Table for storing intracellular response related metadata')
+        # Initialize the DynamicTable
+        call_docval_func(super().__init__, kwargs)
+
 
 @register_class('IntracellularRecordingsTable', namespace)
-class IntracellularRecordingsTable(DynamicTable):
+class IntracellularRecordingsTable(AlignedDynamicTable):
     """
     A table to group together a stimulus and response from a single electrode and
     a single simultaneous_recording. Each row in the table represents a single recording consisting
     typically of a stimulus and a corresponding response.
     """
-
-    __columns__ = (
-        {'name': 'stimulus',
-         'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
-         'required': True,
-         'index': False},
-        {'name': 'response',
-         'description': 'Column storing the reference to the recorded response for the recording (rows)',
-         'required': True,
-         'index': False},
-        {'name': 'electrode',
-         'description': 'Column for storing the reference to the intracellular electrode',
-         'required': True,
-         'index': False},
-    )
-
-    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
-        kwargs['description'] = ('A table to group together a stimulus and response from a single electrode and'
-                                 'a single simultaneous_recording. Each row in the table represents a single '
-                                 'recording consisting typically of a stimulus and a corresponding response.')
-        call_docval_func(super(IntracellularRecordingsTable, self).__init__, kwargs)
+        kwargs['description'] = ('A table to group together a stimulus and response from a single electrode '
+                                 'and a single simultaneous recording and for storing metadata about the '
+                                 'intracellular recording.')
+        kwargs['dynamic_tables'] = [IntracellularElectrodesTable(),
+                                    IntracellularStimuliTable(),
+                                    IntracellularResponsesTable()]
+        call_docval_func(super().__init__, kwargs)
 
     @docval({'name': 'electrode', 'type': IntracellularElectrode, 'doc': 'The intracellular electrode used'},
             {'name': 'stimulus_start_index', 'type': 'int', 'doc': 'Start index of the stimulus', 'default': -1},

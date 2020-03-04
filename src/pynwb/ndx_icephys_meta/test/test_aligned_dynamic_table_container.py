@@ -16,18 +16,18 @@ except ImportError:
     from pynwb.core import DynamicTable, VectorData
 
 try:
-    from ndx_icephys_meta.icephys import AlignedDynamicTableContainer
+    from ndx_icephys_meta.icephys import AlignedDynamicTable
 except ImportError:
     # If we are running tests directly in the GitHub repo without installing the extension
     import sys
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    from ndx_icephys_meta.icephys import AlignedDynamicTableContainer
+    from ndx_icephys_meta.icephys import AlignedDynamicTable
 
 
 
 class TestAlignedDynamicTableContainer(unittest.TestCase):
     """
-    Test the AlignedDynamicTableContainer class.
+    Test the AlignedDynamicTable class.
     """
     def setUp(self):
         warnings.simplefilter("always")  # Trigger all warnings
@@ -38,7 +38,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
 
     def test_init(self):
         """Test that just checks that populating the tables with data works correctly"""
-        AlignedDynamicTableContainer(
+        AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container')
 
@@ -46,7 +46,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         """Test that we can create an empty table with custom categories"""
         category_names = ['test1', 'test2', 'test3']
         categories = [DynamicTable(name=val, description=val+" description") for val in category_names]
-        AlignedDynamicTableContainer(
+        AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
             dynamic_tables=categories)
@@ -61,7 +61,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
                                                        description=val+t+' description',
                                                        data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
                                    ) for val in category_names]
-        AlignedDynamicTableContainer(
+        AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
             dynamic_tables=categories)
@@ -71,7 +71,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         Test that we can create an empty table with custom categories. This also tests
         the contains, categories, main_table methods.
         """
-        category_names = ['test1', AlignedDynamicTableContainer.__main_table_name__,  'test2', 'test3']
+        category_names = ['test1', AlignedDynamicTable.__main_table_name__, 'test2', 'test3']
         num_rows=10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
@@ -79,13 +79,13 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
                                                        description=val+t+' description',
                                                        data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
                                    ) for val in category_names]
-        temp = AlignedDynamicTableContainer(
+        temp = AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
             dynamic_tables=categories)
 
         self.assertEqual(temp.categories,
-                         [AlignedDynamicTableContainer.__main_table_name__, 'test1', 'test2', 'test3'])
+                         [AlignedDynamicTable.__main_table_name__, 'test1', 'test2', 'test3'])
         self.assertTrue(categories[1] == temp.main)
         self.assertTrue('test1' in temp)  # test that contains category works
         self.assertTrue(('test1', 'c1') in temp) # test that contains a column works
@@ -110,7 +110,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
                                                        data=np.arange(num_rows+1)) for t in ['c1', 'c2', 'c3']])
                       ]
         with self.assertRaises(ValueError):
-            AlignedDynamicTableContainer(
+            AlignedDynamicTable(
                 name='test_aligned_table',
                 description='Test aligned container',
                 dynamic_tables=categories)
@@ -126,14 +126,14 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
                                                        data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
                                    ) for val in category_names]
         with self.assertRaises(ValueError):
-            AlignedDynamicTableContainer(
+            AlignedDynamicTable(
                 name='test_aligned_table',
                 description='Test aligned container',
                 dynamic_tables=categories)
 
     def test_round_trip_container(self):
         """Test read and write the container by itself"""
-        category_names = ['test1', AlignedDynamicTableContainer.__main_table_name__,  'test2', 'test3']
+        category_names = ['test1', AlignedDynamicTable.__main_table_name__, 'test2', 'test3']
         num_rows=10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
@@ -141,7 +141,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
                                                        description=val+t+' description',
                                                        data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
                                    ) for val in category_names]
-        curr = AlignedDynamicTableContainer(
+        curr = AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
             dynamic_tables=categories)

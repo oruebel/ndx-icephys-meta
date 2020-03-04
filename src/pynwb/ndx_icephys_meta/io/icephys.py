@@ -3,7 +3,7 @@ Module with ObjectMapper classes for the icephys-meta Container classes/neurodat
 """
 from pynwb import register_map
 from pynwb.io.file import NWBFileMap
-from ndx_icephys_meta.icephys import ICEphysFile, AlignedDynamicTableContainer
+from ndx_icephys_meta.icephys import ICEphysFile, AlignedDynamicTable
 from hdmf.build import ObjectMapper, BuildManager
 from hdmf.spec import Spec
 from hdmf.utils import getargs, docval
@@ -27,16 +27,16 @@ class ICEphysFileMap(NWBFileMap):
         self.map_spec('ic_filtering', icephys_spec.get_dataset('filtering'))
 
 
-@register_map(AlignedDynamicTableContainer)
+@register_map(AlignedDynamicTable)
 class AlignedDynamicTableContainerMap(ObjectMapper):
     """
-    Customize the mapping for our AlignedDynamicTableContainer
+    Customize the mapping for our AlignedDynamicTable
     """
     def __init__(self, spec):
         super(AlignedDynamicTableContainerMap, self).__init__(spec)
 
     @docval({"name": "spec", "type": Spec, "doc": "the spec to get the attribute value for"},
-            {"name": "container", "type": AlignedDynamicTableContainer, "doc": "the container to get the attribute value from"},
+            {"name": "container", "type": AlignedDynamicTable, "doc": "the container to get the attribute value from"},
             {"name": "manager", "type": BuildManager, "doc": "the BuildManager used for managing this build"},
             returns='the value of the attribute')
     def get_attr_value(self, **kwargs):
