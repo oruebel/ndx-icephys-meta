@@ -1,5 +1,5 @@
 groups:
-- neurodata_type_def: AlignedDynamicTableContainer
+- neurodata_type_def: AlignedDynamicTable
   neurodata_type_inc: Container
   doc: Container for storing a collection of DynamicTables that are aligned by row
     index. I.e., all DynamicTables stored in this group MUST have the same number
@@ -13,9 +13,9 @@ groups:
     - num_categories
     shape:
     - null
-    doc: The names of the categories in this AlignedDynamicTableContainer. Each category
-      is represented by one DynamicTable stored in the parent group.This attribute
-      should be used to specify an order of categories.
+    doc: The names of the categories in this AlignedDynamicTable. Each category is
+      represented by one DynamicTable stored in the parent group.This attribute should
+      be used to specify an order of categories.
   - name: description
     dtype: text
     doc: description of the purpose and contents of this table
@@ -23,19 +23,19 @@ groups:
   - name: main
     neurodata_type_inc: DynamicTable
     doc: The main DynamicTable storing the gloabl ids and other data belonging to
-      the main table, rather tha being part of a particular subcategory of the AlignedDynamicTableContainer
+      the main table, rather tha being part of a particular subcategory of the AlignedDynamicTable
       parent container. The table MUST be aligned with (i.e., have the same number
-      of rows, as all other DynamicTables stored in the AlignedDynamicTableContainer
-      parent container.
+      of rows, as all other DynamicTables stored in the AlignedDynamicTable parent
+      container.
   - neurodata_type_inc: DynamicTable
-    doc: A DynamicTable representing a particular category for columns in the AlignedDynamicTableContainer
+    doc: A DynamicTable representing a particular category for columns in the AlignedDynamicTable
       parent container. The table MUST be aligned with (i.e., have the same number
-      of rows, as all other DynamicTables stored in the AlignedDynamicTableContainer
-      parent container. The name of the category is given by the name of the DynamicTable
+      of rows, as all other DynamicTables stored in the AlignedDynamicTable parent
+      container. The name of the category is given by the name of the DynamicTable
       and its description by the description attribute of the DynamicTable.
     quantity: '*'
 - neurodata_type_def: IntracellularRecordingsTable
-  neurodata_type_inc: AlignedDynamicTableContainer
+  neurodata_type_inc: AlignedDynamicTable
   name: intracellular_recordings
   doc: A table to group together a stimulus and response from a single electrode and
     a single simultaneous recording. Each row in the table represents a single recording
@@ -54,16 +54,17 @@ groups:
     value: A table to group together a stimulus and response from a single electrode
       and a single simultaneous recording and for storing metadata about the intracellular
       recording.
-    doc: Description of the contents of this table. Inherited from AlignedDynamicTableContainer
+    doc: Description of the contents of this table. Inherited from AlignedDynamicTable
       and overwritten here to fix the value of the attribute
   groups:
-  - name: electrode
+  - neurodata_type_def: IntracellularElectrodesTable
     neurodata_type_inc: DynamicTable
-    doc: Table for storing electrode related metadata
+    name: electrodes
+    doc: Table for storing intracellular electrode related metadata
     attributes:
     - name: description
       dtype: text
-      value: Table for storing electrode related metadata
+      value: Table for storing intracellular electrode related metadata
       doc: Description of what is in this dynamic table.
     datasets:
     - name: electrode
@@ -72,13 +73,14 @@ groups:
         target_type: IntracellularElectrode
         reftype: object
       doc: Column for storing the reference to the intracellular electrode
-  - name: stimulus
+  - neurodata_type_def: IntracellularStimuliTable
     neurodata_type_inc: DynamicTable
-    doc: Table for storing stimulus related metadata
+    name: stimuli
+    doc: Table for storing intracellular stimulus related metadata
     attributes:
     - name: description
       dtype: text
-      value: Table for storing stimulus related metadata
+      value: Table for storing intracellular stimulus related metadata
       doc: Description of what is in this dynamic table.
     datasets:
     - name: stimulus
@@ -98,13 +100,14 @@ groups:
         doc: The TimeSeries that this index applies to
       doc: Column storing the reference to the recorded stimulus for the recording
         (rows)
-  - name: response
+  - neurodata_type_def: IntracellularResponsesTable
     neurodata_type_inc: DynamicTable
-    doc: Table for storing response related metadata
+    name: responses
+    doc: Table for storing intracellular response related metadata
     attributes:
     - name: description
       dtype: text
-      value: Table for storing response related metadata
+      value: Table for storing intracellular response related metadata
       doc: Description of what is in this dynamic table.
     datasets:
     - name: response
