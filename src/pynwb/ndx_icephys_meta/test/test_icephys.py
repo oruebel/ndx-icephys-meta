@@ -201,7 +201,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
 
     def setUp(self):
         # Create an example nwbfile with a device, intracellular electrode, stimulus, and response
-        self.nwbfile = NWBFile(
+        self.nwbfile = ICEphysFile(
             session_description='my first synthetic recording',
             identifier='EXAMPLE_ID',
             session_start_time=datetime.now(tzlocal()),
@@ -261,20 +261,17 @@ class ICEphysMetaTestBase(unittest.TestCase):
              'default': None})
     def write_test_helper(self, **kwargs):
         ir, sw, sws, repetitions, cond = popargs('ir', 'sw', 'sws', 'repetitions', 'cond', kwargs)
-        # For testing we'll add our IR table as a processing module and write the file to disk
-        if ir is not None or sw is not None:
-            test_module = self.nwbfile.create_processing_module(name='icephys_meta_module',
-                                                                description='icephys metadata module')
-            if ir is not None:
-                test_module.add(ir)
-            if sw is not None:
-                test_module.add(sw)
-            if sws is not None:
-                test_module.add(sws)
-            if repetitions is not None:
-                test_module.add(repetitions)
-            if cond is not None:
-                test_module.add(cond)
+
+        if ir is not None:
+            self.nwbfile.intracellular_recordings = ir
+        if sw is not None:
+            self.nwbfile.icephys_simultaneous_recordings = sw
+        if sws is not None:
+            self.nwbfile.icephys_sequential_recordings = sws
+        if repetitions is not None:
+            self.nwbfile.icephys_repetitions = repetitions
+        if cond is not None:
+            self.nwbfile.icephys_experimental_conditions = cond
 
         # Write our test file
         with NWBHDF5IO(self.path, 'w') as io:
@@ -283,7 +280,9 @@ class ICEphysMetaTestBase(unittest.TestCase):
         with NWBHDF5IO(self.path, 'r') as io:
             infile = io.read()
             if ir is not None:
-                in_ir = infile.get_processing_module('icephys_meta_module').get('intracellular_recordings')  # noqa F841
+                in_ir = infile.intracellular_recordings
+                self.assertIsNotNone(in_ir)
+                assert_frame_equal(ir.to_dataframe(), ir.to_dataframe())
                 # TODO compare the data in ir with in_ir to make sure the data was written and read correctly
             if sw is not None:
                 in_sw = infile.get_processing_module('icephys_meta_module').get('simultaneous_recordings')  # noqa F841
@@ -311,27 +310,27 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
     def test_add_row(self):
         # Add a row to our IR table
         ir = IntracellularRecordingsTable()
+
         row_index = ir.add_recording(electrode=self.electrode,
                                      stimulus=self.stimulus,
                                      response=self.response,
                                      id=np.int64(10))
-        res = ir[0]
-        # Check the ID
-        self.assertEqual(res.index[0], 10)
-        # Check the stimulus
-        self.assertEqual(res.iloc[0]['stimulus'][0], 0)
-        self.assertEqual(res.iloc[0]['stimulus'][1], 5)
-        self.assertIs(res.iloc[0]['stimulus'][2], self.stimulus)
-        # Check the response
-        self.assertEqual(res.iloc[0]['response'][0], 0)
-        self.assertEqual(res.iloc[0]['response'][1], 5)
-        self.assertIs(res.iloc[0]['response'][2], self.response)
-        # Check the Intracellular electrode
-        self.assertIs(res.iloc[0]['electrode'], self.electrode)
-        # test writing out ir table
-        self.write_test_helper(ir)
         # test that we get the correct row index back
         self.assertEqual(row_index, 0)
+        # read our first (and only) row and assert that it is correct
+        res = ir[0]
+        # Confirm that slicing one row give the same result as converting the whole table, which has only one row
+        assert_frame_equal(ir.to_dataframe() , res)
+        # Check the row id
+        self.assertEqual(res.index[0], 10)
+        # Check electrodes
+        self.assertIs(res[('electrodes', 'electrode')].iloc[0], self.electrode)
+        # Check the stimulus
+        self.assertTupleEqual(res[('stimuli', 'stimulus')].iloc[0], (0, 5, self.stimulus))
+        # Check the response
+        self.assertTupleEqual(res[('responses', 'response')].iloc[0], (0, 5, self.response))
+        # test writing out ir table
+        self.write_test_helper(ir)
 
     def test_add_row_incompatible_types(self):
         # Add a row that mixes CurrentClamp and VoltageClamp data
@@ -394,20 +393,16 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         res = ir[0]
         # Check the ID
         self.assertEqual(res.index[0], 10)
+        # Check the row id
+        self.assertEqual(res.index[0], 10)
+        # Check electrodes
+        self.assertIs(res[('electrodes', 'electrode')].iloc[0], self.electrode)
         # Check the stimulus
-        self.assertEqual(res.iloc[0]['stimulus'][0], 0)
-        self.assertEqual(res.iloc[0]['stimulus'][1], 5)
-        self.assertIs(res.iloc[0]['stimulus'][2], self.stimulus)
+        self.assertTupleEqual(res[('stimuli', 'stimulus')].iloc[0], (0, 5, self.stimulus))
         # Check the response
-        self.assertEqual(res.iloc[0]['response'][0], -1)
-        self.assertEqual(res.iloc[0]['response'][1], -1)
-        self.assertIs(res.iloc[0]['response'][2], self.stimulus)
-        # Check the Intracellular electrode
-        self.assertIs(res.iloc[0]['electrode'], self.electrode)
+        self.assertTupleEqual(res[('responses', 'response')].iloc[0], (-1, -1, self.stimulus))
         # test writing out ir table
         self.write_test_helper(ir)
-        # test that we get the correct row index back
-        self.assertEqual(row_index, 0)
 
     def test_add_row_no_stimulus(self):
         ir = IntracellularRecordingsTable()
@@ -418,20 +413,16 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
         res = ir[0]
         # Check the ID
         self.assertEqual(res.index[0], 10)
+        # Check the row id
+        self.assertEqual(res.index[0], 10)
+        # Check electrodes
+        self.assertIs(res[('electrodes', 'electrode')].iloc[0], self.electrode)
         # Check the stimulus
-        self.assertEqual(res.iloc[0]['stimulus'][0], -1)
-        self.assertEqual(res.iloc[0]['stimulus'][1], -1)
-        self.assertIs(res.iloc[0]['stimulus'][2], self.response)
+        self.assertTupleEqual(res[('stimuli', 'stimulus')].iloc[0], (-1, -1, self.response))
         # Check the response
-        self.assertEqual(res.iloc[0]['response'][0], 0)
-        self.assertEqual(res.iloc[0]['response'][1], 5)
-        self.assertIs(res.iloc[0]['response'][2], self.response)
-        # Check the Intracellular electrode
-        self.assertIs(res.iloc[0]['electrode'], self.electrode)
+        self.assertTupleEqual(res[('responses', 'response')].iloc[0], (0, 5, self.response))
         # test writing out ir table
         self.write_test_helper(ir)
-        # test that we get the correct row index back
-        self.assertEqual(row_index, 0)
 
     def test_add_row_index_out_of_range(self):
 

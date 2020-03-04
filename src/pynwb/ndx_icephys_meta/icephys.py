@@ -276,6 +276,9 @@ class AlignedDynamicTable(Container):
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
             return val[1] in self.get_category(val[0])
 
+    def __len__(self):
+        return len(self.dynamic_tables[self.__main_table_name__])
+
     @property
     def main(self):
         """Get the primary data table"""
@@ -338,22 +341,48 @@ class AlignedDynamicTable(Container):
         category = self.get_category(category_name)
         category.add_column(**kwargs)
 
-    @docval({'name': 'data', 'type': 'array_data', 'doc': 'The full data row to be added'})
+    @docval({'name': 'data', 'type': dict, 'doc': 'the data to put in this row', 'default': None},
+            {'name': 'id', 'type': int, 'doc': 'the ID for the row', 'default': None},
+            {'name': 'enforce_unique_id', 'type': bool, 'doc': 'enforce that the id in the table must be unique',
+             'default': False},
+            allow_extra=True)
     def add_row(self, **kwargs):
         """
-        Add a full row to the table
+        We can either provide the row data as a single dict or by specifying a dict for each category
         """
-        indata = popargs('data', **kwargs)
-        start_index = 0
-        for name, category in self.dynamic_tables.items():
-            stop_index = start_index + len(category.colnames)
-            category.add_row(data=indata[start_index:stop_index])
-            start_index = stop_index
+        data, row_id, enforce_unique_id = popargs('data', 'id', 'enforce_unique_id', kwargs)
+        data = data if data is not None else kwargs
+
+        # Check that we have the approbriate categories provided
+        extra_categories = set(list(data.keys())) - set(self.categories)
+        missing_categories = set(self.categories) - set(list(data.keys()))
+        if extra_categories or missing_categories:
+            raise ValueError(
+                '\n'.join([
+                    'row data keys don\'t match available categories',
+                    'you supplied {} extra keys: {}'.format(len(extra_categories), extra_categories),
+                    'and were missing {} keys: {}'.format(len(missing_categories), missing_categories)
+                ])
+            )
+
+        # Check and pass on custom row id
+        if row_id is not None and enforce_unique_id:
+            if row_id in self.dynamic_tables[self.__main_table_name__].id:
+                raise ValueError("id %i already in the table" % row_id)
+        if row_id is not None:
+            data[self.__main_table_name__]['id'] = row_id
+
+        # Add the data to all out dynamic table categories
+        for category, values in data.items():
+            self.dynamic_tables[category].add_row(**values)
 
     def to_dataframe(self):
-        dfs = [category.to_dataframe() for category in self.dynamic_tables]
+        """Convert the collection of tables to a single pandas DataFrame"""
+        dfs = [category.to_dataframe().reset_index() for category in self.dynamic_tables.values()]
         names = list(self.dynamic_tables.keys())
-        return pd.concat(dfs, axis=1, keys=names)
+        res = pd.concat(dfs, axis=1, keys=names)
+        res.set_index((self.__main_table_name__, 'id'), drop=True, inplace=True)
+        return res
 
     def __getitem__(self, item):
         """
@@ -367,9 +396,11 @@ class AlignedDynamicTable(Container):
         """
         if isinstance(item, int):
             # get a single full row from all tables
-            dfs = [category[item] for category in self.dynamic_tables]
+            dfs = [category[item].reset_index() for category in self.dynamic_tables.values()]
             names = list(self.dynamic_tables.keys())
-            return pd.concat(dfs, axis=1, keys=names)
+            res = pd.concat(dfs, axis=1, keys=names)
+            res.set_index((self.__main_table_name__, 'id'), drop=True, inplace=True)
+            return res
         elif isinstance(item, str):
             # get a single category
             return self.get_category(item).to_dataframe()
@@ -480,6 +511,14 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
             {'name': 'response', 'type': TimeSeries,
              'doc': 'The TimeSeries (usually a PatchClampSeries) with the response',
              'default': None},
+            {'name': 'electrode_metadata', 'type': dict,
+             'doc': 'Additional electrode metadata to be stored in the electrodes table', 'default': None},
+            {'name': 'stimulus_metadata', 'type': dict,
+             'doc': 'Additional stimulus metadata to be stored in the stimuli table', 'default': None},
+            {'name': 'response_metadata', 'type': dict,
+             'doc': 'Additional resposnse metadata to be stored in the responses table', 'default': None},
+            {'name': 'recording_metadata', 'type': dict,
+             'doc': 'Additional recording metadata to be stored in the responses table', 'default': None},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -560,13 +599,36 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                 raise ValueError("electrodes are usually expected to be the same for PatchClampSeries type "
                                  "stimulus and response pairs in an intracellular recording.")
 
-        # Add the row to the table
-        row_kwargs = {'electrode': electrode,
-                      'stimulus': (stimulus_start_index, stimulus_index_count, stimulus),
-                      'response': (response_start_index, response_index_count, response)}
-        row_kwargs.update(kwargs)
-        _ = super(IntracellularRecordingsTable, self).add_row(enforce_unique_id=True, **row_kwargs)
-        return len(self.id) - 1
+        # Compile the electrodes table data
+        electrodes = popargs('electrode_metadata', kwargs)
+        if electrodes is None:
+            electrodes = {}
+        electrodes['electrode'] = electrode
+
+        # Compile the stimuli table data
+        stimuli = popargs('stimulus_metadata', kwargs)
+        if stimuli is None:
+            stimuli = {}
+        stimuli['stimulus'] = (stimulus_start_index, stimulus_index_count, stimulus)
+
+        # Compile the reponses table data
+        responses = popargs('response_metadata', kwargs)
+        if responses is None:
+            responses = {}
+        responses['response'] =  (response_start_index, response_index_count, response)
+
+        # Recording metadata
+        recording_metadata = popargs('recording_metadata', kwargs)
+        if recording_metadata is None:
+            recording_metadata = {}
+
+        _ = super().add_row(enforce_unique_id=True,
+                            electrodes=electrodes,
+                            responses=responses,
+                            stimuli=stimuli,
+                            main=recording_metadata,
+                            **kwargs)
+        return len(self) - 1
 
 
 @register_class('SimultaneousRecordingsTable', namespace)
