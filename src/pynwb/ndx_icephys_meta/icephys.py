@@ -91,26 +91,13 @@ class HierarchicalDynamicTableMixin(object):
         The function denormalizes the hierarchical table and represents all data as
         columns in the resulting dataframe.
         """
-        def get_first_prefix(instr, prefixs):
-            """Internal helper function to find the first prefix that matches"""
-            for p in prefixs:
-                if instr.startswith(p):
-                    return p
-            return prefixs[-1]
-
-        def remove_prefix(instr, prefix):
-            """Internal helper function to remove the first prefix that matches"""
-
-            if instr.startswith(prefix):
-                return instr[len(prefix):]
-            return instr
-
         hier_df = self.to_hierarchical_dataframe(flat_column_index=True)
         flat_df = hier_df.reset_index()
         if not flat_column_index:
-            table_names = [t.name for t in self.get_targets(include_self=True)]
-            mi_tuples = [(get_first_prefix(n, table_names),
-                          remove_prefix(n, get_first_prefix(n, table_names)+"_")) for n in flat_df.columns]
+            # cn[0] is the level, cn[1:] is the label. If cn has only 2 elements than use cn[1] instead to
+            # avoid creating column labels that are tuples with just one element
+            mi_tuples = [(cn[0], cn[1:] if len(cn)>2 else cn[1])
+                         for cn in flat_df.columns]
             flat_df.columns = pd.MultiIndex.from_tuples(mi_tuples, names=('source_table', 'label'))
 
         return flat_df
@@ -151,8 +138,8 @@ class HierarchicalDynamicTableMixin(object):
                     # Determine the names for our index and columns of our output table if this is the first row.
                     # These are constant for all rows so we only need to do this onle once for the first row.
                     if row_index == 0:
-                        index_names = ([self.name + "_id", ] +
-                                       [(self.name + "_" + colname)
+                        index_names = ([(self.name , 'id') ] +
+                                       [(self.name , colname)
                                         for colname in self.colnames if colname != hcol_name])
                         if flat_column_index:
                             columns = ['id', ] + list(row_df.columns)
@@ -186,8 +173,8 @@ class HierarchicalDynamicTableMixin(object):
                         index.append(tuple(index_data))
                         # Determine the names for our index and columns of our output table if this is the first row
                         if row_index == 0:
-                            index_names = ([self.name + "_id"] +
-                                           [(self.name + "_" + colname)
+                            index_names = ([(self.name, "id")] +
+                                           [(self.name, colname)
                                             for colname in self.colnames if colname != hcol_name] +
                                            hcol_hdf.index.names)
                             columns = hcol_hdf.columns
@@ -345,10 +332,15 @@ class AlignedDynamicTable(DynamicTable):
         for category, values in category_data.items():
             self.dynamic_tables[category].add_row(**values)
 
-    def to_dataframe(self):
+    @docval({'name': 'ignore_category_ids', 'type': bool,
+             'doc': "Ignore id columns of sub-category tables", 'default': False})
+    def to_dataframe(self, **kwargs):
         """Convert the collection of tables to a single pandas DataFrame"""
-        dfs = ([super().to_dataframe().reset_index(), ] +
-               [category.to_dataframe().reset_index() for category in self.dynamic_tables.values()])
+        dfs = [super().to_dataframe().reset_index(), ]
+        if getargs('ignore_category_ids', kwargs):
+            dfs += [category.to_dataframe() for category in self.dynamic_tables.values()]
+        else:
+            dfs += [category.to_dataframe().reset_index() for category in self.dynamic_tables.values()]
         names = [self.name,] + list(self.dynamic_tables.keys())
         res = pd.concat(dfs, axis=1, keys=names)
         res.set_index((self.name, 'id'), drop=True, inplace=True)
@@ -387,6 +379,7 @@ class AlignedDynamicTable(DynamicTable):
 # TODO Add tests for the IntracellularRecordingsTable
 # TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
 # TODO Fix broken tests
+# TODO to_hierarchical_dataframe, the id volumn of the intracellular recordings table does not get the intracellular_recordings label
 
 @register_class('IntracellularElectrodesTable', namespace)
 class IntracellularElectrodesTable(DynamicTable):
