@@ -570,7 +570,7 @@ class IntracellularRecordingsTests(ICEphysMetaTestBase):
             io.write(local_nwbfile)
 
 
-class SweepsTests(ICEphysMetaTestBase):
+class SimultaneousRecordingsTableTests(ICEphysMetaTestBase):
     """
     Test class for testing the SimultaneousRecordingsTable Container class
     """
@@ -622,9 +622,9 @@ class SweepsTests(ICEphysMetaTestBase):
             sw.add_simultaneous_recording(recordings=[0], id=np.int64(10))
 
 
-class SweepSequencesTests(ICEphysMetaTestBase):
+class SequentialRecordingsTableTests(ICEphysMetaTestBase):
     """
-    Test class for testing the SweepsSequences Container class
+    Test class for testing the SequentialRecordingsTable Container class
     """
 
     def test_init(self):
@@ -680,7 +680,7 @@ class SweepSequencesTests(ICEphysMetaTestBase):
             sws.add_sequential_recording(simultaneous_recordings=[0, ], id=np.int64(10), stimulus_type='MyStimStype')
 
 
-class RunsTests(ICEphysMetaTestBase):
+class RepetitionsTableTests(ICEphysMetaTestBase):
     """
     Test class for testing the RepetitionsTable Container class
     """
@@ -743,7 +743,7 @@ class RunsTests(ICEphysMetaTestBase):
             repetitions.add_repetition(sequential_recordings=[0, ], id=np.int64(10))
 
 
-class ConditionsTests(ICEphysMetaTestBase):
+class ExperimentalConditionsTableTests(ICEphysMetaTestBase):
     """
     Test class for testing the ExperimentalConditionsTable Container class
     """

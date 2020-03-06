@@ -198,66 +198,47 @@ class HierarchicalDynamicTableMixin(object):
 
 
 @register_class('AlignedDynamicTable', namespace)
-class AlignedDynamicTable(Container):
+class AlignedDynamicTable(DynamicTable):
     """
-    Container for storing a collection of DynamicTables that are aligned by row index. I.e., all
+    DynamicTable container that subports storing a collection of subtables. Each sub-table is a
+    DynamicTable itself that is aligned with the main table by row index. I.e., all
     DynamicTables stored in this group MUST have the same number of rows. This type effectively
-    defines a 2-level table in which columns of the table a grouped into categories, with each
-    DynamicTable representing a particular category.
+    defines a 2-level table in which the main data is stored in the main table implementd by this type
+    and additional columns of the table are grouped into categories, with each category being'
+    represented by a separate DynamicTable stored within the group.
     """
     __fields__ = (
         {'name': 'dynamic_tables', 'child': True},
         'description')
 
-    # The name of the main table storing the primary data
-    __main_table_name__ = 'main'
-
-    @docval(*get_docval(Container.__init__),
-            {'name': 'description', 'type': str, 'doc': 'Description of the aligned table container'},
+    @docval(*get_docval(DynamicTable.__init__),
             {'name': 'dynamic_tables', 'type': list,
              'doc': 'List of DynamicTables to be added to the container', 'default': None},)
     def __init__(self, **kwargs):
-        call_docval_func(super().__init__, kwargs)
-        # Set the description
-        self.description = getargs('description', kwargs)
         in_dynamic_tables = popargs('dynamic_tables', kwargs)
-        # Create and set all categories
+        # Initialize the main dynamic table
+        in_id = getargs('id', kwargs)
+        call_docval_func(super().__init__, kwargs)
+        # Create and set all sub-categories
         dts = OrderedDict()
-        # Add the main table to our categories
-        main_table = DynamicTable(name=self.__main_table_name__,
-                                  description='The main table storing the global ids and other data '
-                                               'belonging to the main table, rather than being part of '
-                                               'a particular subcategory in the the AlignedDynamicTable '
-                                               'parent container')
-        # If custom categories are provided we need to decide how to create our main table
-        ignore_main_table = -1
-        if in_dynamic_tables is not None and len(in_dynamic_tables) > 0:
-            # Check if the main table has been provided by the user
-            main_table_index = None
-            for i, category in enumerate(in_dynamic_tables):
-                if category.name == self.__main_table_name__:
-                    main_table_index = i
-            # If the main table was not provided then resize the main table approbriately and add it
-            if main_table_index is None:
-                for i in range(len(in_dynamic_tables[0])):
-                    main_table.add_row()
-                dts[self.__main_table_name__] = main_table
-            # If the main table was provided then add it first and remove it from the in_dynamic_tables
-            else:
-                dts[self.__main_table_name__] = in_dynamic_tables[main_table_index]
-                ignore_main_table = main_table_index
-        # No custom categories were provided so add a blank main table
-        else:
-            dts[self.__main_table_name__] = main_table
-
         # Add the custom categories given as inputs
         if in_dynamic_tables is not None:
+            # We may need to resize our main table when adding categories as the user may not have set ids
+            if len(in_dynamic_tables) > 0:
+                # We have categories to process
+                if len(self.id) == 0:
+                    # The user did not initialize our main table id's nor set columns for our main table
+                    for i in range(len(in_dynamic_tables[0])):
+                        self.id.append(i)
+            # Add the user-provided categories
             for i, category in enumerate(in_dynamic_tables):
-                if i != ignore_main_table:
-                    self.__add_category_helper(category=category,
-                                               category_dict=dts,
-                                               main_table=dts[self.__main_table_name__])
-
+                if len(category) != len(self):
+                    raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
+                                     (len(category), len(self)))
+                if category.name in dts:
+                    raise ValueError("Duplicate table name %s found in input dynamic_ables:" % category.name)
+                dts[category.name] = category
+        # Set the self.dynamic_tables attribute, which will set the parent/child relationships for the dynamic_tables
         self.dynamic_tables = dts
 
     @docval({'name': 'val', 'type': (str, tuple), 'doc': 'The name of the category or column to check.'})
@@ -276,14 +257,6 @@ class AlignedDynamicTable(Container):
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
             return val[1] in self.get_category(val[0])
 
-    def __len__(self):
-        return len(self.dynamic_tables[self.__main_table_name__])
-
-    @property
-    def main(self):
-        """Get the primary data table"""
-        return self.dynamic_tables[self.__main_table_name__]
-
     @property
     def categories(self):
         """
@@ -294,18 +267,6 @@ class AlignedDynamicTable(Container):
         :raises: KeyError if the given name is not in self.dynamic_tables
         """
         return list(self.dynamic_tables.keys())
-
-    def __add_category_helper(self, category, category_dict, main_table):
-        """
-        Internal helper function to add a dynamic table category to a dict.
-        """
-        #category, overwrite_existing  = getargs('category', 'category_)', kwargs)
-        if len(category) != len(main_table):
-            raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
-                             (len(category), len(main_table)))
-        if category.name in category_dict:
-            raise ValueError("Category %s already in the table" % category.name)
-        category_dict[category.name] = category
 
     @docval({'name': 'category', 'type': DynamicTable, 'doc': 'Add a new DynamicTable category'},)
     def add_category(self, **kwargs):
@@ -318,10 +279,14 @@ class AlignedDynamicTable(Container):
 
         :raises: ValueError is raised if the input table does not have the same number of rows as the main table
         """
-        self.__add_category_helper(category=getargs('category', kwargs),
-                                   category_dict=self.dynamic_tables,
-                                   main_table=self.main)
-
+        category = getargs('category', kwargs)
+        if len(category) != len(self):
+            raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
+                             (len(category), len(self)))
+        if category.name in self.dynamic_tables:
+            raise ValueError("Category %s already in the table" % category.name)
+        self.dynamic_tables[category.name] = category
+        category.parent = self
 
     @docval({'name': 'name', 'type': str, 'doc': 'Name of the category we want to retrieve'})
     def get_category(self, **kwargs):
@@ -329,7 +294,7 @@ class AlignedDynamicTable(Container):
 
     @docval(*get_docval(DynamicTable.add_column),
             {'name': 'category', 'type': str, 'doc': 'The category the column should be added to',
-             'default': 'main'})
+             'default': None})
     def add_column(self, **kwargs):
         """
         Add a column to the table
@@ -338,8 +303,13 @@ class AlignedDynamicTable(Container):
 
         """
         category_name = popargs('category', kwargs)
-        category = self.get_category(category_name)
-        category.add_column(**kwargs)
+        if category_name is None:
+            # Add the column to our main table
+            call_docval_func(super().add_column, kwargs)
+        else:
+            # Add the column to a sub-category table
+            category = self.get_category(category_name)
+            category.add_column(**kwargs)
 
     @docval({'name': 'data', 'type': dict, 'doc': 'the data to put in this row', 'default': None},
             {'name': 'id', 'type': int, 'doc': 'the ID for the row', 'default': None},
@@ -353,35 +323,34 @@ class AlignedDynamicTable(Container):
         data, row_id, enforce_unique_id = popargs('data', 'id', 'enforce_unique_id', kwargs)
         data = data if data is not None else kwargs
 
+        # extract the category data
+        category_data = {k: data.pop(k) for k in self.categories if k in data}
+
         # Check that we have the approbriate categories provided
-        extra_categories = set(list(data.keys())) - set(self.categories)
-        missing_categories = set(self.categories) - set(list(data.keys()))
-        if extra_categories or missing_categories:
+        missing_categories = set(self.categories) - set(list(category_data.keys()))
+        if missing_categories:
             raise ValueError(
                 '\n'.join([
                     'row data keys don\'t match available categories',
-                    'you supplied {} extra keys: {}'.format(len(extra_categories), extra_categories),
-                    'and were missing {} keys: {}'.format(len(missing_categories), missing_categories)
+                    'missing {} category keys: {}'.format(len(missing_categories), missing_categories)
                 ])
             )
-
-        # Check and pass on custom row id
-        if row_id is not None and enforce_unique_id:
-            if row_id in self.dynamic_tables[self.__main_table_name__].id:
-                raise ValueError("id %i already in the table" % row_id)
-        if row_id is not None:
-            data[self.__main_table_name__]['id'] = row_id
+        # Add the data to our main dynamic table
+        data['id'] = row_id
+        data['enforce_unique_id'] = enforce_unique_id
+        call_docval_func(super().add_row, data)
 
         # Add the data to all out dynamic table categories
-        for category, values in data.items():
+        for category, values in category_data.items():
             self.dynamic_tables[category].add_row(**values)
 
     def to_dataframe(self):
         """Convert the collection of tables to a single pandas DataFrame"""
-        dfs = [category.to_dataframe().reset_index() for category in self.dynamic_tables.values()]
-        names = list(self.dynamic_tables.keys())
+        dfs = ([super().to_dataframe().reset_index(), ] +
+               [category.to_dataframe().reset_index() for category in self.dynamic_tables.values()])
+        names = [self.name,] + list(self.dynamic_tables.keys())
         res = pd.concat(dfs, axis=1, keys=names)
-        res.set_index((self.__main_table_name__, 'id'), drop=True, inplace=True)
+        res.set_index((self.name, 'id'), drop=True, inplace=True)
         return res
 
     def __getitem__(self, item):
@@ -396,10 +365,11 @@ class AlignedDynamicTable(Container):
         """
         if isinstance(item, int):
             # get a single full row from all tables
-            dfs = [category[item].reset_index() for category in self.dynamic_tables.values()]
-            names = list(self.dynamic_tables.keys())
+            dfs = ([super().__getitem__(item).reset_index(),] +
+                   [category[item].reset_index() for category in self.dynamic_tables.values()])
+            names = [self.name,] + list(self.dynamic_tables.keys())
             res = pd.concat(dfs, axis=1, keys=names)
-            res.set_index((self.__main_table_name__, 'id'), drop=True, inplace=True)
+            res.set_index((self.name, 'id'), drop=True, inplace=True)
             return res
         elif isinstance(item, str):
             # get a single category
@@ -411,11 +381,11 @@ class AlignedDynamicTable(Container):
 
 # TODO Rename dynamic_tables attribute of AlignedDynamicTable to category_tables
 # TODO Add functionality for our AlignedDynamicTable
-# TODO Implement add_row for AlignedDynamicTable and IntracellularRecordingsTable
 # TODO Add tests for the IntracellularElectrodesTable
 # TODO Add tests for the IntracellularStimuliTable
 # TODO Add tests for the IntracellularRecordingsTable
 # TODO Add simple round-trip tests for all classes (i.e., rountrip just the container without a NWBFile)
+# TODO Fix broken tests
 
 @register_class('IntracellularElectrodesTable', namespace)
 class IntracellularElectrodesTable(DynamicTable):
@@ -517,8 +487,6 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
              'doc': 'Additional stimulus metadata to be stored in the stimuli table', 'default': None},
             {'name': 'response_metadata', 'type': dict,
              'doc': 'Additional resposnse metadata to be stored in the responses table', 'default': None},
-            {'name': 'recording_metadata', 'type': dict,
-             'doc': 'Additional recording metadata to be stored in the responses table', 'default': None},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -617,16 +585,10 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
             responses = {}
         responses['response'] =  (response_start_index, response_index_count, response)
 
-        # Recording metadata
-        recording_metadata = popargs('recording_metadata', kwargs)
-        if recording_metadata is None:
-            recording_metadata = {}
-
         _ = super().add_row(enforce_unique_id=True,
                             electrodes=electrodes,
                             responses=responses,
                             stimuli=stimuli,
-                            main=recording_metadata,
                             **kwargs)
         return len(self) - 1
 

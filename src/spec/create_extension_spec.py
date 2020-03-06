@@ -44,32 +44,23 @@ def main():
 
     # Create a collection of aligned dynamic tables
     aligned_dynamic_tables_spec = NWBGroupSpec(
-        neurodata_type_inc='Container',
+        neurodata_type_inc='DynamicTable',
         neurodata_type_def='AlignedDynamicTable',
-        doc='Container for storing a collection of DynamicTables that are aligned by row index. I.e., all '
+        doc='DynamicTable container that subports storing a collection of subtables. Each sub-table is a '
+            'DynamicTable itself that is aligned with the main table by row index. I.e., all '
             'DynamicTables stored in this group MUST have the same number of rows. This type effectively '
-            'defines a 2-level table in which columns of the table a grouped into categories, with each'
-            'DynamicTable respresenting a particular category.',
+            'defines a 2-level table in which the main data is stored in the main table implementd by this type'
+            'and additional columns of the table are grouped into categories, with each category being'
+            'represented by a separate DynamicTable stored within the group.',
         attributes=[NWBAttributeSpec(name='categories',
                                      dtype='text',
                                      dims=['num_categories'],
                                      doc='The names of the categories in this AlignedDynamicTable. Each '
                                          'category is represented by one DynamicTable stored in the parent group.'
                                          'This attribute should be used to specify an order of categories.',
-                                     shape=[None]),
-                    NWBAttributeSpec(name='description',
-                                     doc='description of the purpose and contents of this table',
-                                     dtype='text')
+                                     shape=[None])
                    ],
         groups=[NWBGroupSpec(neurodata_type_inc='DynamicTable',
-                             name='main',
-                             quantity=1,
-                             doc='The main DynamicTable storing the gloabl ids and other data belonging '
-                                 'to the main table, rather tha being part of a particular subcategory '
-                                 'of the AlignedDynamicTable parent container. The table MUST be aligned '
-                                 'with (i.e., have the same number of rows, as all other DynamicTables '
-                                 'stored in the AlignedDynamicTable parent container.',),
-                NWBGroupSpec(neurodata_type_inc='DynamicTable',
                              doc='A DynamicTable representing a particular category for columns in the '
                                  'AlignedDynamicTable parent container. The table MUST be aligned '
                                  'with (i.e., have the same number of rows, as all other DynamicTables '

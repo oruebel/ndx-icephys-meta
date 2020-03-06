@@ -1,6 +1,6 @@
 groups:
 - neurodata_type_def: AlignedDynamicTable
-  neurodata_type_inc: Container
+  neurodata_type_inc: DynamicTable
   doc: Container for storing a collection of DynamicTables that are aligned by row
     index. I.e., all DynamicTables stored in this group MUST have the same number
     of rows. This type effectively defines a 2-level table in which columns of the
@@ -16,17 +16,7 @@ groups:
     doc: The names of the categories in this AlignedDynamicTable. Each category is
       represented by one DynamicTable stored in the parent group.This attribute should
       be used to specify an order of categories.
-  - name: description
-    dtype: text
-    doc: description of the purpose and contents of this table
   groups:
-  - name: main
-    neurodata_type_inc: DynamicTable
-    doc: The main DynamicTable storing the gloabl ids and other data belonging to
-      the main table, rather tha being part of a particular subcategory of the AlignedDynamicTable
-      parent container. The table MUST be aligned with (i.e., have the same number
-      of rows, as all other DynamicTables stored in the AlignedDynamicTable parent
-      container.
   - neurodata_type_inc: DynamicTable
     doc: A DynamicTable representing a particular category for columns in the AlignedDynamicTable
       parent container. The table MUST be aligned with (i.e., have the same number

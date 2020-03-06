@@ -71,7 +71,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         Test that we can create an empty table with custom categories. This also tests
         the contains, categories, main_table methods.
         """
-        category_names = ['test1', AlignedDynamicTable.__main_table_name__, 'test2', 'test3']
+        category_names = ['test1', 'test2', 'test3']
         num_rows=10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
@@ -84,9 +84,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             description='Test aligned container',
             dynamic_tables=categories)
 
-        self.assertEqual(temp.categories,
-                         [AlignedDynamicTable.__main_table_name__, 'test1', 'test2', 'test3'])
-        self.assertTrue(categories[1] == temp.main)
+        self.assertEqual(temp.categories, category_names)
         self.assertTrue('test1' in temp)  # test that contains category works
         self.assertTrue(('test1', 'c1') in temp) # test that contains a column works
         with self.assertRaises(ValueError):  # test the error case of a tuple with len !-2
@@ -133,7 +131,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
 
     def test_round_trip_container(self):
         """Test read and write the container by itself"""
-        category_names = ['test1', AlignedDynamicTable.__main_table_name__, 'test2', 'test3']
+        category_names = ['test1', 'test2', 'test3']
         num_rows=10
         categories = [DynamicTable(name=val,
                                    description=val+" description",

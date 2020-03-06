@@ -3,8 +3,9 @@ Module with ObjectMapper classes for the icephys-meta Container classes/neurodat
 """
 from pynwb import register_map
 from pynwb.io.file import NWBFileMap
+from hdmf.common.io.table import DynamicTableMap
 from ndx_icephys_meta.icephys import ICEphysFile, AlignedDynamicTable
-from hdmf.build import ObjectMapper, BuildManager
+from hdmf.build import  BuildManager
 from hdmf.spec import Spec
 from hdmf.utils import getargs, docval
 
@@ -28,7 +29,7 @@ class ICEphysFileMap(NWBFileMap):
 
 
 @register_map(AlignedDynamicTable)
-class AlignedDynamicTableContainerMap(ObjectMapper):
+class AlignedDynamicTableContainerMap(DynamicTableMap):
     """
     Customize the mapping for our AlignedDynamicTable
     """
