@@ -2,6 +2,7 @@ from pynwb import register_class
 from pynwb.file import NWBFile
 from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
+import numpy as np
 try:
     from pynwb.core import DynamicTable, DynamicTableRegion, Container
 except ImportError:
@@ -363,7 +364,7 @@ class AlignedDynamicTable(DynamicTable):
         :returns: DataFrame when retrieving a row or category. Returns scalar when selecting a cell.
                  Returns a VectorData/VectorIndex when retrieving a single column.
         """
-        if isinstance(item, int):
+        if isinstance(item, (int, list, np.ndarray, slice)):
             # get a single full row from all tables
             dfs = ([super().__getitem__(item).reset_index(),] +
                    [category[item].reset_index() for category in self.dynamic_tables.values()])
@@ -384,7 +385,7 @@ class AlignedDynamicTable(DynamicTable):
 # TODO Add tests for the IntracellularElectrodesTable
 # TODO Add tests for the IntracellularStimuliTable
 # TODO Add tests for the IntracellularRecordingsTable
-# TODO Add simple round-trip tests for all classes (i.e., rountrip just the container without a NWBFile)
+# TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
 # TODO Fix broken tests
 
 @register_class('IntracellularElectrodesTable', namespace)
@@ -624,7 +625,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
                                  'IntracellularRecordingsTable table together that were recorded simultaneously '
                                  'from different electrodes.')
         # Initialize the DynamicTable
-        call_docval_func(super(SimultaneousRecordingsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['recordings'].target.table is None:
             if intracellular_recordings_table is not None:
                 self['recordings'].target.table = intracellular_recordings_table
@@ -647,7 +648,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         recordings = getargs('recordings', kwargs)
         if recordings is None:
             kwargs['recordings'] = []
-        _ = super(SimultaneousRecordingsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -689,7 +690,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
                                  'group together simultaneous_recordings where the a sequence of stimuli of the '
                                  'same type with varying parameters have been presented in a sequence.')
         # Initialize the DynamicTable
-        call_docval_func(super(SequentialRecordingsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['simultaneous_recordings'].target.table is None:
             if simultaneous_recordings_table is not None:
                 self['simultaneous_recordings'].target.table = simultaneous_recordings_table
@@ -715,7 +716,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         simultaneous_recordings = getargs('simultaneous_recordings', kwargs)
         if simultaneous_recordings is None:
             kwargs[''] = []
-        _ = super(SequentialRecordingsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -751,7 +752,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
                                  'of stimulus, the RepetitionsTable table is typically used to group sets '
                                  'of stimuli applied in sequence.')
         # Initialize the DynamicTable
-        call_docval_func(super(RepetitionsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['sequential_recordings'].target.table is None:
             if sequential_recordings_table is not None:
                 self['sequential_recordings'].target.table = sequential_recordings_table
@@ -774,7 +775,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         sequential_recordings = getargs('sequential_recordings', kwargs)
         if sequential_recordings is None:
             kwargs['sequential_recordings'] = []
-        _ = super(RepetitionsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -805,7 +806,7 @@ class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         kwargs['description'] = ('A table for grouping different intracellular recording repetitions together that '
                                  'belong to the same experimental experimental_conditions.')
         # Initialize the DynamicTable
-        call_docval_func(super(ExperimentalConditionsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['repetitions'].target.table is None:
             if repetitions_table is not None:
                 self['repetitions'].target.table = repetitions_table
@@ -828,7 +829,7 @@ class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         repetitions = getargs('repetitions', kwargs)
         if repetitions is None:
             kwargs['repetitions'] = []
-        _ = super(ExperimentalConditionsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -898,8 +899,8 @@ class ICEphysFile(NWBFile):
                           "simultaneous_recordings, sequential_recordings, repetitions and/or "
                           "experimental_conditions table(s) instead.", DeprecationWarning)
         # Initialize the NWBFile parent class
-        pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
-        super(ICEphysFile, self).__init__(*pargs, **pkwargs)
+        pargs, pkwargs = fmt_docval_args(super().__init__, kwargs)
+        super().__init__(*pargs, **pkwargs)
         # Set ic filtering if requested
         self.ic_filtering = kwargs.get('ic_filtering')
         # Set the intracellular_recordings if available
