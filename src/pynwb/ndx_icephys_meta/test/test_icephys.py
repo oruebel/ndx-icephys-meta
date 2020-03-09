@@ -856,8 +856,8 @@ class ICEphysFileTests(unittest.TestCase):
         warnings.simplefilter("always")  # Trigger all warnings
         self.path = 'test_icephys_meta_intracellularrecording.h5'
 
-    #def tearDown(self):
-    #    remove_test_file(self.path)
+    def tearDown(self):
+        remove_test_file(self.path)
 
     def __get_icephysfile(self):
         """
