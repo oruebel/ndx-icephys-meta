@@ -49,7 +49,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
-            dynamic_tables=categories)
+            category_tables=categories)
 
     def test_init_with_custom_nonempty_categories(self):
         """Test that we can create an empty table with custom categories"""
@@ -64,7 +64,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
-            dynamic_tables=categories)
+            category_tables=categories)
 
     def test_init_with_custom_nonempty_categories_and_main(self):
         """
@@ -82,7 +82,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         temp = AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
-            dynamic_tables=categories)
+            category_tables=categories)
 
         self.assertEqual(temp.categories, category_names)
         self.assertTrue('test1' in temp)  # test that contains category works
@@ -111,7 +111,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             AlignedDynamicTable(
                 name='test_aligned_table',
                 description='Test aligned container',
-                dynamic_tables=categories)
+                category_tables=categories)
 
     def test_init_with_duplicate_custom_categories(self):
         """Test that we can create an empty table with custom categories"""
@@ -127,7 +127,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             AlignedDynamicTable(
                 name='test_aligned_table',
                 description='Test aligned container',
-                dynamic_tables=categories)
+                category_tables=categories)
 
     def test_round_trip_container(self):
         """Test read and write the container by itself"""
@@ -142,7 +142,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         curr = AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
-            dynamic_tables=categories)
+            category_tables=categories)
 
         with NWBHDF5IO(self.path, 'w') as io:
             io.write(curr)
