@@ -28,23 +28,3 @@ class ICEphysFileMap(NWBFileMap):
         self.map_spec('ic_filtering', icephys_spec.get_dataset('filtering'))
 
 
-@register_map(AlignedDynamicTable)
-class AlignedDynamicTableContainerMap(DynamicTableMap):
-    """
-    Customize the mapping for our AlignedDynamicTable
-    """
-    def __init__(self, spec):
-        super(AlignedDynamicTableContainerMap, self).__init__(spec)
-
-    @docval({"name": "spec", "type": Spec, "doc": "the spec to get the attribute value for"},
-            {"name": "container", "type": AlignedDynamicTable, "doc": "the container to get the attribute value from"},
-            {"name": "manager", "type": BuildManager, "doc": "the BuildManager used for managing this build"},
-            returns='the value of the attribute')
-    def get_attr_value(self, **kwargs):
-        ''' Get the value of the attribute corresponding to this spec from the given container '''
-        spec, container, manager = getargs('spec', 'container', 'manager', kwargs)
-        attr_value = super().get_attr_value(spec, container, manager)
-        if attr_value is None and spec.name in container:
-            if spec.data_type_inc == 'DynamicTable':
-                attr_value = container.categories[spec.name]
-        return attr_value
