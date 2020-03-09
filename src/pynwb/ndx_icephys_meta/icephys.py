@@ -16,6 +16,17 @@ from copy import copy
 namespace = 'ndx-icephys-meta'
 
 
+# TODO Rename dynamic_tables attribute of AlignedDynamicTable to category_tables
+# TODO Add functionality for our AlignedDynamicTable
+# TODO Add tests for the IntracellularElectrodesTable
+# TODO Add tests for the IntracellularStimuliTable
+# TODO Add tests for the IntracellularRecordingsTable
+# TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
+# TODO to_hierarchical_dataframe, the id column of the intracellular recordings table does not get the intracellular_recordings label
+# TODO Add tests for adding custom categories
+# TODO Update notebooks to use the predefined stimulus type column rather than adding a custom one
+# TODO Profile read (and write) performance for the extension
+
 class HierarchicalDynamicTableMixin(object):
     """
     Mixin class for defining specialized functionality for hierarchical dynamic tables.
@@ -389,16 +400,6 @@ class AlignedDynamicTable(DynamicTable):
         elif isinstance(item, tuple):
             # get a column, row, or cell from a particular category
             return self.get_category(item[0])[item[1:]]
-
-
-# TODO Rename dynamic_tables attribute of AlignedDynamicTable to category_tables
-# TODO Add functionality for our AlignedDynamicTable
-# TODO Add tests for the IntracellularElectrodesTable
-# TODO Add tests for the IntracellularStimuliTable
-# TODO Add tests for the IntracellularRecordingsTable
-# TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
-# TODO to_hierarchical_dataframe, the id volumn of the intracellular recordings table does not get the intracellular_recordings label
-# TODO Add tests for adding custom categories
 
 @register_class('IntracellularElectrodesTable', namespace)
 class IntracellularElectrodesTable(DynamicTable):
