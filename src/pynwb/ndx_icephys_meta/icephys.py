@@ -11,6 +11,7 @@ from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, f
 import warnings
 import pandas as pd
 from collections import OrderedDict
+from copy import copy
 
 namespace = 'ndx-icephys-meta'
 
@@ -201,11 +202,18 @@ class AlignedDynamicTable(DynamicTable):
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'dynamic_tables', 'type': list,
-             'doc': 'List of DynamicTables to be added to the container', 'default': None},)
+             'doc': 'List of DynamicTables to be added to the container', 'default': None},
+            {'name': 'categories', 'type': 'array_data',
+             'doc': 'List of names with the ordering of category tables', 'default': None})
     def __init__(self, **kwargs):
         in_dynamic_tables = popargs('dynamic_tables', kwargs)
+        in_categories = popargs('categories', kwargs)
+        if in_categories is None:
+            in_categories = [tab.name for tab in in_dynamic_tables]
+        if len(in_categories) != len(in_dynamic_tables):
+            raise ValueError("%s category dynamic_tables given but %s categories specified" %
+                             (len(in_dynamic_tables), len(in_categories)))
         # Initialize the main dynamic table
-        in_id = getargs('id', kwargs)
         call_docval_func(super().__init__, kwargs)
         # Create and set all sub-categories
         dts = OrderedDict()
@@ -218,8 +226,19 @@ class AlignedDynamicTable(DynamicTable):
                     # The user did not initialize our main table id's nor set columns for our main table
                     for i in range(len(in_dynamic_tables[0])):
                         self.id.append(i)
-            # Add the user-provided categories
-            for i, category in enumerate(in_dynamic_tables):
+            # Add the user-provided categories in the correct order as described by the categories
+            # This is necessary, because we do not store the categories explicitly but we maintain them
+            # as the order of our self.dynamic_tables. In this makes sure look-ups are consistent.
+            lookup_index = OrderedDict([(k,-1) for k in in_categories])
+            for i, v in enumerate(in_dynamic_tables):
+                if v.name not in lookup_index:
+                    raise ValueError("DynamicTable %s does not appear in categories" % v.name)
+                lookup_index[v.name] = i
+            for table_name, tabel_index in lookup_index.items():
+                if tabel_index < 0:
+                    raise ValueError("DyanmicTable %s listed in categories but does not appear in dynamic_tables" %
+                                     table_name)
+                category = in_dynamic_tables[tabel_index]
                 if len(category) != len(self):
                     raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
                                      (len(category), len(self)))
@@ -378,8 +397,8 @@ class AlignedDynamicTable(DynamicTable):
 # TODO Add tests for the IntracellularStimuliTable
 # TODO Add tests for the IntracellularRecordingsTable
 # TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
-# TODO Fix broken tests
 # TODO to_hierarchical_dataframe, the id volumn of the intracellular recordings table does not get the intracellular_recordings label
+# TODO Add tests for adding custom categories
 
 @register_class('IntracellularElectrodesTable', namespace)
 class IntracellularElectrodesTable(DynamicTable):
@@ -454,14 +473,54 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     a single simultaneous_recording. Each row in the table represents a single recording consisting
     typically of a stimulus and a corresponding response.
     """
+    @docval(*get_docval(AlignedDynamicTable.__init__, 'id','columns', 'colnames', 'dynamic_tables', 'categories'))
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
         kwargs['description'] = ('A table to group together a stimulus and response from a single electrode '
                                  'and a single simultaneous recording and for storing metadata about the '
                                  'intracellular recording.')
-        kwargs['dynamic_tables'] = [IntracellularElectrodesTable(),
-                                    IntracellularStimuliTable(),
-                                    IntracellularResponsesTable()]
+        in_dynamic_tables = getargs('dynamic_tables', kwargs)
+        if in_dynamic_tables is None or len(in_dynamic_tables) == 0:
+            kwargs['dynamic_tables'] = [IntracellularElectrodesTable(),
+                                        IntracellularStimuliTable(),
+                                        IntracellularResponsesTable()]
+            kwargs['categories'] = None
+        else:
+            # Check if our required data tables are supplied, otherwise add them to the list
+            required_dynamic_table_given = [-1 for i in range(3)]  # The first three are our required tables
+            for i, tab in enumerate(in_dynamic_tables):
+                if isinstance(tab, IntracellularElectrodesTable):
+                    required_dynamic_table_given[0] = i
+                elif isinstance(tab, IntracellularStimuliTable):
+                    required_dynamic_table_given[1] = i
+                elif isinstance(tab, IntracellularResponsesTable):
+                    required_dynamic_table_given[2] = i
+            # Check if the supplied tables contain data but not all required tables have been supplied
+            required_dynamic_table_missing = np.any(np.array(required_dynamic_table_given[0:3]) < 0)
+            if len(in_dynamic_tables[0]) !=0 and required_dynamic_table_missing:
+                raise ValueError("IntracellularElectrodeTable, IntracellularStimuliTable, and "
+                                 "IntracellularResponsesTable are required when adding custom, non-empty "
+                                 "tables to IntracellularRecordingsTable as the missing data for the required "
+                                 "tables cannot be determined automatically")
+            # Compile the complete list of tables
+            dynamic_table_arg = copy(in_dynamic_tables)
+            categories_arg = [] if getargs('categories', kwargs) is None else copy(getargs('categories', kwargs))
+            if required_dynamic_table_missing:
+                if required_dynamic_table_given[2] < 0:
+                    dynamic_table_arg.append(IntracellularResponsesTable)
+                    if not dynamic_table_arg[-1].name in categories_arg:
+                        categories_arg.insert(0, dynamic_table_arg[-1].name)
+                if required_dynamic_table_given[1] < 0:
+                    dynamic_table_arg.append(IntracellularStimuliTable())
+                    if not dynamic_table_arg[-1].name in categories_arg:
+                        categories_arg.insert(0, dynamic_table_arg[-1].name)
+                if required_dynamic_table_given[0] < 0:
+                    dynamic_table_arg.append(IntracellularElectrodesTable())
+                    if not dynamic_table_arg[-1].name in categories_arg:
+                        categories_arg.insert(0, dynamic_table_arg[-1].name)
+            kwargs['dynamic_tables'] = dynamic_table_arg
+            kwargs['categories'] = categories_arg
+
         call_docval_func(super().__init__, kwargs)
 
     @docval({'name': 'electrode', 'type': IntracellularElectrode, 'doc': 'The intracellular electrode used'},
