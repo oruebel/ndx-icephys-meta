@@ -219,11 +219,15 @@ class AlignedDynamicTable(DynamicTable):
     def __init__(self, **kwargs):
         in_dynamic_tables = popargs('dynamic_tables', kwargs)
         in_categories = popargs('categories', kwargs)
-        if in_categories is None:
+        if in_categories is None and in_dynamic_tables is not None:
             in_categories = [tab.name for tab in in_dynamic_tables]
-        if len(in_categories) != len(in_dynamic_tables):
-            raise ValueError("%s category dynamic_tables given but %s categories specified" %
-                             (len(in_dynamic_tables), len(in_categories)))
+        if in_categories is not None and in_dynamic_tables is None:
+            raise ValueError("Categories provided but no dynamic_tables given")
+        # at this point both in_categories and in_dynamic_tables should either both be None or both be a list
+        if in_categories is not None:
+            if len(in_categories) != len(in_dynamic_tables):
+                raise ValueError("%s category dynamic_tables given but %s categories specified" %
+                                 (len(in_dynamic_tables), len(in_categories)))
         # Initialize the main dynamic table
         call_docval_func(super().__init__, kwargs)
         # Create and set all sub-categories
@@ -244,6 +248,8 @@ class AlignedDynamicTable(DynamicTable):
             for i, v in enumerate(in_dynamic_tables):
                 if v.name not in lookup_index:
                     raise ValueError("DynamicTable %s does not appear in categories" % v.name)
+                if lookup_index[v.name] >= 0:
+                    raise ValueError("Duplicate table name %s found in input dynamic_ables:" % v.name)
                 lookup_index[v.name] = i
             for table_name, tabel_index in lookup_index.items():
                 if tabel_index < 0:
@@ -253,8 +259,6 @@ class AlignedDynamicTable(DynamicTable):
                 if len(category) != len(self):
                     raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
                                      (len(category), len(self)))
-                if category.name in dts:
-                    raise ValueError("Duplicate table name %s found in input dynamic_ables:" % category.name)
                 dts[category.name] = category
         # Set the self.dynamic_tables attribute, which will set the parent/child relationships for the dynamic_tables
         self.dynamic_tables = dts

@@ -158,6 +158,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
     # TODO Test add_column
     # TODO Test to_dataframe
     # TODO Test __getitem__
+    # TODO Test the various error cases for __init__
 
 if __name__ == '__main__':
     unittest.main()
