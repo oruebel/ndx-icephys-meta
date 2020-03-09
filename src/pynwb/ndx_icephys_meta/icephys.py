@@ -16,7 +16,6 @@ from copy import copy
 namespace = 'ndx-icephys-meta'
 
 
-# TODO Rename dynamic_tables attribute of AlignedDynamicTable to category_tables
 # TODO Add functionality for our AlignedDynamicTable
 # TODO Add tests for the IntracellularElectrodesTable
 # TODO Add tests for the IntracellularStimuliTable
@@ -208,44 +207,44 @@ class AlignedDynamicTable(DynamicTable):
     represented by a separate DynamicTable stored within the group.
     """
     __fields__ = (
-        {'name': 'dynamic_tables', 'child': True},
+        {'name': 'category_tables', 'child': True},
         'description')
 
     @docval(*get_docval(DynamicTable.__init__),
-            {'name': 'dynamic_tables', 'type': list,
+            {'name': 'category_tables', 'type': list,
              'doc': 'List of DynamicTables to be added to the container', 'default': None},
             {'name': 'categories', 'type': 'array_data',
              'doc': 'List of names with the ordering of category tables', 'default': None})
     def __init__(self, **kwargs):
-        in_dynamic_tables = popargs('dynamic_tables', kwargs)
+        in_category_tables = popargs('category_tables', kwargs)
         in_categories = popargs('categories', kwargs)
-        if in_categories is None and in_dynamic_tables is not None:
-            in_categories = [tab.name for tab in in_dynamic_tables]
-        if in_categories is not None and in_dynamic_tables is None:
-            raise ValueError("Categories provided but no dynamic_tables given")
-        # at this point both in_categories and in_dynamic_tables should either both be None or both be a list
+        if in_categories is None and in_category_tables is not None:
+            in_categories = [tab.name for tab in in_category_tables]
+        if in_categories is not None and in_category_tables is None:
+            raise ValueError("Categories provided but no category_tables given")
+        # at this point both in_categories and in_category_tables should either both be None or both be a list
         if in_categories is not None:
-            if len(in_categories) != len(in_dynamic_tables):
-                raise ValueError("%s category dynamic_tables given but %s categories specified" %
-                                 (len(in_dynamic_tables), len(in_categories)))
+            if len(in_categories) != len(in_category_tables):
+                raise ValueError("%s category category_tables given but %s categories specified" %
+                                 (len(in_category_tables), len(in_categories)))
         # Initialize the main dynamic table
         call_docval_func(super().__init__, kwargs)
         # Create and set all sub-categories
         dts = OrderedDict()
         # Add the custom categories given as inputs
-        if in_dynamic_tables is not None:
+        if in_category_tables is not None:
             # We may need to resize our main table when adding categories as the user may not have set ids
-            if len(in_dynamic_tables) > 0:
+            if len(in_category_tables) > 0:
                 # We have categories to process
                 if len(self.id) == 0:
                     # The user did not initialize our main table id's nor set columns for our main table
-                    for i in range(len(in_dynamic_tables[0])):
+                    for i in range(len(in_category_tables[0])):
                         self.id.append(i)
             # Add the user-provided categories in the correct order as described by the categories
             # This is necessary, because we do not store the categories explicitly but we maintain them
-            # as the order of our self.dynamic_tables. In this makes sure look-ups are consistent.
+            # as the order of our self.category_tables. In this makes sure look-ups are consistent.
             lookup_index = OrderedDict([(k,-1) for k in in_categories])
-            for i, v in enumerate(in_dynamic_tables):
+            for i, v in enumerate(in_category_tables):
                 if v.name not in lookup_index:
                     raise ValueError("DynamicTable %s does not appear in categories" % v.name)
                 if lookup_index[v.name] >= 0:
@@ -253,15 +252,15 @@ class AlignedDynamicTable(DynamicTable):
                 lookup_index[v.name] = i
             for table_name, tabel_index in lookup_index.items():
                 if tabel_index < 0:
-                    raise ValueError("DyanmicTable %s listed in categories but does not appear in dynamic_tables" %
+                    raise ValueError("DyanmicTable %s listed in categories but does not appear in category_tables" %
                                      table_name)
-                category = in_dynamic_tables[tabel_index]
+                category = in_category_tables[tabel_index]
                 if len(category) != len(self):
                     raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
                                      (len(category), len(self)))
                 dts[category.name] = category
-        # Set the self.dynamic_tables attribute, which will set the parent/child relationships for the dynamic_tables
-        self.dynamic_tables = dts
+        # Set the self.category_tables attribute, which will set the parent/child relationships for the category_tables
+        self.category_tables = dts
 
     @docval({'name': 'val', 'type': (str, tuple), 'doc': 'The name of the category or column to check.'})
     def __contains__(self, val):
@@ -273,7 +272,7 @@ class AlignedDynamicTable(DynamicTable):
         colname exists.
         """
         if isinstance(val, str):
-            return val in self.dynamic_tables
+            return val in self.category_tables
         elif isinstance(val, tuple):
             if len(val) != 2:
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
@@ -284,11 +283,11 @@ class AlignedDynamicTable(DynamicTable):
         """
         Get the list of names the categories
 
-        Short-hand for list(self.dynamic_tables.keys())
+        Short-hand for list(self.category_tables.keys())
 
-        :raises: KeyError if the given name is not in self.dynamic_tables
+        :raises: KeyError if the given name is not in self.category_tables
         """
-        return list(self.dynamic_tables.keys())
+        return list(self.category_tables.keys())
 
     @docval({'name': 'category', 'type': DynamicTable, 'doc': 'Add a new DynamicTable category'},)
     def add_category(self, **kwargs):
@@ -305,14 +304,14 @@ class AlignedDynamicTable(DynamicTable):
         if len(category) != len(self):
             raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
                              (len(category), len(self)))
-        if category.name in self.dynamic_tables:
+        if category.name in self.category_tables:
             raise ValueError("Category %s already in the table" % category.name)
-        self.dynamic_tables[category.name] = category
+        self.category_tables[category.name] = category
         category.parent = self
 
     @docval({'name': 'name', 'type': str, 'doc': 'Name of the category we want to retrieve'})
     def get_category(self, **kwargs):
-        return self.dynamic_tables[popargs('name', kwargs)]
+        return self.category_tables[popargs('name', kwargs)]
 
     @docval(*get_docval(DynamicTable.add_column),
             {'name': 'category', 'type': str, 'doc': 'The category the column should be added to',
@@ -364,7 +363,7 @@ class AlignedDynamicTable(DynamicTable):
 
         # Add the data to all out dynamic table categories
         for category, values in category_data.items():
-            self.dynamic_tables[category].add_row(**values)
+            self.category_tables[category].add_row(**values)
 
     @docval({'name': 'ignore_category_ids', 'type': bool,
              'doc': "Ignore id columns of sub-category tables", 'default': False})
@@ -372,10 +371,10 @@ class AlignedDynamicTable(DynamicTable):
         """Convert the collection of tables to a single pandas DataFrame"""
         dfs = [super().to_dataframe().reset_index(), ]
         if getargs('ignore_category_ids', kwargs):
-            dfs += [category.to_dataframe() for category in self.dynamic_tables.values()]
+            dfs += [category.to_dataframe() for category in self.category_tables.values()]
         else:
-            dfs += [category.to_dataframe().reset_index() for category in self.dynamic_tables.values()]
-        names = [self.name,] + list(self.dynamic_tables.keys())
+            dfs += [category.to_dataframe().reset_index() for category in self.category_tables.values()]
+        names = [self.name,] + list(self.category_tables.keys())
         res = pd.concat(dfs, axis=1, keys=names)
         res.set_index((self.name, 'id'), drop=True, inplace=True)
         return res
@@ -393,8 +392,8 @@ class AlignedDynamicTable(DynamicTable):
         if isinstance(item, (int, list, np.ndarray, slice)):
             # get a single full row from all tables
             dfs = ([super().__getitem__(item).reset_index(),] +
-                   [category[item].reset_index() for category in self.dynamic_tables.values()])
-            names = [self.name,] + list(self.dynamic_tables.keys())
+                   [category[item].reset_index() for category in self.category_tables.values()])
+            names = [self.name,] + list(self.category_tables.keys())
             res = pd.concat(dfs, axis=1, keys=names)
             res.set_index((self.name, 'id'), drop=True, inplace=True)
             return res
@@ -478,22 +477,22 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     a single simultaneous_recording. Each row in the table represents a single recording consisting
     typically of a stimulus and a corresponding response.
     """
-    @docval(*get_docval(AlignedDynamicTable.__init__, 'id','columns', 'colnames', 'dynamic_tables', 'categories'))
+    @docval(*get_docval(AlignedDynamicTable.__init__, 'id','columns', 'colnames', 'category_tables', 'categories'))
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
         kwargs['description'] = ('A table to group together a stimulus and response from a single electrode '
                                  'and a single simultaneous recording and for storing metadata about the '
                                  'intracellular recording.')
-        in_dynamic_tables = getargs('dynamic_tables', kwargs)
-        if in_dynamic_tables is None or len(in_dynamic_tables) == 0:
-            kwargs['dynamic_tables'] = [IntracellularElectrodesTable(),
+        in_category_tables = getargs('category_tables', kwargs)
+        if in_category_tables is None or len(in_category_tables) == 0:
+            kwargs['category_tables'] = [IntracellularElectrodesTable(),
                                         IntracellularStimuliTable(),
                                         IntracellularResponsesTable()]
             kwargs['categories'] = None
         else:
             # Check if our required data tables are supplied, otherwise add them to the list
             required_dynamic_table_given = [-1 for i in range(3)]  # The first three are our required tables
-            for i, tab in enumerate(in_dynamic_tables):
+            for i, tab in enumerate(in_category_tables):
                 if isinstance(tab, IntracellularElectrodesTable):
                     required_dynamic_table_given[0] = i
                 elif isinstance(tab, IntracellularStimuliTable):
@@ -502,13 +501,13 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                     required_dynamic_table_given[2] = i
             # Check if the supplied tables contain data but not all required tables have been supplied
             required_dynamic_table_missing = np.any(np.array(required_dynamic_table_given[0:3]) < 0)
-            if len(in_dynamic_tables[0]) !=0 and required_dynamic_table_missing:
+            if len(in_category_tables[0]) !=0 and required_dynamic_table_missing:
                 raise ValueError("IntracellularElectrodeTable, IntracellularStimuliTable, and "
                                  "IntracellularResponsesTable are required when adding custom, non-empty "
                                  "tables to IntracellularRecordingsTable as the missing data for the required "
                                  "tables cannot be determined automatically")
             # Compile the complete list of tables
-            dynamic_table_arg = copy(in_dynamic_tables)
+            dynamic_table_arg = copy(in_category_tables)
             categories_arg = [] if getargs('categories', kwargs) is None else copy(getargs('categories', kwargs))
             if required_dynamic_table_missing:
                 if required_dynamic_table_given[2] < 0:
@@ -523,7 +522,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                     dynamic_table_arg.append(IntracellularElectrodesTable())
                     if not dynamic_table_arg[-1].name in categories_arg:
                         categories_arg.insert(0, dynamic_table_arg[-1].name)
-            kwargs['dynamic_tables'] = dynamic_table_arg
+            kwargs['category_tables'] = dynamic_table_arg
             kwargs['categories'] = categories_arg
 
         call_docval_func(super().__init__, kwargs)

@@ -17,7 +17,7 @@ class ICEphysFileMap(NWBFileMap):
     SequentialRecordingsTable, RepetitionsTable, and ExperimentalConditionsTable
     """
     def __init__(self, spec):
-        super(ICEphysFileMap, self).__init__(spec)
+        super().__init__(spec)
         general_spec = self.spec.get_group('general')
         icephys_spec = general_spec.get_group('intracellular_ephys')
         self.map_spec('intracellular_recordings', icephys_spec.get_neurodata_type('IntracellularRecordingsTable'))
@@ -28,3 +28,13 @@ class ICEphysFileMap(NWBFileMap):
         self.map_spec('ic_filtering', icephys_spec.get_dataset('filtering'))
 
 
+@register_map(AlignedDynamicTable)
+class AlignedDynamicTableMap(DynamicTableMap):
+    """
+    Customize the mapping for AlignedDynamicTable
+    """
+    def __init__(self, spec):
+        super().__init__(spec)
+        # By default the DynamicTables contained as sub-categories in the AlignedDynamicTable are mapped to
+        # the 'dynamic_tables' class attribute. This renames the attribute to 'category_tables'
+        self.map_spec('category_tables', spec.get_neurodata_type('DynamicTable'))
