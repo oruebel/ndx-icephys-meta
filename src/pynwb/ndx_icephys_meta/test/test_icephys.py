@@ -1206,18 +1206,17 @@ class ICEphysFileTests(unittest.TestCase):
         # Write our file to disk
         # Write our test file
         with NWBHDF5IO(self.path, 'w') as nwbio:
-            #import cProfile, pstats, io
-            #from pstats import SortKey
-            #pr = cProfile.Profile()
-            #pr.enable()
+            # import cProfile, pstats, io
+            # from pstats import SortKey
+            # pr = cProfile.Profile()
+            # pr.enable()
             nwbio.write(nwbfile)
-            #pr.disable()
-            #s = io.StringIO()
-            #sortby = SortKey.CUMULATIVE
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats()
-            #print(s.getvalue())
-
+            # pr.disable()
+            # s = io.StringIO()
+            # sortby = SortKey.CUMULATIVE
+            # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            # ps.print_stats()
+            # print(s.getvalue())
 
         #################################################################
         # Confirm that the low-level data has been written as expected
@@ -1252,35 +1251,45 @@ class ICEphysFileTests(unittest.TestCase):
         #############################################
         #  Test reading the file back from disk
         #############################################
-        with NWBHDF5IO(self.path, 'r') as io:
-            infile = io.read()
+        with NWBHDF5IO(self.path, 'r') as nwbio:
+            #import cProfile, pstats, io
+            #from pstats import SortKey
+            #pr = cProfile.Profile()
+            #pr.enable()
+            infile = nwbio.read()
+            #pr.disable()
+            #s = io.StringIO()
+            #sortby = SortKey.CUMULATIVE
+            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            #ps.print_stats()
+            #print(s.getvalue())
 
             ############################################################################
             #  Test that the  IntracellularRecordingsTable table has been written correctly
             ############################################################################
             self.assertIsNotNone(infile.intracellular_recordings)
             self.assertEqual(len(infile.intracellular_recordings), 1)
-            res = nwbfile.intracellular_recordings[0]
+            res = infile.intracellular_recordings[0]
             # Check the ID
             self.assertEqual(res.index[0], 10)
-            # TODO Update asserts for intracellular recordings table
             # Check the stimulus
-            #self.assertEqual(res.iloc[0]['stimulus'][0], 0)
-            #self.assertEqual(res.iloc[0]['stimulus'][1], 5)
-            #self.assertIs(res.iloc[0]['stimulus'][2], stimulus)
+            self.assertEqual(res[('stimuli', 'stimulus')].iloc[0][0], 0)
+            self.assertEqual(res[('stimuli', 'stimulus')].iloc[0][1], 5)
+            self.assertEqual(res[('stimuli', 'stimulus')].iloc[0][2].object_id,  stimulus.object_id)
             # Check the response
-            #self.assertEqual(res.iloc[0]['response'][0], 0)
-            #self.assertEqual(res.iloc[0]['response'][1], 5)
-            #self.assertIs(res.iloc[0]['response'][2],  nwbfile.get_acquisition('vcs'))
+            self.assertEqual(res[('responses', 'response')].iloc[0][0], 0)
+            self.assertEqual(res[('responses', 'response')].iloc[0][1], 5)
+            self.assertEqual(res[('responses', 'response')].iloc[0][2].object_id,
+                             nwbfile.get_acquisition('vcs').object_id)
             # Check the Intracellular electrode
-            #self.assertIs(res.iloc[0]['electrode'], electrode)
+            self.assertEqual(res[('electrodes', 'electrode')].iloc[0].object_id,  electrode.object_id)
 
             ############################################################################
             #  Test that the  SimultaneousRecordingsTable table has been written correctly
             ############################################################################
             self.assertIsNotNone(infile.icephys_simultaneous_recordings)
             self.assertEqual(len(infile.icephys_simultaneous_recordings), 1)
-            res = nwbfile.icephys_simultaneous_recordings[0]
+            res = infile.icephys_simultaneous_recordings[0]
             # Check the ID and len of the intracellular_recordings column
             self.assertEqual(res.index[0], 12)
             self.assertEqual(len(res.iloc[0]['recordings']), 1)
@@ -1291,7 +1300,7 @@ class ICEphysFileTests(unittest.TestCase):
             ############################################################################
             self.assertIsNotNone(infile.icephys_sequential_recordings)
             self.assertEqual(len(infile.icephys_sequential_recordings), 1)
-            res = nwbfile.icephys_sequential_recordings[0]
+            res = infile.icephys_sequential_recordings[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 15)
             self.assertEqual(len(res.iloc[0]['simultaneous_recordings']), 1)
@@ -1303,7 +1312,7 @@ class ICEphysFileTests(unittest.TestCase):
             ############################################################################
             self.assertIsNotNone(infile.icephys_repetitions)
             self.assertEqual(len(infile.icephys_repetitions), 1)
-            res = nwbfile.icephys_repetitions[0]
+            res = infile.icephys_repetitions[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 17)
             self.assertEqual(len(res.iloc[0]['sequential_recordings']), 1)
@@ -1314,7 +1323,7 @@ class ICEphysFileTests(unittest.TestCase):
             ############################################################################
             self.assertIsNotNone(infile.icephys_experimental_conditions)
             self.assertEqual(len(infile.icephys_experimental_conditions), 1)
-            res = nwbfile.icephys_experimental_conditions[0]
+            res = infile.icephys_experimental_conditions[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 19)
             self.assertEqual(len(res.iloc[0]['repetitions']), 1)
