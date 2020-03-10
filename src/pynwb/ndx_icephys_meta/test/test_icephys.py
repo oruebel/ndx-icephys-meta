@@ -282,27 +282,39 @@ class ICEphysMetaTestBase(unittest.TestCase):
         # Test that we can read the file
         with NWBHDF5IO(self.path, 'r') as io:
             infile = io.read()
-            # TODO add asserts for data content
             if ir is not None:
                 in_ir = infile.intracellular_recordings
                 self.assertIsNotNone(in_ir)
-                #assert_frame_equal(ir.to_dataframe(), in_ir.to_dataframe())
+                to_dataframe_kwargs = dict(electrode_refs_as_objectids=True,
+                                           stimulus_refs_as_objectids=True,
+                                           response_refs_as_objectids=True)
+                assert_frame_equal(ir.to_dataframe(**to_dataframe_kwargs), in_ir.to_dataframe(**to_dataframe_kwargs))
             if sw is not None:
                 in_sw = infile.icephys_simultaneous_recordings
                 self.assertIsNotNone(in_sw)
-                #assert_frame_equal(sw.to_dataframe(), in_sw.to_dataframe())
+                self.assertListEqual(in_sw['recordings'].target.data[:].tolist(), sw['recordings'].target.data[:])
+                self.assertEqual(in_sw['recordings'].target.table.object_id, sw['recordings'].target.table.object_id)
             if sws is not None:
                 in_sws = infile.icephys_sequential_recordings
                 self.assertIsNotNone(in_sws)
-                #assert_frame_equal(sws.to_dataframe(), in_sws.to_dataframe())
+                self.assertListEqual(in_sws['simultaneous_recordings'].target.data[:].tolist(),
+                                     sws['simultaneous_recordings'].target.data[:])
+                self.assertEqual(in_sws['simultaneous_recordings'].target.table.object_id,
+                                 sws['simultaneous_recordings'].target.table.object_id)
             if repetitions is not None:
                 in_repetitions = infile.icephys_repetitions
                 self.assertIsNotNone(in_repetitions)
-                #assert_frame_equal(repetitions.to_dataframe(), in_repetitions.to_dateframe)
+                self.assertListEqual(in_repetitions['sequential_recordings'].target.data[:].tolist(),
+                                     repetitions['sequential_recordings'].target.data[:])
+                self.assertEqual(in_repetitions['sequential_recordings'].target.table.object_id,
+                                 repetitions['sequential_recordings'].target.table.object_id)
             if cond is not None:
                 in_cond = infile.icephys_experimental_conditions
                 self.assertIsNotNone(in_cond)
-                #assert_frame_equal(cond.to_dataframe(), in_cond.to_dataframe())
+                self.assertListEqual(in_cond['repetitions'].target.data[:].tolist(),
+                                     cond['repetitions'].target.data[:])
+                self.assertEqual(in_cond['repetitions'].target.table.object_id,
+                                 cond['repetitions'].target.table.object_id)
 
 
 class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
