@@ -29,6 +29,13 @@ except ImportError:
                                           ExperimentalConditionsTable,
                                           ICEphysFile)
 
+# TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
+# TODO Add tests for the IntracellularElectrodesTable
+# TODO Add tests for the IntracellularStimuliTable
+# TODO Add tests for the IntracellularRecordingsTable
+# TODO Add tests for adding custom categories (both on init and using add_category)
+# TODO Add tests for adding custom columns to IntracellularRecordings on init
+
 
 class ICEphysMetaTestBase(unittest.TestCase):
     """

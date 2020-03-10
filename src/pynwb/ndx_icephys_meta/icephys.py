@@ -16,16 +16,11 @@ from copy import copy
 namespace = 'ndx-icephys-meta'
 
 
-# TODO Add functionality for our AlignedDynamicTable
-# TODO Add tests for the IntracellularElectrodesTable
-# TODO Add tests for the IntracellularStimuliTable
-# TODO Add tests for the IntracellularRecordingsTable
-# TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
 # TODO to_hierarchical_dataframe, the intracellular_recordings id column does not get the intracellular_recordings label
-# TODO Add tests for adding custom categories
 # TODO Update notebooks to use the predefined stimulus type column rather than adding a custom one
-# TODO Profile read (and write) performance for the extension
 # TODO Show replacing references with object_ids for intracellular_recordings in notebooks
+# TODO Profile read (and write) performance for the extension
+
 
 class HierarchicalDynamicTableMixin(object):
     """

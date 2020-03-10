@@ -26,6 +26,7 @@ except ImportError:
 
 # TODO Test add_row
 # TODO Test add_column
+# TODO Test add_category
 # TODO Test to_dataframe
 # TODO Test __getitem__
 # TODO Test the various error cases for __init__
