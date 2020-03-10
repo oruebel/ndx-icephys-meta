@@ -260,8 +260,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
              'doc': 'ExperimentalConditionsTable table to be added to the file before write',
              'default': None})
     def write_test_helper(self, **kwargs):
-
-
+        """Internal helper function to roundtrip an ICEphys file with the given set of ICEphys tables"""
         ir, sw, sws, repetitions, cond = popargs('ir', 'sw', 'sws', 'repetitions', 'cond', kwargs)
 
         if ir is not None:
@@ -339,7 +338,7 @@ class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
         # read our first (and only) row and assert that it is correct
         res = ir[0]
         # Confirm that slicing one row give the same result as converting the whole table, which has only one row
-        assert_frame_equal(ir.to_dataframe() , res)
+        assert_frame_equal(ir.to_dataframe(), res)
         # Check the row id
         self.assertEqual(res.index[0], 10)
         # Check electrodes
@@ -411,6 +410,7 @@ class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
                                      id=np.int64(10))
         res = ir[0]
         # Check the ID
+        self.assertEqual(row_index, 0)
         self.assertEqual(res.index[0], 10)
         # Check the row id
         self.assertEqual(res.index[0], 10)
@@ -431,6 +431,7 @@ class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
                                      id=np.int64(10))
         res = ir[0]
         # Check the ID
+        self.assertEqual(row_index, 0)
         self.assertEqual(res.index[0], 10)
         # Check the row id
         self.assertEqual(res.index[0], 10)
@@ -539,11 +540,9 @@ class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
 
     def test_round_trip_container_no_data(self):
         """Test read and write the container by itself"""
-        curr =  IntracellularRecordingsTable()
-
+        curr = IntracellularRecordingsTable()
         with NWBHDF5IO(self.path, 'w') as io:
             io.write(curr)
-
         with NWBHDF5IO(self.path, 'r') as io:
             incon = io.read()
             self.assertListEqual(incon.categories, curr.categories)
@@ -1155,8 +1154,6 @@ class ICEphysFileTests(unittest.TestCase):
         self.assertListEqual(nwbfile.icephys_simultaneous_recordings['recordings'].data, [1])
         self.assertListEqual(nwbfile.icephys_simultaneous_recordings['recordings'].target.data[:], [0])
         res = nwbfile.icephys_simultaneous_recordings[0]
-        #print(nwbfile.icephys_simultaneous_recordings.id[:])
-        #print(nwbfile.icephys_simultaneous_recordings['recordings'][:])
         # check the id value
         self.assertEqual(res.index[0], 12)
         # Check that our sweep contains 1 IntracellularRecording
@@ -1218,6 +1215,7 @@ class ICEphysFileTests(unittest.TestCase):
         # Write our file to disk
         # Write our test file
         with NWBHDF5IO(self.path, 'w') as nwbio:
+            # # Uncomment the following lines to enable profiling for write
             # import cProfile, pstats, io
             # from pstats import SortKey
             # pr = cProfile.Profile()
@@ -1264,17 +1262,18 @@ class ICEphysFileTests(unittest.TestCase):
         #  Test reading the file back from disk
         #############################################
         with NWBHDF5IO(self.path, 'r') as nwbio:
-            #import cProfile, pstats, io
-            #from pstats import SortKey
-            #pr = cProfile.Profile()
-            #pr.enable()
+            # # Uncomment the following lines to enable profiling for read
+            # import cProfile, pstats, io
+            # from pstats import SortKey
+            # pr = cProfile.Profile()
+            # pr.enable()
             infile = nwbio.read()
-            #pr.disable()
-            #s = io.StringIO()
-            #sortby = SortKey.CUMULATIVE
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats()
-            #print(s.getvalue())
+            # pr.disable()
+            # s = io.StringIO()
+            # sortby = SortKey.CUMULATIVE
+            # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            # ps.print_stats()
+            # print(s.getvalue())
 
             ############################################################################
             #  Test that the  IntracellularRecordingsTable table has been written correctly

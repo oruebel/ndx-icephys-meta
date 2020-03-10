@@ -24,6 +24,12 @@ except ImportError:
     from ndx_icephys_meta.icephys import AlignedDynamicTable
 
 
+# TODO Test add_row
+# TODO Test add_column
+# TODO Test to_dataframe
+# TODO Test __getitem__
+# TODO Test the various error cases for __init__
+
 
 class TestAlignedDynamicTableContainer(unittest.TestCase):
     """
@@ -54,7 +60,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
     def test_init_with_custom_nonempty_categories(self):
         """Test that we can create an empty table with custom categories"""
         category_names = ['test1', 'test2', 'test3']
-        num_rows=10
+        num_rows = 10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
                                    columns=[VectorData(name=val+t,
@@ -72,7 +78,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         the contains, categories, main_table methods.
         """
         category_names = ['test1', 'test2', 'test3']
-        num_rows=10
+        num_rows = 10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
                                    columns=[VectorData(name=t,
@@ -86,14 +92,13 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
 
         self.assertEqual(temp.categories, category_names)
         self.assertTrue('test1' in temp)  # test that contains category works
-        self.assertTrue(('test1', 'c1') in temp) # test that contains a column works
+        self.assertTrue(('test1', 'c1') in temp)  # test that contains a column works
         with self.assertRaises(ValueError):  # test the error case of a tuple with len !-2
             ('test1', 'c1', 't3') in temp
 
-
     def test_init_with_custom_misaligned_categories(self):
         """Test that we can create an empty table with custom categories"""
-        num_rows=10
+        num_rows = 10
         val1 = 'test1'
         val2 = 'test2'
         categories = [DynamicTable(name=val1,
@@ -116,7 +121,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
     def test_init_with_duplicate_custom_categories(self):
         """Test that we can create an empty table with custom categories"""
         category_names = ['test1', 'test1']
-        num_rows=10
+        num_rows = 10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
                                    columns=[VectorData(name=val+t,
@@ -132,7 +137,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
     def test_round_trip_container(self):
         """Test read and write the container by itself"""
         category_names = ['test1', 'test2', 'test3']
-        num_rows=10
+        num_rows = 10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
                                    columns=[VectorData(name=t,
@@ -153,12 +158,6 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             for n in category_names:
                 assert_frame_equal(incon[n], curr[n])
 
-
-    # TODO Test add_row
-    # TODO Test add_column
-    # TODO Test to_dataframe
-    # TODO Test __getitem__
-    # TODO Test the various error cases for __init__
 
 if __name__ == '__main__':
     unittest.main()
