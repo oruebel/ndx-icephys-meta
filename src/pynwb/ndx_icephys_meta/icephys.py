@@ -4,9 +4,9 @@ from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
 import numpy as np
 try:
-    from pynwb.core import DynamicTable, DynamicTableRegion, Container
+    from pynwb.core import DynamicTable, DynamicTableRegion
 except ImportError:
-    from hdmf.common import DynamicTable, DynamicTableRegion, Container
+    from hdmf.common import DynamicTable, DynamicTableRegion
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
 import pandas as pd
@@ -21,10 +21,11 @@ namespace = 'ndx-icephys-meta'
 # TODO Add tests for the IntracellularStimuliTable
 # TODO Add tests for the IntracellularRecordingsTable
 # TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
-# TODO to_hierarchical_dataframe, the id column of the intracellular recordings table does not get the intracellular_recordings label
+# TODO to_hierarchical_dataframe, the intracellular_recordings id column does not get the intracellular_recordings label
 # TODO Add tests for adding custom categories
 # TODO Update notebooks to use the predefined stimulus type column rather than adding a custom one
 # TODO Profile read (and write) performance for the extension
+# TODO Show replacing references with object_ids for intracellular_recordings in notebooks
 
 class HierarchicalDynamicTableMixin(object):
     """
@@ -107,7 +108,7 @@ class HierarchicalDynamicTableMixin(object):
         if not flat_column_index:
             # cn[0] is the level, cn[1:] is the label. If cn has only 2 elements than use cn[1] instead to
             # avoid creating column labels that are tuples with just one element
-            mi_tuples = [(cn[0], cn[1:] if len(cn)>2 else cn[1])
+            mi_tuples = [(cn[0], cn[1:] if len(cn) > 2 else cn[1])
                          for cn in flat_df.columns]
             flat_df.columns = pd.MultiIndex.from_tuples(mi_tuples, names=('source_table', 'label'))
 
@@ -149,8 +150,8 @@ class HierarchicalDynamicTableMixin(object):
                     # Determine the names for our index and columns of our output table if this is the first row.
                     # These are constant for all rows so we only need to do this onle once for the first row.
                     if row_index == 0:
-                        index_names = ([(self.name , 'id') ] +
-                                       [(self.name , colname)
+                        index_names = ([(self.name, 'id')] +
+                                       [(self.name, colname)
                                         for colname in self.colnames if colname != hcol_name])
                         if flat_column_index:
                             columns = ['id', ] + list(row_df.columns)
@@ -243,7 +244,7 @@ class AlignedDynamicTable(DynamicTable):
             # Add the user-provided categories in the correct order as described by the categories
             # This is necessary, because we do not store the categories explicitly but we maintain them
             # as the order of our self.category_tables. In this makes sure look-ups are consistent.
-            lookup_index = OrderedDict([(k,-1) for k in in_categories])
+            lookup_index = OrderedDict([(k, -1) for k in in_categories])
             for i, v in enumerate(in_category_tables):
                 if v.name not in lookup_index:
                     raise ValueError("DynamicTable %s does not appear in categories" % v.name)
@@ -384,7 +385,7 @@ class AlignedDynamicTable(DynamicTable):
             dfs += [category.to_dataframe() for category in self.category_tables.values()]
         else:
             dfs += [category.to_dataframe().reset_index() for category in self.category_tables.values()]
-        names = [self.name,] + list(self.category_tables.keys())
+        names = [self.name, ] + list(self.category_tables.keys())
         res = pd.concat(dfs, axis=1, keys=names)
         if getargs('electrode_refs_as_objectids', kwargs):
             res[('electrodes', 'electrode')] = [e.object_id for e in res[('electrodes', 'electrode')]]
@@ -407,9 +408,9 @@ class AlignedDynamicTable(DynamicTable):
         """
         if isinstance(item, (int, list, np.ndarray, slice)):
             # get a single full row from all tables
-            dfs = ([super().__getitem__(item).reset_index(),] +
+            dfs = ([super().__getitem__(item).reset_index(), ] +
                    [category[item].reset_index() for category in self.category_tables.values()])
-            names = [self.name,] + list(self.category_tables.keys())
+            names = [self.name, ] + list(self.category_tables.keys())
             res = pd.concat(dfs, axis=1, keys=names)
             res.set_index((self.name, 'id'), drop=True, inplace=True)
             return res
@@ -419,6 +420,7 @@ class AlignedDynamicTable(DynamicTable):
         elif isinstance(item, tuple):
             # get a column, row, or cell from a particular category
             return self.get_category(item[0])[item[1:]]
+
 
 @register_class('IntracellularElectrodesTable', namespace)
 class IntracellularElectrodesTable(DynamicTable):
@@ -433,7 +435,7 @@ class IntracellularElectrodesTable(DynamicTable):
          'table': False},
     )
 
-    @docval( *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
         # Define defaultb name and description settings
         kwargs['name'] = 'electrodes'
@@ -455,7 +457,7 @@ class IntracellularStimuliTable(DynamicTable):
          'table': False},
     )
 
-    @docval( *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
         # Define defaultb name and description settings
         kwargs['name'] = 'stimuli'
@@ -477,7 +479,7 @@ class IntracellularResponsesTable(DynamicTable):
          'table': False},
     )
 
-    @docval( *get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
     def __init__(self, **kwargs):
         # Define defaultb name and description settings
         kwargs['name'] = 'responses'
@@ -493,7 +495,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
     a single simultaneous_recording. Each row in the table represents a single recording consisting
     typically of a stimulus and a corresponding response.
     """
-    @docval(*get_docval(AlignedDynamicTable.__init__, 'id','columns', 'colnames', 'category_tables', 'categories'))
+    @docval(*get_docval(AlignedDynamicTable.__init__, 'id', 'columns', 'colnames', 'category_tables', 'categories'))
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
         kwargs['description'] = ('A table to group together a stimulus and response from a single electrode '
@@ -502,8 +504,8 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
         in_category_tables = getargs('category_tables', kwargs)
         if in_category_tables is None or len(in_category_tables) == 0:
             kwargs['category_tables'] = [IntracellularElectrodesTable(),
-                                        IntracellularStimuliTable(),
-                                        IntracellularResponsesTable()]
+                                         IntracellularStimuliTable(),
+                                         IntracellularResponsesTable()]
             kwargs['categories'] = None
         else:
             # Check if our required data tables are supplied, otherwise add them to the list
@@ -517,7 +519,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                     required_dynamic_table_given[2] = i
             # Check if the supplied tables contain data but not all required tables have been supplied
             required_dynamic_table_missing = np.any(np.array(required_dynamic_table_given[0:3]) < 0)
-            if len(in_category_tables[0]) !=0 and required_dynamic_table_missing:
+            if len(in_category_tables[0]) != 0 and required_dynamic_table_missing:
                 raise ValueError("IntracellularElectrodeTable, IntracellularStimuliTable, and "
                                  "IntracellularResponsesTable are required when adding custom, non-empty "
                                  "tables to IntracellularRecordingsTable as the missing data for the required "
@@ -656,7 +658,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
         responses = popargs('response_metadata', kwargs)
         if responses is None:
             responses = {}
-        responses['response'] =  (response_start_index, response_index_count, response)
+        responses['response'] = (response_start_index, response_index_count, response)
 
         _ = super().add_row(enforce_unique_id=True,
                             electrodes=electrodes,

@@ -5,9 +5,7 @@ from pynwb import register_map
 from pynwb.io.file import NWBFileMap
 from hdmf.common.io.table import DynamicTableMap
 from ndx_icephys_meta.icephys import ICEphysFile, AlignedDynamicTable
-from hdmf.build import  BuildManager
-from hdmf.spec import Spec
-from hdmf.utils import getargs, docval
+
 
 @register_map(ICEphysFile)
 class ICEphysFileMap(NWBFileMap):
