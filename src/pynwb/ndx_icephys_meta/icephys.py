@@ -366,7 +366,17 @@ class AlignedDynamicTable(DynamicTable):
             self.category_tables[category].add_row(**values)
 
     @docval({'name': 'ignore_category_ids', 'type': bool,
-             'doc': "Ignore id columns of sub-category tables", 'default': False})
+             'doc': "Ignore id columns of sub-category tables", 'default': False},
+            {'name': 'electrode_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the electrode column with object_ids',
+             'default': False},
+            {'name': 'stimulus_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the stimulus column with object_ids',
+             'default': False},
+            {'name': 'response_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the response column with object_ids',
+             'default': False}
+            )
     def to_dataframe(self, **kwargs):
         """Convert the collection of tables to a single pandas DataFrame"""
         dfs = [super().to_dataframe().reset_index(), ]
@@ -376,6 +386,12 @@ class AlignedDynamicTable(DynamicTable):
             dfs += [category.to_dataframe().reset_index() for category in self.category_tables.values()]
         names = [self.name,] + list(self.category_tables.keys())
         res = pd.concat(dfs, axis=1, keys=names)
+        if getargs('electrode_refs_as_objectids', kwargs):
+            res[('electrodes', 'electrode')] = [e.object_id for e in res[('electrodes', 'electrode')]]
+        if getargs('stimulus_refs_as_objectids', kwargs):
+            res[('stimuli', 'stimulus')] = [(e[0], e[1],  e[2].object_id) for e in res[('stimuli', 'stimulus')]]
+        if getargs('response_refs_as_objectids', kwargs):
+            res[('responses', 'response')] = [(e[0], e[1],  e[2].object_id) for e in res[('responses', 'response')]]
         res.set_index((self.name, 'id'), drop=True, inplace=True)
         return res
 
