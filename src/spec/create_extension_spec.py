@@ -59,7 +59,7 @@ def main():
                                          'category is represented by one DynamicTable stored in the parent group.'
                                          'This attribute should be used to specify an order of categories.',
                                      shape=[None])
-                   ],
+                    ],
         groups=[NWBGroupSpec(neurodata_type_inc='DynamicTable',
                              doc='A DynamicTable representing a particular category for columns in the '
                                  'AlignedDynamicTable parent container. The table MUST be aligned '
@@ -68,7 +68,7 @@ def main():
                                  'the category is given by the name of the DynamicTable and its description '
                                  'by the description attribute of the DynamicTable.',
                              quantity='*')
-               ]
+                ]
     )
 
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
@@ -122,7 +122,7 @@ def main():
                         name='stimulus',
                         neurodata_type_inc='VectorData',
                         doc='Column storing the reference to the recorded stimulus for the recording (rows)',
-                        dtype=reference_timeseries_dtype),]),
+                        dtype=reference_timeseries_dtype), ]),
                 NWBGroupSpec(
                     name='responses',
                     neurodata_type_inc='DynamicTable',
@@ -136,8 +136,8 @@ def main():
                         name='response',
                         neurodata_type_inc='VectorData',
                         doc='Column storing the reference to the recorded response for the recording (rows)',
-                        dtype=reference_timeseries_dtype),])
-            ]
+                        dtype=reference_timeseries_dtype), ])
+                ]
     )
 
     # Create a SimultaneousRecordingsTable (similar to trials) table to group
