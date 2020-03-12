@@ -3,12 +3,13 @@ from pynwb.file import NWBFile
 from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
 try:
-    from pynwb.core import DynamicTable, DynamicTableRegion
+    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex
 except ImportError:
-    from hdmf.common import DynamicTable, DynamicTableRegion
+    from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
 import pandas as pd
+import numpy as np
 
 namespace = 'ndx-icephys-meta'
 
@@ -129,10 +130,17 @@ class HierarchicalDynamicTableMixin(object):
         columns = None
         index_names = None
 
+        # If we have indexed columns (other than our hierarchical column) then our index data for our
+        # MultiIndex will contain lists as elements (which are not hashable) and as such create an error.
+        # As such we need to check if we have any affected columns so we can  fix our data
+        indexed_column_indicies = np.where([isinstance(self[colname], VectorIndex)
+                                            for colname in self.colnames if colname != hcol_name])[0]
+        indexed_column_indicies += 1  # Need to increment by 1 since we add the row id in our iteration below
+
         # Case 1:  Our DynamicTableRegion column points to a regular DynamicTable
-        #          If this is the case than we need to de-normalize the data and flatten the hierarcht
+        #          If this is the case than we need to de-normalize the data and flatten the hierarchy
         if not isinstance(hcol_target, HierarchicalDynamicTableMixin):
-            # 1) Iterate over all rows in our hierarchcial columns (i.e,. the DynamicTableRegion column)
+            # 1) Iterate over all rows in our hierarchical columns (i.e,. the DynamicTableRegion column)
             for row_index, row_df in enumerate(hcol[:]):  # need hcol[:] here in case this is an h5py.Dataset
                 # 1.1): Since hcol is a DynamicTableRegion, each row returns another DynamicTable so we
                 #       next need to iterate over all rows in that table to denormalize our data
@@ -145,6 +153,8 @@ class HierarchicalDynamicTableMixin(object):
                     #        iii) the index (i.e., id) from our target row
                     index_data = ([self.id[row_index], ] +
                                   [self[row_index, colname] for colname in self.colnames if colname != hcol_name])
+                    for i in indexed_column_indicies:  # Fix data from indexed columns
+                        index_data[i] = tuple(index_data[i])  # Convert from list to tuple (which is hashable)
                     index.append(tuple(index_data))
                     # Determine the names for our index and columns of our output table if this is the first row.
                     # These are constant for all rows so we only need to do this onle once for the first row.
@@ -158,7 +168,6 @@ class HierarchicalDynamicTableMixin(object):
                             columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
                                                                 [(hcol_target.name, c) for c in row_df.columns],
                                                                 names=('source_table', 'label'))
-
         # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
         else:
             # 1) First we need to recursively flatten the hierarchy by calling 'to_hierarchical_dataframe()'
@@ -181,6 +190,8 @@ class HierarchicalDynamicTableMixin(object):
                         index_data = ([self.id[row_index], ] +
                                       [self[row_index, colname] for colname in self.colnames if colname != hcol_name] +
                                       list(row_tuple_level3[0]))
+                        for i in indexed_column_indicies:  # Fix data from indexed columns
+                            index_data[i] = tuple(index_data[i])  # Convert from list to tuple (which is hashable)
                         index.append(tuple(index_data))
                         # Determine the names for our index and columns of our output table if this is the first row
                         if row_index == 0:

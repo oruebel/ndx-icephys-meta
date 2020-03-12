@@ -91,6 +91,10 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
                                      name='tag',
                                      description='custom tag',
                                      index=False)
+        self.table_level1.add_column(data=['tag1', 'tag2', 'tag2', 'tag1', 'tag3', 'tag4', 'tag5'],
+                                     name='tags',
+                                     description='custom tags',
+                                     index=[2, 4, 7])
         self.table_level2.add_row(id=0, child_table_refs=[0, ])
         self.table_level2.add_row(id=1, child_table_refs=[1, 2])
         self.table_level2.add_column(data=[10, 12],
