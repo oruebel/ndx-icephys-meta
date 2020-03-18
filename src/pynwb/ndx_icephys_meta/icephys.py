@@ -159,7 +159,7 @@ class HierarchicalDynamicTableMixin(object):
                                        [(self.name, colname)
                                         for colname in self.colnames if colname != hcol_name])
                         if flat_column_index:
-                            columns = ['id', ] + list(row_df.columns)
+                            columns = [(hcol_target.name, 'id'), ] + list(row_df.columns)
                         else:
                             columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
                                                                 [(hcol_target.name, c) for c in row_df.columns],
@@ -387,6 +387,7 @@ class AlignedDynamicTable(DynamicTable):
     def to_dataframe(self, **kwargs):
         """Convert the collection of tables to a single pandas DataFrame"""
         dfs = [super().to_dataframe().reset_index(), ]
+
         if getargs('ignore_category_ids', kwargs):
             dfs += [category.to_dataframe() for category in self.category_tables.values()]
         else:
