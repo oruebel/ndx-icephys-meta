@@ -12,13 +12,8 @@ import warnings
 import pandas as pd
 from collections import OrderedDict
 from copy import copy
-import numpy as np
 
 namespace = 'ndx-icephys-meta'
-
-
-# TODO Show adding new category to the intracelluar_recordings table
-# TODO Profile read (and write) performance for the extension
 
 
 class HierarchicalDynamicTableMixin(object):
