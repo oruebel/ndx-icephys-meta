@@ -17,9 +17,7 @@ import numpy as np
 namespace = 'ndx-icephys-meta'
 
 
-# TODO to_hierarchical_dataframe, the intracellular_recordings id column does not get the intracellular_recordings label
-# TODO Update notebooks to use the predefined stimulus type column rather than adding a custom one
-# TODO Show replacing references with object_ids for intracellular_recordings in notebooks
+# TODO Show adding new category to the intracelluar_recordings table
 # TODO Profile read (and write) performance for the extension
 
 
