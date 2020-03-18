@@ -128,7 +128,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                                 stimulus=stim,
                                                 response=resp,
                                                 id=sweep_number)
-        nwbfile.intracellular_recordings.add_column(name='stimulus_type',
+        nwbfile.intracellular_recordings.add_column(name='recording_tags',
                                                     data=['A1', 'A2',
                                                           'B1', 'B2',
                                                           'C1', 'C2', 'C3',
@@ -137,7 +137,7 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                                           'B1', 'B2',
                                                           'C1', 'C2', 'C3',
                                                           'D1', 'D2', 'D3'],
-                                                    description='String indicating the type of stimulus applied')
+                                                    description='String with a set of recording tags')
         # Add simultaneous_recordings
         nwbfile.add_icephys_simultaneous_recording(recordings=[0, 1], id=np.int64(100))
         nwbfile.add_icephys_simultaneous_recording(recordings=[2, 3], id=np.int64(101))
@@ -156,22 +156,22 @@ class ICEphysMetaTestBase(unittest.TestCase):
         # Add sequential recordings
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[0, 1],
                                                  id=np.int64(1000),
-                                                 stimulus_type="MyStimulusType")
+                                                 stimulus_type="StimType_1")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[2, ],
                                                  id=np.int64(1001),
-                                                 stimulus_type="MyStimulusType")
+                                                 stimulus_type="StimType_2")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[3, ],
                                                  id=np.int64(1002),
-                                                 stimulus_type="MyStimulusType")
+                                                 stimulus_type="StimType_3")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[4, 5],
                                                  id=np.int64(1003),
-                                                 stimulus_type="MyStimulusType")
+                                                 stimulus_type="StimType_1")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[6, ],
                                                  id=np.int64(1004),
-                                                 stimulus_type="MyStimulusType")
+                                                 stimulus_type="StimType_2")
         nwbfile.add_icephys_sequential_recording(simultaneous_recordings=[7, ],
                                                  id=np.int64(1005),
-                                                 stimulus_type="MyStimulusType")
+                                                 stimulus_type="StimType_3")
         if add_custom_columns:
             nwbfile.icephys_sequential_recordings.add_column(
                 name='type',
