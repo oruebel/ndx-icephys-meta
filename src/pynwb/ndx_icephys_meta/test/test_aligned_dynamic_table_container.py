@@ -26,7 +26,6 @@ except ImportError:
 
 # TODO Test add_row
 # TODO Test add_column
-# TODO Test add_category
 # TODO Test to_dataframe
 # TODO Test __getitem__
 
@@ -232,6 +231,66 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             self.assertListEqual(incon.categories, curr.categories)
             for n in category_names:
                 assert_frame_equal(incon[n], curr[n])
+
+    def test_add_category(self):
+        """Test that we can correct a non-empty category to an existing table"""
+        category_names = ['test1', 'test2', 'test3']
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=val+t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
+                                   ) for val in category_names]
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            category_tables=categories[0:2])
+        self.assertListEqual(adt.categories, category_names[0:2])
+        adt.add_category(categories[-1])
+        self.assertListEqual(adt.categories, category_names)
+
+    def test_add_category_misaligned_rows(self):
+        """Test that we can correct a non-empty category to an existing table"""
+        category_names = ['test1', 'test2']
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=val+t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
+                                   ) for val in category_names]
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            category_tables=categories)
+        self.assertListEqual(adt.categories, category_names)
+        with self.assertRaises(ValueError) as ve:
+            adt.add_category(DynamicTable(name='test3',
+                                          description='test3_description',
+                                          columns=[VectorData(name='test3_'+t,
+                                                              description='test3 '+t+' description',
+                                                              data=np.arange(num_rows - 2)) for t in ['c1', 'c2', 'c3']
+                                                   ]))
+        self.assertEqual(str(ve.exception), "New category DynamicTable does not align, it has 8 rows expected 10")
+
+    def test_add_category_already_in_table(self):
+        category_names = ['test1', 'test2', 'test2']
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=val+t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
+                                   ) for val in category_names]
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            category_tables=categories[0:2])
+        self.assertListEqual(adt.categories, category_names[0:2])
+        with self.assertRaises(ValueError) as ve:
+            adt.add_category(categories[-1])
+        self.assertEqual(str(ve.exception), "Category test2 already in the table")
 
 
 if __name__ == '__main__':
