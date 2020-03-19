@@ -1028,7 +1028,7 @@ class ICEphysFile(NWBFile):
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
                               "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
-                              "add_icephys)repetition, add_icephys_condition functions.",
+                              "add_icephys_repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -1046,7 +1046,7 @@ class ICEphysFile(NWBFile):
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
                               "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
-                              "add_icephys)repetition, add_icephys_condition functions.",
+                              "add_icephys_repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -1064,7 +1064,7 @@ class ICEphysFile(NWBFile):
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
                               "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
-                              "add_icephys)repetition, add_icephys_condition functions.",
+                              "add_icephys_repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(nwbdata)
 
