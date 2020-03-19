@@ -955,6 +955,44 @@ class ICEphysFileTests(unittest.TestCase):
             nwbfile.add_acquisition(responce, use_sweep_table=True)
             self.assertEqual(len(w), 1)
 
+    def test_deprecate_sweeptable_on_add_stimulus_template(self):
+        """
+        Make sure we warn when using the sweep-table
+        """
+        nwbfile = self.__get_icephysfile()
+        local_electrode = nwbfile.create_icephys_electrode(
+            name="elec0",
+            description='a mock intracellular electrode',
+            device=nwbfile.create_device(name='Heka ITC-1600'))
+        local_stimulus = VoltageClampStimulusSeries(
+            name="ccss",
+            data=[1, 2, 3, 4, 5],
+            starting_time=123.6,
+            rate=10e3,
+            electrode=local_electrode,
+            gain=0.02,
+            sweep_number=np.uint64(15))
+        local_stimulus2 = VoltageClampStimulusSeries(
+            name="ccss2",
+            data=[1, 2, 3, 4, 5],
+            starting_time=123.6,
+            rate=10e3,
+            electrode=local_electrode,
+            gain=0.02,
+            sweep_number=np.uint64(15))
+        with warnings.catch_warnings(record=True) as w:
+            nwbfile.add_stimulus_template(local_stimulus, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+            assert issubclass(w[-1].category, DeprecationWarning)
+            self.assertEqual(str(w[-1].message),
+                             "Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
+                             "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
+                             "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
+                             "add_icephys_repetition, add_icephys_condition functions.")
+            # make sure we don't trigger the same deprecation warning twice
+            nwbfile.add_stimulus_template(local_stimulus2, use_sweep_table=True)
+            self.assertEqual(len(w), 1)
+
     def test_deprecate_sweepstable_on_add_acquistion(self):
         """
         Test that warnings are raised if the user tries to use a sweeps table
@@ -969,6 +1007,11 @@ class ICEphysFileTests(unittest.TestCase):
             nwbfile.add_acquisition(responce, use_sweep_table=True)
             self.assertEqual(len(w), 1)
             assert issubclass(w[-1].category, DeprecationWarning)
+            self.assertEqual(str(w[-1].message),
+                             "Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
+                             "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
+                             "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
+                             "add_icephys_repetition, add_icephys_condition functions.")
             # make sure we don't trigger the same deprecation warning twice
             nwbfile.add_stimulus(stimulus, use_sweep_table=True)
             self.assertEqual(len(w), 1)
