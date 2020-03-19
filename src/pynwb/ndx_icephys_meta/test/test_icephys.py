@@ -1077,6 +1077,8 @@ class ICEphysFileTests(unittest.TestCase):
                                             resistance_comp_correction=70.0,
                                             sweep_number=np.uint64(15))
         local_nwbfile.add_stimulus_template(local_stimulus)
+        # Check that none of the table exist yet
+        self.assertIsNone(local_nwbfile.get_icephys_meta_parent_table())
         # Add a recording and confirm that intracellular_recordings is the top table
         _ = local_nwbfile.add_intracellular_recording(electrode=local_electrode,
                                                       stimulus=local_stimulus,
