@@ -292,6 +292,61 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             adt.add_category(categories[-1])
         self.assertEqual(str(ve.exception), "Category test2 already in the table")
 
+    def test_add_column(self):
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            columns=[VectorData(name='test_'+t,
+                                description='test_'+t+' description',
+                                data=np.arange(10)) for t in ['c1', 'c2', 'c3']])
+        # Test successful add
+        adt.add_column(name='testA', description='testA', data=np.arange(10))
+        self.assertTupleEqual(adt.colnames,  ('test_c1', 'test_c2', 'test_c3', 'testA'))
+
+    def test_add_column_bad_category(self):
+        """Test add column with bad category"""
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            columns=[VectorData(name='test_'+t,
+                                description='test_'+t+' description',
+                                data=np.arange(10)) for t in ['c1', 'c2', 'c3']])
+        with self.assertRaises(KeyError) as ke:
+            adt.add_column(category='mycat', name='testA', description='testA', data=np.arange(10))
+        self.assertEqual(str(ke.exception), "'Category mycat not in table'")
+
+    def test_add_column_bad_length(self):
+        """Test add column that is too short"""
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            columns=[VectorData(name='test_'+t,
+                                description='test_'+t+' description',
+                                data=np.arange(10)) for t in ['c1', 'c2', 'c3']])
+        # Test successful add
+        with self.assertRaises(ValueError) as ve:
+            adt.add_column(name='testA', description='testA', data=np.arange(8))
+        self.assertEqual(str(ve.exception), "column must have the same number of rows as 'id'")
+
+    def test_add_column_to_subcategory(self):
+        """Test adding a column to a subcategory"""
+        category_names = ['test1', 'test2', 'test3']
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=val+t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
+                                   ) for val in category_names]
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            category_tables=categories)
+        self.assertListEqual(adt.categories, category_names)
+        # Test successful add
+        adt.add_column(category='test2', name='testA', description='testA', data=np.arange(10))
+        self.assertTupleEqual(adt.get_category('test2').colnames, ('test2c1', 'test2c2', 'test2c3', 'testA'))
+
 
 if __name__ == '__main__':
     unittest.main()

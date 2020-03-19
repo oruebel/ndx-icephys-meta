@@ -356,7 +356,10 @@ class AlignedDynamicTable(DynamicTable):
             call_docval_func(super().add_column, kwargs)
         else:
             # Add the column to a sub-category table
-            category = self.get_category(category_name)
+            try:
+                category = self.get_category(category_name)
+            except KeyError:
+                raise KeyError("Category %s not in table" % category_name)
             category.add_column(**kwargs)
 
     @docval({'name': 'data', 'type': dict, 'doc': 'the data to put in this row', 'default': None},
