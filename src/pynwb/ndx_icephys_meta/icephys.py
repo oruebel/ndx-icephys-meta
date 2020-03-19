@@ -244,7 +244,7 @@ class AlignedDynamicTable(DynamicTable):
         # at this point both in_categories and in_category_tables should either both be None or both be a list
         if in_categories is not None:
             if len(in_categories) != len(in_category_tables):
-                raise ValueError("%s category category_tables given but %s categories specified" %
+                raise ValueError("%s category_tables given but %s categories specified" %
                                  (len(in_category_tables), len(in_categories)))
         # Initialize the main dynamic table
         call_docval_func(super().__init__, kwargs)
@@ -264,19 +264,27 @@ class AlignedDynamicTable(DynamicTable):
             # as the order of our self.category_tables. In this makes sure look-ups are consistent.
             lookup_index = OrderedDict([(k, -1) for k in in_categories])
             for i, v in enumerate(in_category_tables):
+                # Error check that the name of the table is in our categories list
                 if v.name not in lookup_index:
-                    raise ValueError("DynamicTable %s does not appear in categories" % v.name)
+                    raise ValueError("DynamicTable %s does not appear in categories %s" % (v.name, str(in_categories)))
+                # Error check to make sure no two tables with the same name are given
                 if lookup_index[v.name] >= 0:
-                    raise ValueError("Duplicate table name %s found in input dynamic_ables:" % v.name)
+                    raise ValueError("Duplicate table name %s found in input dynamic_tables" % v.name)
                 lookup_index[v.name] = i
             for table_name, tabel_index in lookup_index.items():
-                if tabel_index < 0:
-                    raise ValueError("DyanmicTable %s listed in categories but does not appear in category_tables" %
-                                     table_name)
+                # This error case should not be able to occur since the length of the in_categories and
+                # in_category_tables must match and we made sure that each DynamicTable we added had its
+                # name in the in_categories list. We, therefore, exclude this check from coverage testing
+                # but we leave it in just as a backup trigger in case something unexpected happens
+                if tabel_index < 0:  # pragma: no cover
+                    raise ValueError("DynamicTable %s listed in categories but does not appear in category_tables" %
+                                     table_name)  # pragma: no cover
+                # Test that all category tables have the correct number of rows
                 category = in_category_tables[tabel_index]
                 if len(category) != len(self):
-                    raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
-                                     (len(category), len(self)))
+                    raise ValueError('Category DynamicTable %s does not align, it has %i rows expected %i' %
+                                     (category.name, len(category), len(self)))
+                # Add the category table to our category_tables.
                 dts[category.name] = category
         # Set the self.category_tables attribute, which will set the parent/child relationships for the category_tables
         self.category_tables = dts

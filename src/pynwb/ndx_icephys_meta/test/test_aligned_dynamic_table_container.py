@@ -29,7 +29,6 @@ except ImportError:
 # TODO Test add_category
 # TODO Test to_dataframe
 # TODO Test __getitem__
-# TODO Test the various error cases for __init__
 
 
 class TestAlignedDynamicTableContainer(unittest.TestCase):
@@ -48,6 +47,81 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container')
+
+    def test_init_categories_without_category_tables_error(self):
+        # Test raise error if categories is given without category_tables
+        with self.assertRaises(ValueError) as ve:
+            AlignedDynamicTable(
+                name='test_aligned_table',
+                description='Test aligned container',
+                categories=['cat1', 'cat2'])
+        self.assertEqual(str(ve.exception), "Categories provided but no category_tables given")
+
+    def test_init_length_mismatch_between_categories_and_category_tables(self):
+        # Test length mismatch between categories and category_tables
+        with self.assertRaises(ValueError) as ve:
+            AlignedDynamicTable(
+                name='test_aligned_table',
+                description='Test aligned container',
+                categories=['cat1', 'cat2'],
+                category_tables=[])
+        self.assertEqual(str(ve.exception), "0 category_tables given but 2 categories specified")
+
+    def test_init_category_table_names_do_not_match_categories(self):
+        # Construct some categories for testing
+        category_names = ['test1', 'test2', 'test3']
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=val+t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
+                                   ) for val in category_names]
+        # Test add category_table that is not listed in the categories list
+        with self.assertRaises(ValueError) as ve:
+            AlignedDynamicTable(
+                name='test_aligned_table',
+                description='Test aligned container',
+                categories=['test1', 'test2', 't3'],  # bad name for 'test3'
+                category_tables=categories)
+        self.assertEqual(str(ve.exception), "DynamicTable test3 does not appear in categories ['test1', 'test2', 't3']")
+
+    def test_init_duplicate_category_table_name(self):
+        # Test duplicate table name
+        with self.assertRaises(ValueError) as ve:
+            categories = [DynamicTable(name=val,
+                                       description=val+" description",
+                                       columns=[VectorData(name=val+t,
+                                                           description=val+t+' description',
+                                                           data=np.arange(10)) for t in ['c1', 'c2', 'c3']]
+                                       ) for val in ['test1', 'test1', 'test3']]
+            AlignedDynamicTable(
+                name='test_aligned_table',
+                description='Test aligned container',
+                categories=['test1', 'test2', 'test3'],
+                category_tables=categories)
+        self.assertEqual(str(ve.exception), "Duplicate table name test1 found in input dynamic_tables")
+
+    def test_init_misaligned_category_tables(self):
+        # Test misaligned category tables
+        with self.assertRaises(ValueError) as ve:
+            categories = [DynamicTable(name=val,
+                                       description=val+" description",
+                                       columns=[VectorData(name=val+t,
+                                                           description=val+t+' description',
+                                                           data=np.arange(10)) for t in ['c1', 'c2', 'c3']]
+                                       ) for val in ['test1', 'test2']]
+            categories.append(DynamicTable(name='test3',
+                                           description="test3 description",
+                                           columns=[VectorData(name='test3 '+t,
+                                                               description='test3 '+t+' description',
+                                                               data=np.arange(8)) for t in ['c1', 'c2', 'c3']]))
+            AlignedDynamicTable(
+                name='test_aligned_table',
+                description='Test aligned container',
+                categories=['test1', 'test2', 'test3'],
+                category_tables=categories)
+        self.assertEqual(str(ve.exception), "Category DynamicTable test3 does not align, it has 8 rows expected 10")
 
     def test_init_with_custom_empty_categories(self):
         """Test that we can create an empty table with custom categories"""
@@ -98,7 +172,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             ('test1', 'c1', 't3') in temp
 
     def test_init_with_custom_misaligned_categories(self):
-        """Test that we can create an empty table with custom categories"""
+        """Test that we cannot create an empty table with custom categories"""
         num_rows = 10
         val1 = 'test1'
         val2 = 'test2'
