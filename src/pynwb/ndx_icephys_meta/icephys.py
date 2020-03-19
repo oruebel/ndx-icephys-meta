@@ -380,7 +380,7 @@ class AlignedDynamicTable(DynamicTable):
         # Check that we have the approbriate categories provided
         missing_categories = set(self.categories) - set(list(category_data.keys()))
         if missing_categories:
-            raise ValueError(
+            raise KeyError(
                 '\n'.join([
                     'row data keys don\'t match available categories',
                     'missing {} category keys: {}'.format(len(missing_categories), missing_categories)

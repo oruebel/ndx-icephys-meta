@@ -24,8 +24,6 @@ except ImportError:
     from ndx_icephys_meta.icephys import AlignedDynamicTable
 
 
-# TODO Test add_row
-# TODO Test add_column
 # TODO Test to_dataframe
 # TODO Test __getitem__
 
@@ -350,6 +348,35 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         # Test successful add
         adt.add_column(category='test2', name='testA', description='testA', data=np.arange(10))
         self.assertTupleEqual(adt.get_category('test2').colnames, ('test2c1', 'test2c2', 'test2c3', 'testA'))
+
+    def test_add_row(self):
+        """Test adding a row to a non_empty table"""
+        category_names = ['test1', ]
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2']]
+                                   ) for val in category_names]
+        temp = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            category_tables=categories,
+            columns=[VectorData(name='main_' + t,
+                                description='main_'+t+'_description',
+                                data=np.arange(num_rows)) for t in ['c1', 'c2']])
+        self.assertListEqual(temp.categories, category_names)
+        # Test successful add
+        temp.add_row(test1=dict(c1=1, c2=2), main_c1=3, main_c2=5)
+        self.assertListEqual(temp[10].iloc[0].tolist(), [3, 5, 10, 1, 2])
+        # Test successful add version 2
+        temp.add_row(data=dict(test1=dict(c1=1, c2=2), main_c1=4, main_c2=5))
+        self.assertListEqual(temp[11].iloc[0].tolist(), [4, 5, 11, 1, 2])
+        # Test missing categories data
+        with self.assertRaises(KeyError) as ke:
+            temp.add_row(main_c1=3, main_c2=5)
+        self.assertTrue("row data keys don't match" in str(ke.exception))
 
 
 if __name__ == '__main__':
