@@ -141,15 +141,15 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
                                                        description=val+t+' description',
                                                        data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
                                    ) for val in category_names]
-        AlignedDynamicTable(
+        temp = AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
             category_tables=categories)
+        self.assertEqual(temp.categories, category_names)
 
     def test_init_with_custom_nonempty_categories_and_main(self):
         """
-        Test that we can create an empty table with custom categories. This also tests
-        the contains, categories, main_table methods.
+        Test that we can create a non-empty table with custom non-empty categories
         """
         category_names = ['test1', 'test2', 'test3']
         num_rows = 10
@@ -162,13 +162,17 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         temp = AlignedDynamicTable(
             name='test_aligned_table',
             description='Test aligned container',
-            category_tables=categories)
+            category_tables=categories,
+            columns=[VectorData(name='main_' + t,
+                                description='main_'+t+'_description',
+                                data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']])
 
         self.assertEqual(temp.categories, category_names)
         self.assertTrue('test1' in temp)  # test that contains category works
         self.assertTrue(('test1', 'c1') in temp)  # test that contains a column works
         with self.assertRaises(ValueError):  # test the error case of a tuple with len !-2
             ('test1', 'c1', 't3') in temp
+        self.assertTupleEqual(temp.colnames, ('main_c1', 'main_c2', 'main_c3'))
 
     def test_init_with_custom_misaligned_categories(self):
         """Test that we cannot create an empty table with custom categories"""
