@@ -4,9 +4,9 @@ from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
 import numpy as np
 try:
-    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex
+    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex   # pragma: no cover
 except ImportError:
-    from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex
+    from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex  # pragma: no cover
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
 import pandas as pd
