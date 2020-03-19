@@ -299,7 +299,7 @@ class AlignedDynamicTable(DynamicTable):
         colname exists.
         """
         if isinstance(val, str):
-            return val in self.category_tables
+            return val in self.category_tables or val in self.colnames
         elif isinstance(val, tuple):
             if len(val) != 2:
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
@@ -336,9 +336,13 @@ class AlignedDynamicTable(DynamicTable):
         self.category_tables[category.name] = category
         category.parent = self
 
-    @docval({'name': 'name', 'type': str, 'doc': 'Name of the category we want to retrieve'})
+    @docval({'name': 'name', 'type': str, 'doc': 'Name of the category we want to retrieve', 'default': None})
     def get_category(self, **kwargs):
-        return self.category_tables[popargs('name', kwargs)]
+        name = popargs('name', kwargs)
+        if name is None or (name not in self.category_tables and name == self.name):
+            return self
+        else:
+            return self.category_tables[name]
 
     @docval(*get_docval(DynamicTable.add_column),
             {'name': 'category', 'type': str, 'doc': 'The category the column should be added to',
@@ -431,7 +435,9 @@ class AlignedDynamicTable(DynamicTable):
         If item is:
         * int : Return a single row of the table
         * string : Return a single category of the table
-        * tuple: Get a column, row, or cell from a particular category
+        * tuple: Get a column, row, or cell from a particular category. The tuple is expected to consist
+                 of (category, selection) where category may be a string with the name of the sub-category
+                 or None (or the name of this AlignedDynamicTable) if we want to slice into the main table.
 
         :returns: DataFrame when retrieving a row or category. Returns scalar when selecting a cell.
                  Returns a VectorData/VectorIndex when retrieving a single column.
@@ -444,12 +450,20 @@ class AlignedDynamicTable(DynamicTable):
             res = pd.concat(dfs, axis=1, keys=names)
             res.set_index((self.name, 'id'), drop=True, inplace=True)
             return res
-        elif isinstance(item, str):
-            # get a single category
-            return self.get_category(item).to_dataframe()
+        elif isinstance(item, str) or item is None:
+            if item in self.colnames:
+                # get a specfic column
+                return super().__getitem__(item)
+            else:
+                # get a single category
+                return self.get_category(item).to_dataframe()
         elif isinstance(item, tuple):
-            # get a column, row, or cell from a particular category
-            return self.get_category(item[0])[item[1:]]
+            if len(item) == 2:
+                return self.get_category(item[0])[item[1]]
+            elif len(item) == 3:
+                return self.get_category(item[0])[item[1]][item[2]]
+            else:
+                raise ValueError("Expected tuple of length 2 or 3 with (category, column, row) as value.")
 
 
 @register_class('IntracellularElectrodesTable', namespace)

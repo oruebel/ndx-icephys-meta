@@ -23,9 +23,7 @@ except ImportError:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from ndx_icephys_meta.icephys import AlignedDynamicTable
 
-
 # TODO Test to_dataframe
-# TODO Test __getitem__
 
 
 class TestAlignedDynamicTableContainer(unittest.TestCase):
@@ -349,15 +347,45 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
         adt.add_column(category='test2', name='testA', description='testA', data=np.arange(10))
         self.assertTupleEqual(adt.get_category('test2').colnames, ('test2c1', 'test2c2', 'test2c3', 'testA'))
 
-    def test_add_row(self):
-        """Test adding a row to a non_empty table"""
+    # def test_add_row(self):
+    #     """Test adding a row to a non_empty table"""
+    #     category_names = ['test1', ]
+    #     num_rows = 10
+    #     categories = [DynamicTable(name=val,
+    #                                description=val+" description",
+    #                                columns=[VectorData(name=t,
+    #                                                    description=val+t+' description',
+    #                                                    data=np.arange(num_rows)) for t in ['c1', 'c2']]
+    #                                ) for val in category_names]
+    #     temp = AlignedDynamicTable(
+    #         name='test_aligned_table',
+    #         description='Test aligned container',
+    #         category_tables=categories,
+    #         columns=[VectorData(name='main_' + t,
+    #                             description='main_'+t+'_description',
+    #                             data=np.arange(num_rows)) for t in ['c1', 'c2']])
+    #     self.assertListEqual(temp.categories, category_names)
+    #     # Test successful add
+    #     temp.add_row(test1=dict(c1=1, c2=2), main_c1=3, main_c2=5)
+    #     self.assertListEqual(temp[10].iloc[0].tolist(), [3, 5, 10, 1, 2])
+    #     # Test successful add version 2
+    #     temp.add_row(data=dict(test1=dict(c1=1, c2=2), main_c1=4, main_c2=5))
+    #     self.assertListEqual(temp[11].iloc[0].tolist(), [4, 5, 11, 1, 2])
+    #     # Test missing categories data
+    #     with self.assertRaises(KeyError) as ke:
+    #         temp.add_row(main_c1=3, main_c2=5)
+    #     self.assertTrue("row data keys don't match" in str(ke.exception))
+
+    def test_get_item(self):
+        """Test getting elements from the table"""
         category_names = ['test1', ]
         num_rows = 10
         categories = [DynamicTable(name=val,
                                    description=val+" description",
                                    columns=[VectorData(name=t,
                                                        description=val+t+' description',
-                                                       data=np.arange(num_rows)) for t in ['c1', 'c2']]
+                                                       data=np.arange(num_rows) + i + 3)
+                                            for i, t in enumerate(['c1', 'c2'])]
                                    ) for val in category_names]
         temp = AlignedDynamicTable(
             name='test_aligned_table',
@@ -365,18 +393,33 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             category_tables=categories,
             columns=[VectorData(name='main_' + t,
                                 description='main_'+t+'_description',
-                                data=np.arange(num_rows)) for t in ['c1', 'c2']])
+                                data=np.arange(num_rows)+2) for t in ['c1', 'c2']])
         self.assertListEqual(temp.categories, category_names)
-        # Test successful add
-        temp.add_row(test1=dict(c1=1, c2=2), main_c1=3, main_c2=5)
-        self.assertListEqual(temp[10].iloc[0].tolist(), [3, 5, 10, 1, 2])
-        # Test successful add version 2
-        temp.add_row(data=dict(test1=dict(c1=1, c2=2), main_c1=4, main_c2=5))
-        self.assertListEqual(temp[11].iloc[0].tolist(), [4, 5, 11, 1, 2])
-        # Test missing categories data
-        with self.assertRaises(KeyError) as ke:
-            temp.add_row(main_c1=3, main_c2=5)
-        self.assertTrue("row data keys don't match" in str(ke.exception))
+        # Test slicing with a single index
+        self.assertListEqual(temp[5].iloc[0].tolist(), [7, 7, 5, 8, 9])
+        # Test slice with list
+        self.assertListEqual(temp[[5, 7]].iloc[0].tolist(), [7, 7, 5, 8, 9])
+        self.assertListEqual(temp[[5, 7]].iloc[1].tolist(), [9, 9, 7, 10, 11])
+        # Test slice with slice
+        self.assertListEqual(temp[5:7].iloc[0].tolist(), [7, 7, 5, 8, 9])
+        self.assertListEqual(temp[5:7].iloc[1].tolist(), [8, 8, 6, 9, 10])
+        # Test slice with numpy index arrya
+        self.assertListEqual(temp[np.asarray([5, 8])].iloc[0].tolist(), [7, 7, 5, 8, 9])
+        self.assertListEqual(temp[np.asarray([5, 8])].iloc[1].tolist(), [10, 10, 8, 11, 12])
+        # Test slicing for a single column
+        self.assertListEqual(temp['main_c1'][:].tolist(), (np.arange(num_rows)+2).tolist())
+        # Test slicing for a single category
+        assert_frame_equal(temp['test1'], categories[0].to_dataframe())
+        # Test getting the main table
+        assert_frame_equal(temp[None], temp.to_dataframe())
+        # Test getting a specific column
+        self.assertListEqual(temp['test1', 'c1'][:].tolist(), (np.arange(num_rows) + 3).tolist())
+        # Test getting a specific cell
+        self.assertEqual(temp[None, 'main_c1', 1], 3)
+        # Test bad selection tuple
+        with self.assertRaises(ValueError):
+            temp[('main_c1',)]
+            raise ValueError("Expected tuple of length 2 or 3 with (category, selection, row) as value.")
 
 
 if __name__ == '__main__':
