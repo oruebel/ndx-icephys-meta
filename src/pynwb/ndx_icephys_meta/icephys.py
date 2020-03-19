@@ -2,14 +2,16 @@ from pynwb import register_class
 from pynwb.file import NWBFile
 from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
+import numpy as np
 try:
-    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex
+    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex   # pragma: no cover
 except ImportError:
-    from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex
+    from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex  # pragma: no cover
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
 import pandas as pd
-import numpy as np
+from collections import OrderedDict
+from copy import copy
 
 namespace = 'ndx-icephys-meta'
 
@@ -90,26 +92,13 @@ class HierarchicalDynamicTableMixin(object):
         The function denormalizes the hierarchical table and represents all data as
         columns in the resulting dataframe.
         """
-        def get_first_prefix(instr, prefixs):
-            """Internal helper function to find the first prefix that matches"""
-            for p in prefixs:
-                if instr.startswith(p):
-                    return p
-            return prefixs[-1]
-
-        def remove_prefix(instr, prefix):
-            """Internal helper function to remove the first prefix that matches"""
-
-            if instr.startswith(prefix):
-                return instr[len(prefix):]
-            return instr
-
         hier_df = self.to_hierarchical_dataframe(flat_column_index=True)
         flat_df = hier_df.reset_index()
         if not flat_column_index:
-            table_names = [t.name for t in self.get_targets(include_self=True)]
-            mi_tuples = [(get_first_prefix(n, table_names),
-                          remove_prefix(n, get_first_prefix(n, table_names)+"_")) for n in flat_df.columns]
+            # cn[0] is the level, cn[1:] is the label. If cn has only 2 elements than use cn[1] instead to
+            # avoid creating column labels that are tuples with just one element
+            mi_tuples = [(cn[0], cn[1:] if len(cn) > 2 else cn[1])
+                         for cn in flat_df.columns]
             flat_df.columns = pd.MultiIndex.from_tuples(mi_tuples, names=('source_table', 'label'))
 
         return flat_df
@@ -159,15 +148,27 @@ class HierarchicalDynamicTableMixin(object):
                     # Determine the names for our index and columns of our output table if this is the first row.
                     # These are constant for all rows so we only need to do this onle once for the first row.
                     if row_index == 0:
-                        index_names = ([self.name + "_id", ] +
-                                       [(self.name + "_" + colname)
+                        index_names = ([(self.name, 'id')] +
+                                       [(self.name, colname)
                                         for colname in self.colnames if colname != hcol_name])
                         if flat_column_index:
-                            columns = ['id', ] + list(row_df.columns)
+                            columns = [(hcol_target.name, 'id'), ] + list(row_df.columns)
                         else:
                             columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
                                                                 [(hcol_target.name, c) for c in row_df.columns],
                                                                 names=('source_table', 'label'))
+            #  if we had an empty data table then at least define the columns
+            if index_names is None:
+                index_names = ([(self.name, 'id')] +
+                               [(self.name, colname)
+                                for colname in self.colnames if colname != hcol_name])
+                if flat_column_index:
+                    columns = [(hcol_target.name, 'id'), ] + list(row_df.columns)
+                else:
+                    columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
+                                                        [(hcol_target.name, c) for c in hcol_target.colnames],
+                                                        names=('source_table', 'label'))
+
         # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
         else:
             # 1) First we need to recursively flatten the hierarchy by calling 'to_hierarchical_dataframe()'
@@ -195,11 +196,18 @@ class HierarchicalDynamicTableMixin(object):
                         index.append(tuple(index_data))
                         # Determine the names for our index and columns of our output table if this is the first row
                         if row_index == 0:
-                            index_names = ([self.name + "_id"] +
-                                           [(self.name + "_" + colname)
+                            index_names = ([(self.name, "id")] +
+                                           [(self.name, colname)
                                             for colname in self.colnames if colname != hcol_name] +
                                            hcol_hdf.index.names)
                             columns = hcol_hdf.columns
+            # if we had an empty table, then at least define the columns
+            if index_names is None:
+                index_names = ([(self.name, "id")] +
+                               [(self.name, colname)
+                                for colname in self.colnames if colname != hcol_name] +
+                               hcol_hdf.index.names)
+                columns = hcol_hdf.columns
 
         # Construct the pandas dataframe with the hierarchical multi-index
         multi_index = pd.MultiIndex.from_tuples(index, names=index_names)
@@ -207,36 +215,379 @@ class HierarchicalDynamicTableMixin(object):
         return out_df
 
 
+@register_class('AlignedDynamicTable', namespace)
+class AlignedDynamicTable(DynamicTable):
+    """
+    DynamicTable container that subports storing a collection of subtables. Each sub-table is a
+    DynamicTable itself that is aligned with the main table by row index. I.e., all
+    DynamicTables stored in this group MUST have the same number of rows. This type effectively
+    defines a 2-level table in which the main data is stored in the main table implementd by this type
+    and additional columns of the table are grouped into categories, with each category being'
+    represented by a separate DynamicTable stored within the group.
+    """
+    __fields__ = (
+        {'name': 'category_tables', 'child': True},
+        'description')
+
+    @docval(*get_docval(DynamicTable.__init__),
+            {'name': 'category_tables', 'type': list,
+             'doc': 'List of DynamicTables to be added to the container', 'default': None},
+            {'name': 'categories', 'type': 'array_data',
+             'doc': 'List of names with the ordering of category tables', 'default': None})
+    def __init__(self, **kwargs):
+        in_category_tables = popargs('category_tables', kwargs)
+        in_categories = popargs('categories', kwargs)
+        if in_categories is None and in_category_tables is not None:
+            in_categories = [tab.name for tab in in_category_tables]
+        if in_categories is not None and in_category_tables is None:
+            raise ValueError("Categories provided but no category_tables given")
+        # at this point both in_categories and in_category_tables should either both be None or both be a list
+        if in_categories is not None:
+            if len(in_categories) != len(in_category_tables):
+                raise ValueError("%s category_tables given but %s categories specified" %
+                                 (len(in_category_tables), len(in_categories)))
+        # Initialize the main dynamic table
+        call_docval_func(super().__init__, kwargs)
+        # Create and set all sub-categories
+        dts = OrderedDict()
+        # Add the custom categories given as inputs
+        if in_category_tables is not None:
+            # We may need to resize our main table when adding categories as the user may not have set ids
+            if len(in_category_tables) > 0:
+                # We have categories to process
+                if len(self.id) == 0:
+                    # The user did not initialize our main table id's nor set columns for our main table
+                    for i in range(len(in_category_tables[0])):
+                        self.id.append(i)
+            # Add the user-provided categories in the correct order as described by the categories
+            # This is necessary, because we do not store the categories explicitly but we maintain them
+            # as the order of our self.category_tables. In this makes sure look-ups are consistent.
+            lookup_index = OrderedDict([(k, -1) for k in in_categories])
+            for i, v in enumerate(in_category_tables):
+                # Error check that the name of the table is in our categories list
+                if v.name not in lookup_index:
+                    raise ValueError("DynamicTable %s does not appear in categories %s" % (v.name, str(in_categories)))
+                # Error check to make sure no two tables with the same name are given
+                if lookup_index[v.name] >= 0:
+                    raise ValueError("Duplicate table name %s found in input dynamic_tables" % v.name)
+                lookup_index[v.name] = i
+            for table_name, tabel_index in lookup_index.items():
+                # This error case should not be able to occur since the length of the in_categories and
+                # in_category_tables must match and we made sure that each DynamicTable we added had its
+                # name in the in_categories list. We, therefore, exclude this check from coverage testing
+                # but we leave it in just as a backup trigger in case something unexpected happens
+                if tabel_index < 0:  # pragma: no cover
+                    raise ValueError("DynamicTable %s listed in categories but does not appear in category_tables" %
+                                     table_name)  # pragma: no cover
+                # Test that all category tables have the correct number of rows
+                category = in_category_tables[tabel_index]
+                if len(category) != len(self):
+                    raise ValueError('Category DynamicTable %s does not align, it has %i rows expected %i' %
+                                     (category.name, len(category), len(self)))
+                # Add the category table to our category_tables.
+                dts[category.name] = category
+        # Set the self.category_tables attribute, which will set the parent/child relationships for the category_tables
+        self.category_tables = dts
+
+    @docval({'name': 'val', 'type': (str, tuple), 'doc': 'The name of the category or column to check.'})
+    def __contains__(self, val):
+        """
+        Check if the give value (i.e., column) exists in this table
+
+        If the val is a string then check if the given category exists. If val is a tuple
+        of two strings (category, colname) then check for the given category if the given
+        colname exists.
+        """
+        if isinstance(val, str):
+            return val in self.category_tables or val in self.colnames
+        elif isinstance(val, tuple):
+            if len(val) != 2:
+                raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
+            return val[1] in self.get_category(val[0])
+
+    @property
+    def categories(self):
+        """
+        Get the list of names the categories
+
+        Short-hand for list(self.category_tables.keys())
+
+        :raises: KeyError if the given name is not in self.category_tables
+        """
+        return list(self.category_tables.keys())
+
+    @docval({'name': 'category', 'type': DynamicTable, 'doc': 'Add a new DynamicTable category'},)
+    def add_category(self, **kwargs):
+        """
+        Add a new DynamicTable to the AlignedDynamicTable to create a new category in the table.
+
+        NOTE: The table must align with (i.e, have the same number of rows as) the main data table (and
+        other category tables). I.e., if the AlignedDynamicTable is already populated with data
+        then we have to populate the new category with the corresponding data before adding it.
+
+        :raises: ValueError is raised if the input table does not have the same number of rows as the main table
+        """
+        category = getargs('category', kwargs)
+        if len(category) != len(self):
+            raise ValueError('New category DynamicTable does not align, it has %i rows expected %i' %
+                             (len(category), len(self)))
+        if category.name in self.category_tables:
+            raise ValueError("Category %s already in the table" % category.name)
+        self.category_tables[category.name] = category
+        category.parent = self
+
+    @docval({'name': 'name', 'type': str, 'doc': 'Name of the category we want to retrieve', 'default': None})
+    def get_category(self, **kwargs):
+        name = popargs('name', kwargs)
+        if name is None or (name not in self.category_tables and name == self.name):
+            return self
+        else:
+            return self.category_tables[name]
+
+    @docval(*get_docval(DynamicTable.add_column),
+            {'name': 'category', 'type': str, 'doc': 'The category the column should be added to',
+             'default': None})
+    def add_column(self, **kwargs):
+        """
+        Add a column to the table
+
+        :raises: KeyError if the category does not exist
+
+        """
+        category_name = popargs('category', kwargs)
+        if category_name is None:
+            # Add the column to our main table
+            call_docval_func(super().add_column, kwargs)
+        else:
+            # Add the column to a sub-category table
+            try:
+                category = self.get_category(category_name)
+            except KeyError:
+                raise KeyError("Category %s not in table" % category_name)
+            category.add_column(**kwargs)
+
+    @docval({'name': 'data', 'type': dict, 'doc': 'the data to put in this row', 'default': None},
+            {'name': 'id', 'type': int, 'doc': 'the ID for the row', 'default': None},
+            {'name': 'enforce_unique_id', 'type': bool, 'doc': 'enforce that the id in the table must be unique',
+             'default': False},
+            allow_extra=True)
+    def add_row(self, **kwargs):
+        """
+        We can either provide the row data as a single dict or by specifying a dict for each category
+        """
+        data, row_id, enforce_unique_id = popargs('data', 'id', 'enforce_unique_id', kwargs)
+        data = data if data is not None else kwargs
+
+        # extract the category data
+        category_data = {k: data.pop(k) for k in self.categories if k in data}
+
+        # Check that we have the approbriate categories provided
+        missing_categories = set(self.categories) - set(list(category_data.keys()))
+        if missing_categories:
+            raise KeyError(
+                '\n'.join([
+                    'row data keys don\'t match available categories',
+                    'missing {} category keys: {}'.format(len(missing_categories), missing_categories)
+                ])
+            )
+        # Add the data to our main dynamic table
+        data['id'] = row_id
+        data['enforce_unique_id'] = enforce_unique_id
+        call_docval_func(super().add_row, data)
+
+        # Add the data to all out dynamic table categories
+        for category, values in category_data.items():
+            self.category_tables[category].add_row(**values)
+
+    @docval({'name': 'ignore_category_ids', 'type': bool,
+             'doc': "Ignore id columns of sub-category tables", 'default': False},
+            {'name': 'electrode_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the electrode column with object_ids',
+             'default': False},
+            {'name': 'stimulus_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the stimulus column with object_ids',
+             'default': False},
+            {'name': 'response_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the response column with object_ids',
+             'default': False}
+            )
+    def to_dataframe(self, **kwargs):
+        """Convert the collection of tables to a single pandas DataFrame"""
+        dfs = [super().to_dataframe().reset_index(), ]
+
+        if getargs('ignore_category_ids', kwargs):
+            dfs += [category.to_dataframe() for category in self.category_tables.values()]
+        else:
+            dfs += [category.to_dataframe().reset_index() for category in self.category_tables.values()]
+        names = [self.name, ] + list(self.category_tables.keys())
+        res = pd.concat(dfs, axis=1, keys=names)
+        if getargs('electrode_refs_as_objectids', kwargs):
+            res[('electrodes', 'electrode')] = [e.object_id for e in res[('electrodes', 'electrode')]]
+        if getargs('stimulus_refs_as_objectids', kwargs):
+            res[('stimuli', 'stimulus')] = [(e[0], e[1],  e[2].object_id) for e in res[('stimuli', 'stimulus')]]
+        if getargs('response_refs_as_objectids', kwargs):
+            res[('responses', 'response')] = [(e[0], e[1],  e[2].object_id) for e in res[('responses', 'response')]]
+        res.set_index((self.name, 'id'), drop=True, inplace=True)
+        return res
+
+    def __getitem__(self, item):
+        """
+        If item is:
+        * int : Return a single row of the table
+        * string : Return a single category of the table
+        * tuple: Get a column, row, or cell from a particular category. The tuple is expected to consist
+                 of (category, selection) where category may be a string with the name of the sub-category
+                 or None (or the name of this AlignedDynamicTable) if we want to slice into the main table.
+
+        :returns: DataFrame when retrieving a row or category. Returns scalar when selecting a cell.
+                 Returns a VectorData/VectorIndex when retrieving a single column.
+        """
+        if isinstance(item, (int, list, np.ndarray, slice)):
+            # get a single full row from all tables
+            dfs = ([super().__getitem__(item).reset_index(), ] +
+                   [category[item].reset_index() for category in self.category_tables.values()])
+            names = [self.name, ] + list(self.category_tables.keys())
+            res = pd.concat(dfs, axis=1, keys=names)
+            res.set_index((self.name, 'id'), drop=True, inplace=True)
+            return res
+        elif isinstance(item, str) or item is None:
+            if item in self.colnames:
+                # get a specfic column
+                return super().__getitem__(item)
+            else:
+                # get a single category
+                return self.get_category(item).to_dataframe()
+        elif isinstance(item, tuple):
+            if len(item) == 2:
+                return self.get_category(item[0])[item[1]]
+            elif len(item) == 3:
+                return self.get_category(item[0])[item[1]][item[2]]
+            else:
+                raise ValueError("Expected tuple of length 2 or 3 with (category, column, row) as value.")
+
+
+@register_class('IntracellularElectrodesTable', namespace)
+class IntracellularElectrodesTable(DynamicTable):
+    """
+    Table for storing intracellular electrode related metadata'
+    """
+    __columns__ = (
+        {'name': 'electrode',
+         'description': 'Column for storing the reference to the intracellular electrode',
+         'required': True,
+         'index': False,
+         'table': False},
+    )
+
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        # Define defaultb name and description settings
+        kwargs['name'] = 'electrodes'
+        kwargs['description'] = ('Table for storing intracellular electrode related metadata')
+        # Initialize the DynamicTable
+        call_docval_func(super().__init__, kwargs)
+
+
+@register_class('IntracellularStimuliTable', namespace)
+class IntracellularStimuliTable(DynamicTable):
+    """
+    Table for storing intracellular electrode related metadata'
+    """
+    __columns__ = (
+        {'name': 'stimulus',
+         'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
+         'required': True,
+         'index': False,
+         'table': False},
+    )
+
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        # Define defaultb name and description settings
+        kwargs['name'] = 'stimuli'
+        kwargs['description'] = ('Table for storing intracellular stimulus related metadata')
+        # Initialize the DynamicTable
+        call_docval_func(super().__init__, kwargs)
+
+
+@register_class('IntracellularResponsesTable', namespace)
+class IntracellularResponsesTable(DynamicTable):
+    """
+    Table for storing intracellular electrode related metadata'
+    """
+    __columns__ = (
+        {'name': 'response',
+         'description': 'Column storing the reference to the recorded response for the recording (rows)',
+         'required': True,
+         'index': False,
+         'table': False},
+    )
+
+    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    def __init__(self, **kwargs):
+        # Define defaultb name and description settings
+        kwargs['name'] = 'responses'
+        kwargs['description'] = ('Table for storing intracellular response related metadata')
+        # Initialize the DynamicTable
+        call_docval_func(super().__init__, kwargs)
+
+
 @register_class('IntracellularRecordingsTable', namespace)
-class IntracellularRecordingsTable(DynamicTable):
+class IntracellularRecordingsTable(AlignedDynamicTable):
     """
     A table to group together a stimulus and response from a single electrode and
     a single simultaneous_recording. Each row in the table represents a single recording consisting
     typically of a stimulus and a corresponding response.
     """
-
-    __columns__ = (
-        {'name': 'stimulus',
-         'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
-         'required': True,
-         'index': False},
-        {'name': 'response',
-         'description': 'Column storing the reference to the recorded response for the recording (rows)',
-         'required': True,
-         'index': False},
-        {'name': 'electrode',
-         'description': 'Column for storing the reference to the intracellular electrode',
-         'required': True,
-         'index': False},
-    )
-
-    @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
+    @docval(*get_docval(AlignedDynamicTable.__init__, 'id', 'columns', 'colnames', 'category_tables', 'categories'))
     def __init__(self, **kwargs):
         kwargs['name'] = 'intracellular_recordings'
-        kwargs['description'] = ('A table to group together a stimulus and response from a single electrode and'
-                                 'a single simultaneous_recording. Each row in the table represents a single '
-                                 'recording consisting typically of a stimulus and a corresponding response.')
-        call_docval_func(super(IntracellularRecordingsTable, self).__init__, kwargs)
+        kwargs['description'] = ('A table to group together a stimulus and response from a single electrode '
+                                 'and a single simultaneous recording and for storing metadata about the '
+                                 'intracellular recording.')
+        in_category_tables = getargs('category_tables', kwargs)
+        if in_category_tables is None or len(in_category_tables) == 0:
+            kwargs['category_tables'] = [IntracellularElectrodesTable(),
+                                         IntracellularStimuliTable(),
+                                         IntracellularResponsesTable()]
+            kwargs['categories'] = None
+        else:
+            # Check if our required data tables are supplied, otherwise add them to the list
+            required_dynamic_table_given = [-1 for i in range(3)]  # The first three are our required tables
+            for i, tab in enumerate(in_category_tables):
+                if isinstance(tab, IntracellularElectrodesTable):
+                    required_dynamic_table_given[0] = i
+                elif isinstance(tab, IntracellularStimuliTable):
+                    required_dynamic_table_given[1] = i
+                elif isinstance(tab, IntracellularResponsesTable):
+                    required_dynamic_table_given[2] = i
+            # Check if the supplied tables contain data but not all required tables have been supplied
+            required_dynamic_table_missing = np.any(np.array(required_dynamic_table_given[0:3]) < 0)
+            if len(in_category_tables[0]) != 0 and required_dynamic_table_missing:
+                raise ValueError("IntracellularElectrodeTable, IntracellularStimuliTable, and "
+                                 "IntracellularResponsesTable are required when adding custom, non-empty "
+                                 "tables to IntracellularRecordingsTable as the missing data for the required "
+                                 "tables cannot be determined automatically")
+            # Compile the complete list of tables
+            dynamic_table_arg = copy(in_category_tables)
+            categories_arg = [] if getargs('categories', kwargs) is None else copy(getargs('categories', kwargs))
+            if required_dynamic_table_missing:
+                if required_dynamic_table_given[2] < 0:
+                    dynamic_table_arg.append(IntracellularResponsesTable)
+                    if not dynamic_table_arg[-1].name in categories_arg:
+                        categories_arg.insert(0, dynamic_table_arg[-1].name)
+                if required_dynamic_table_given[1] < 0:
+                    dynamic_table_arg.append(IntracellularStimuliTable())
+                    if not dynamic_table_arg[-1].name in categories_arg:
+                        categories_arg.insert(0, dynamic_table_arg[-1].name)
+                if required_dynamic_table_given[0] < 0:
+                    dynamic_table_arg.append(IntracellularElectrodesTable())
+                    if not dynamic_table_arg[-1].name in categories_arg:
+                        categories_arg.insert(0, dynamic_table_arg[-1].name)
+            kwargs['category_tables'] = dynamic_table_arg
+            kwargs['categories'] = categories_arg
+
+        call_docval_func(super().__init__, kwargs)
 
     @docval({'name': 'electrode', 'type': IntracellularElectrode, 'doc': 'The intracellular electrode used'},
             {'name': 'stimulus_start_index', 'type': 'int', 'doc': 'Start index of the stimulus', 'default': -1},
@@ -249,6 +600,12 @@ class IntracellularRecordingsTable(DynamicTable):
             {'name': 'response', 'type': TimeSeries,
              'doc': 'The TimeSeries (usually a PatchClampSeries) with the response',
              'default': None},
+            {'name': 'electrode_metadata', 'type': dict,
+             'doc': 'Additional electrode metadata to be stored in the electrodes table', 'default': None},
+            {'name': 'stimulus_metadata', 'type': dict,
+             'doc': 'Additional stimulus metadata to be stored in the stimuli table', 'default': None},
+            {'name': 'response_metadata', 'type': dict,
+             'doc': 'Additional resposnse metadata to be stored in the responses table', 'default': None},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -329,13 +686,30 @@ class IntracellularRecordingsTable(DynamicTable):
                 raise ValueError("electrodes are usually expected to be the same for PatchClampSeries type "
                                  "stimulus and response pairs in an intracellular recording.")
 
-        # Add the row to the table
-        row_kwargs = {'electrode': electrode,
-                      'stimulus': (stimulus_start_index, stimulus_index_count, stimulus),
-                      'response': (response_start_index, response_index_count, response)}
-        row_kwargs.update(kwargs)
-        _ = super(IntracellularRecordingsTable, self).add_row(enforce_unique_id=True, **row_kwargs)
-        return len(self.id) - 1
+        # Compile the electrodes table data
+        electrodes = popargs('electrode_metadata', kwargs)
+        if electrodes is None:
+            electrodes = {}
+        electrodes['electrode'] = electrode
+
+        # Compile the stimuli table data
+        stimuli = popargs('stimulus_metadata', kwargs)
+        if stimuli is None:
+            stimuli = {}
+        stimuli['stimulus'] = (stimulus_start_index, stimulus_index_count, stimulus)
+
+        # Compile the reponses table data
+        responses = popargs('response_metadata', kwargs)
+        if responses is None:
+            responses = {}
+        responses['response'] = (response_start_index, response_index_count, response)
+
+        _ = super().add_row(enforce_unique_id=True,
+                            electrodes=electrodes,
+                            responses=responses,
+                            stimuli=stimuli,
+                            **kwargs)
+        return len(self) - 1
 
 
 @register_class('SimultaneousRecordingsTable', namespace)
@@ -369,7 +743,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
                                  'IntracellularRecordingsTable table together that were recorded simultaneously '
                                  'from different electrodes.')
         # Initialize the DynamicTable
-        call_docval_func(super(SimultaneousRecordingsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['recordings'].target.table is None:
             if intracellular_recordings_table is not None:
                 self['recordings'].target.table = intracellular_recordings_table
@@ -378,8 +752,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
     @docval({'name': 'recordings',
              'type': 'array_data',
-             'doc': 'the indices of the recordings belonging to this simultaneous recording',
-             'default': None},
+             'doc': 'the indices of the recordings belonging to this simultaneous recording'},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -388,11 +761,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a single Sweep consisting of one-or-more recordings and associated custom
         SimultaneousRecordingsTable metadata to the table.
         """
-        # Check recordings
-        recordings = getargs('recordings', kwargs)
-        if recordings is None:
-            kwargs['recordings'] = []
-        _ = super(SimultaneousRecordingsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -434,7 +803,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
                                  'group together simultaneous_recordings where the a sequence of stimuli of the '
                                  'same type with varying parameters have been presented in a sequence.')
         # Initialize the DynamicTable
-        call_docval_func(super(SequentialRecordingsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['simultaneous_recordings'].target.table is None:
             if simultaneous_recordings_table is not None:
                 self['simultaneous_recordings'].target.table = simultaneous_recordings_table
@@ -446,8 +815,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
              'doc': 'the type of stimulus used for the sequential recording'},
             {'name': 'simultaneous_recordings',
              'type': 'array_data',
-             'doc': 'the indices of the simultaneous_recordings belonging to this sequential recording',
-             'default': None},
+             'doc': 'the indices of the simultaneous_recordings belonging to this sequential recording'},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -456,11 +824,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a sequential recording (i.e., one row)  consisting of one-or-more recording simultaneous_recordings
         and associated custom sequential recording  metadata to the table.
         """
-        # Check recordings
-        simultaneous_recordings = getargs('simultaneous_recordings', kwargs)
-        if simultaneous_recordings is None:
-            kwargs[''] = []
-        _ = super(SequentialRecordingsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -496,7 +860,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
                                  'of stimulus, the RepetitionsTable table is typically used to group sets '
                                  'of stimuli applied in sequence.')
         # Initialize the DynamicTable
-        call_docval_func(super(RepetitionsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['sequential_recordings'].target.table is None:
             if sequential_recordings_table is not None:
                 self['sequential_recordings'].target.table = sequential_recordings_table
@@ -515,11 +879,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a repetition (i.e., one row)  consisting of one-or-more recording sequential recordings
         and associated custom repetition  metadata to the table.
         """
-        # Check recordings
-        sequential_recordings = getargs('sequential_recordings', kwargs)
-        if sequential_recordings is None:
-            kwargs['sequential_recordings'] = []
-        _ = super(RepetitionsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -550,7 +910,7 @@ class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         kwargs['description'] = ('A table for grouping different intracellular recording repetitions together that '
                                  'belong to the same experimental experimental_conditions.')
         # Initialize the DynamicTable
-        call_docval_func(super(ExperimentalConditionsTable, self).__init__, kwargs)
+        call_docval_func(super().__init__, kwargs)
         if self['repetitions'].target.table is None:
             if repetitions_table is not None:
                 self['repetitions'].target.table = repetitions_table
@@ -569,11 +929,7 @@ class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a condition (i.e., one row)  consisting of one-or-more recording repetitions of sequential recordings
         and associated custom experimental_conditions  metadata to the table.
         """
-        # Check recordings
-        repetitions = getargs('repetitions', kwargs)
-        if repetitions is None:
-            kwargs['repetitions'] = []
-        _ = super(ExperimentalConditionsTable, self).add_row(enforce_unique_id=True, **kwargs)
+        _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
 
@@ -643,8 +999,8 @@ class ICEphysFile(NWBFile):
                           "simultaneous_recordings, sequential_recordings, repetitions and/or "
                           "experimental_conditions table(s) instead.", DeprecationWarning)
         # Initialize the NWBFile parent class
-        pargs, pkwargs = fmt_docval_args(super(ICEphysFile, self).__init__, kwargs)
-        super(ICEphysFile, self).__init__(*pargs, **pkwargs)
+        pargs, pkwargs = fmt_docval_args(super().__init__, kwargs)
+        super().__init__(*pargs, **pkwargs)
         # Set ic filtering if requested
         self.ic_filtering = kwargs.get('ic_filtering')
         # Set the intracellular_recordings if available
@@ -679,7 +1035,7 @@ class ICEphysFile(NWBFile):
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
                               "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
-                              "add_icephys)repetition, add_icephys_condition functions.",
+                              "add_icephys_repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -697,7 +1053,7 @@ class ICEphysFile(NWBFile):
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
                               "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
-                              "add_icephys)repetition, add_icephys_condition functions.",
+                              "add_icephys_repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(timeseries)
 
@@ -715,7 +1071,7 @@ class ICEphysFile(NWBFile):
                 warnings.warn("Use of SweepTable is deprecated. Use the IntracellularRecordingsTable, "
                               "SimultaneousRecordingsTable tables instead. See the add_intracellular_recordings, "
                               "add_icephsy_simultaneous_recording, add_icephys_sequential_recording, "
-                              "add_icephys)repetition, add_icephys_condition functions.",
+                              "add_icephys_repetition, add_icephys_condition functions.",
                               DeprecationWarning)
             self._update_sweep_table(nwbdata)
 

@@ -227,6 +227,20 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
                               key='test_to_denormalized_dataframe_flat_column_index_table_level2')
         pandas.testing.assert_frame_equal(curr, ref)
 
+    def test_to_hierarchical_dataframe_empty_table(self):
+        """
+        Test creating the hierarchical table that is empty
+        """
+        # Do not populate with data, just straight convert to dataframe
+        tab = self.table_level1.to_hierarchical_dataframe()
+        self.assertEqual(len(tab), 0)
+        self.assertListEqual(tab.columns.to_list(), [('level0', 'id')])
+        self.assertListEqual(tab.index.names, [('level1', 'id')])
+        tab = self.table_level2.to_hierarchical_dataframe()
+        self.assertEqual(len(tab), 0)
+        self.assertListEqual(tab.columns.to_list(), [('level0', 'id')])
+        self.assertListEqual(tab.index.names, [('level2', 'id'), ('level1', 'id')])
+
     def test_to_hierarchical_dataframe(self):
         """
         Test to_hierarchical_dataframe(flat_column_index=False)

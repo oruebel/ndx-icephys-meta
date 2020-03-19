@@ -17,6 +17,7 @@ namespaces:
   schema:
   - namespace: core
     neurodata_types:
+    - Container
     - DynamicTable
     - DynamicTableRegion
     - VectorData
