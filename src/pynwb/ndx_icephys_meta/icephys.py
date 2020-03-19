@@ -157,6 +157,18 @@ class HierarchicalDynamicTableMixin(object):
                             columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
                                                                 [(hcol_target.name, c) for c in row_df.columns],
                                                                 names=('source_table', 'label'))
+            #  if we had an empty data table then at least define the columns
+            if index_names is None:
+                index_names = ([(self.name, 'id')] +
+                               [(self.name, colname)
+                                for colname in self.colnames if colname != hcol_name])
+                if flat_column_index:
+                    columns = [(hcol_target.name, 'id'), ] + list(row_df.columns)
+                else:
+                    columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
+                                                        [(hcol_target.name, c) for c in hcol_target.colnames],
+                                                        names=('source_table', 'label'))
+
         # Case 2:  Our DynamicTableRegion columns points to another HierarchicalDynamicTable.
         else:
             # 1) First we need to recursively flatten the hierarchy by calling 'to_hierarchical_dataframe()'
@@ -189,6 +201,13 @@ class HierarchicalDynamicTableMixin(object):
                                             for colname in self.colnames if colname != hcol_name] +
                                            hcol_hdf.index.names)
                             columns = hcol_hdf.columns
+            # if we had an empty table, then at least define the columns
+            if index_names is None:
+                index_names = ([(self.name, "id")] +
+                               [(self.name, colname)
+                                for colname in self.colnames if colname != hcol_name] +
+                               hcol_hdf.index.names)
+                columns = hcol_hdf.columns
 
         # Construct the pandas dataframe with the hierarchical multi-index
         multi_index = pd.MultiIndex.from_tuples(index, names=index_names)
