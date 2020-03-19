@@ -727,8 +727,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
     @docval({'name': 'recordings',
              'type': 'array_data',
-             'doc': 'the indices of the recordings belonging to this simultaneous recording',
-             'default': None},
+             'doc': 'the indices of the recordings belonging to this simultaneous recording'},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -737,10 +736,6 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a single Sweep consisting of one-or-more recordings and associated custom
         SimultaneousRecordingsTable metadata to the table.
         """
-        # Check recordings
-        recordings = getargs('recordings', kwargs)
-        if recordings is None:
-            kwargs['recordings'] = []
         _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
@@ -795,8 +790,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
              'doc': 'the type of stimulus used for the sequential recording'},
             {'name': 'simultaneous_recordings',
              'type': 'array_data',
-             'doc': 'the indices of the simultaneous_recordings belonging to this sequential recording',
-             'default': None},
+             'doc': 'the indices of the simultaneous_recordings belonging to this sequential recording'},
             returns='Integer index of the row that was added to this table',
             rtype=int,
             allow_extra=True)
@@ -805,10 +799,6 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a sequential recording (i.e., one row)  consisting of one-or-more recording simultaneous_recordings
         and associated custom sequential recording  metadata to the table.
         """
-        # Check recordings
-        simultaneous_recordings = getargs('simultaneous_recordings', kwargs)
-        if simultaneous_recordings is None:
-            kwargs[''] = []
         _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
@@ -864,10 +854,6 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a repetition (i.e., one row)  consisting of one-or-more recording sequential recordings
         and associated custom repetition  metadata to the table.
         """
-        # Check recordings
-        sequential_recordings = getargs('sequential_recordings', kwargs)
-        if sequential_recordings is None:
-            kwargs['sequential_recordings'] = []
         _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
@@ -918,10 +904,6 @@ class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
         Add a condition (i.e., one row)  consisting of one-or-more recording repetitions of sequential recordings
         and associated custom experimental_conditions  metadata to the table.
         """
-        # Check recordings
-        repetitions = getargs('repetitions', kwargs)
-        if repetitions is None:
-            kwargs['repetitions'] = []
         _ = super().add_row(enforce_unique_id=True, **kwargs)
         return len(self.id) - 1
 
