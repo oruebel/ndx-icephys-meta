@@ -421,6 +421,52 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
             temp[('main_c1',)]
             raise ValueError("Expected tuple of length 2 or 3 with (category, selection, row) as value.")
 
+    def test_to_dataframe(self):
+        """Test that the to_dataframe method works"""
+        category_names = ['test1', 'test2', 'test3']
+        num_rows = 10
+        categories = [DynamicTable(name=val,
+                                   description=val+" description",
+                                   columns=[VectorData(name=t,
+                                                       description=val+t+' description',
+                                                       data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']]
+                                   ) for val in category_names]
+        adt = AlignedDynamicTable(
+            name='test_aligned_table',
+            description='Test aligned container',
+            category_tables=categories,
+            columns=[VectorData(name='main_' + t,
+                                description='main_'+t+'_description',
+                                data=np.arange(num_rows)) for t in ['c1', 'c2', 'c3']])
+
+        # Test the to_dataframe method with default settings
+        tdf = adt.to_dataframe()
+        self.assertListEqual(tdf.index.data.tolist(), list(range(10)))
+        self.assertTupleEqual(tdf.index.name, ('test_aligned_table', 'id'))
+        expected_cols = [('test_aligned_table', 'main_c1'),
+                         ('test_aligned_table', 'main_c2'),
+                         ('test_aligned_table', 'main_c3'),
+                         ('test1', 'id'), ('test1', 'c1'), ('test1', 'c2'), ('test1', 'c3'),
+                         ('test2', 'id'), ('test2', 'c1'), ('test2', 'c2'), ('test2', 'c3'),
+                         ('test3', 'id'), ('test3', 'c1'), ('test3', 'c2'), ('test3', 'c3')]
+        tdf_cols = tdf.columns.tolist()
+        for v in zip(expected_cols, tdf_cols):
+            self.assertTupleEqual(v[0], v[1])
+
+        # test the to_dataframe method with ignore_category_ids set to True
+        tdf = adt.to_dataframe(ignore_category_ids=True)
+        self.assertListEqual(tdf.index.data.tolist(), list(range(10)))
+        self.assertTupleEqual(tdf.index.name, ('test_aligned_table', 'id'))
+        expected_cols = [('test_aligned_table', 'main_c1'),
+                         ('test_aligned_table', 'main_c2'),
+                         ('test_aligned_table', 'main_c3'),
+                         ('test1', 'c1'), ('test1', 'c2'), ('test1', 'c3'),
+                         ('test2', 'c1'), ('test2', 'c2'), ('test2', 'c3'),
+                         ('test3', 'c1'), ('test3', 'c2'), ('test3', 'c3')]
+        tdf_cols = tdf.columns.tolist()
+        for v in zip(expected_cols, tdf_cols):
+            self.assertTupleEqual(v[0], v[1])
+
 
 if __name__ == '__main__':
     unittest.main()
