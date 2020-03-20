@@ -30,10 +30,8 @@ except ImportError:
                                           ICEphysFile)
 
 # TODO Add simple round-trip tests for all classes (i.e., test_round_trip_container_no_data tests without NWBFile)
-# TODO Add tests for the IntracellularElectrodesTable
-# TODO Add tests for the IntracellularStimuliTable
-# TODO Add tests for the IntracellularRecordingsTable
 # TODO Add tests for adding custom categories (both on init and using add_category)
+# TODO Add test provide category tables for IntracellularRecording on init to test error checks for bad/missing tables
 # TODO Add tests for adding custom columns to IntracellularRecordings on init
 
 
@@ -321,6 +319,42 @@ class ICEphysMetaTestBase(unittest.TestCase):
                                      cond['repetitions'].target.data[:])
                 self.assertEqual(in_cond['repetitions'].target.table.object_id,
                                  cond['repetitions'].target.table.object_id)
+
+
+class IntracellularElectrodesTableTests(unittest.TestCase):
+    """
+    The IntracellularElectrodesTable is covered by the
+    IntracellularRecordingsTableTests as this table is part of that table.
+    """
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
+class IntracellularStimuliTableTests(unittest.TestCase):
+    """
+    The IntracellularStimuliTable is covered by the
+    IntracellularRecordingsTableTests as this table is part of that table.
+    """
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+
+class IntracellularResponsesTableTests(unittest.TestCase):
+    """
+    The IntracellularResponsesTable is covered by the
+    IntracellularRecordingsTableTests as this table is part of that table.
+    """
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
 
 
 class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
@@ -1395,7 +1429,7 @@ class ICEphysFileTests(unittest.TestCase):
     @unittest.skip("Test not implemented yet")
     def test_add_intracellular_recordings_column(self):
         """
-        Test that we can add a dynamic column to the intracellular_recordings
+        TODO Test that we can add a dynamic column to the intracellular_recordings
         via nwbfile.add_intracellular_recordings_column
         """
         pass
@@ -1403,7 +1437,7 @@ class ICEphysFileTests(unittest.TestCase):
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_simultaneous_recordings_column(self):
         """
-        Test that we can add a dynamic column to the simultaneous_recordings via
+        TODO Test that we can add a dynamic column to the simultaneous_recordings via
         nwbfile.add_icephys_simultaneous_recordings_column
         """
         pass
@@ -1411,7 +1445,7 @@ class ICEphysFileTests(unittest.TestCase):
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_sweep_seqences_column(self):
         """
-        Test that we can add a dynamic column to the sequential_recordings via
+        TODO Test that we can add a dynamic column to the sequential_recordings via
         nwbfile.add_icephys_sequential_recordings_column
         """
         pass
@@ -1419,14 +1453,14 @@ class ICEphysFileTests(unittest.TestCase):
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_repetitions_column(self):
         """
-        Test that we can add a dynamic column to the repetitions via nwbfile.add_icephys_repetitions_column
+        TODO Test that we can add a dynamic column to the repetitions via nwbfile.add_icephys_repetitions_column
         """
         pass
 
     @unittest.skip("Test not implemented yet")
     def test_add_icephys_experimental_conditions_column(self):
         """
-        Test that we can add a dynamic column to the experimental_conditions
+        TODO Test that we can add a dynamic column to the experimental_conditions
         via nwb.add_icephys_experimental_conditions_column(...)
         """
         pass
