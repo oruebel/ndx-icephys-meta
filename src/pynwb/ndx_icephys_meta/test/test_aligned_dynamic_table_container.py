@@ -23,8 +23,6 @@ except ImportError:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     from ndx_icephys_meta.icephys import AlignedDynamicTable
 
-# TODO Test to_dataframe
-
 
 class TestAlignedDynamicTableContainer(unittest.TestCase):
     """
