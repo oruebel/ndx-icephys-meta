@@ -622,7 +622,9 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
             stimulus_num_samples = stimulus.num_samples
             stimulus_index_count = (stimulus_index_count
                                     if stimulus_index_count >= 0
-                                    else (stimulus_num_samples - stimulus_start_index))
+                                    else ((stimulus_num_samples - stimulus_start_index)
+                                          if stimulus_num_samples is not None
+                                          else None))
             if stimulus_index_count is None:
                 raise IndexError("Invalid stimulus_index_count cannot be determined from stimulus data.")
             if stimulus_num_samples is not None:
@@ -635,7 +637,9 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
             response_num_samples = response.num_samples
             response_index_count = (response_index_count
                                     if response_index_count >= 0
-                                    else (response_num_samples - response_start_index))
+                                    else ((response_num_samples - response_start_index)
+                                          if response_num_samples is not None
+                                          else None))
             if response_index_count is None:
                 raise IndexError("Invalid response_index_count cannot be determined from stimulus data.")
             if response_num_samples is not None:
