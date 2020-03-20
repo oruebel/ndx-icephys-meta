@@ -5,7 +5,7 @@ from pynwb.base import TimeSeries
 import numpy as np
 try:
     from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex   # pragma: no cover
-except ImportError:
+except ImportError:                                                        # pragma: no cover
     from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex  # pragma: no cover
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
 import warnings
@@ -163,7 +163,7 @@ class HierarchicalDynamicTableMixin(object):
                                [(self.name, colname)
                                 for colname in self.colnames if colname != hcol_name])
                 if flat_column_index:
-                    columns = [(hcol_target.name, 'id'), ] + list(row_df.columns)
+                    columns = [(hcol_target.name, 'id'), ] + list(hcol_target.colnames)
                 else:
                     columns = pd.MultiIndex.from_tuples([(hcol_target.name, 'id'), ] +
                                                         [(hcol_target.name, c) for c in hcol_target.colnames],
@@ -400,33 +400,16 @@ class AlignedDynamicTable(DynamicTable):
             self.category_tables[category].add_row(**values)
 
     @docval({'name': 'ignore_category_ids', 'type': bool,
-             'doc': "Ignore id columns of sub-category tables", 'default': False},
-            {'name': 'electrode_refs_as_objectids', 'type': bool,
-             'doc': 'replace object references in the electrode column with object_ids',
-             'default': False},
-            {'name': 'stimulus_refs_as_objectids', 'type': bool,
-             'doc': 'replace object references in the stimulus column with object_ids',
-             'default': False},
-            {'name': 'response_refs_as_objectids', 'type': bool,
-             'doc': 'replace object references in the response column with object_ids',
-             'default': False}
-            )
+             'doc': "Ignore id columns of sub-category tables", 'default': False})
     def to_dataframe(self, **kwargs):
         """Convert the collection of tables to a single pandas DataFrame"""
         dfs = [super().to_dataframe().reset_index(), ]
-
         if getargs('ignore_category_ids', kwargs):
             dfs += [category.to_dataframe() for category in self.category_tables.values()]
         else:
             dfs += [category.to_dataframe().reset_index() for category in self.category_tables.values()]
         names = [self.name, ] + list(self.category_tables.keys())
         res = pd.concat(dfs, axis=1, keys=names)
-        if getargs('electrode_refs_as_objectids', kwargs):
-            res[('electrodes', 'electrode')] = [e.object_id for e in res[('electrodes', 'electrode')]]
-        if getargs('stimulus_refs_as_objectids', kwargs):
-            res[('stimuli', 'stimulus')] = [(e[0], e[1],  e[2].object_id) for e in res[('stimuli', 'stimulus')]]
-        if getargs('response_refs_as_objectids', kwargs):
-            res[('responses', 'response')] = [(e[0], e[1],  e[2].object_id) for e in res[('responses', 'response')]]
         res.set_index((self.name, 'id'), drop=True, inplace=True)
         return res
 
@@ -710,6 +693,28 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                             stimuli=stimuli,
                             **kwargs)
         return len(self) - 1
+
+    @docval(*get_docval(AlignedDynamicTable.to_dataframe, 'ignore_category_ids'),
+            {'name': 'electrode_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the electrode column with object_ids',
+             'default': False},
+            {'name': 'stimulus_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the stimulus column with object_ids',
+             'default': False},
+            {'name': 'response_refs_as_objectids', 'type': bool,
+             'doc': 'replace object references in the response column with object_ids',
+             'default': False}
+            )
+    def to_dataframe(self, **kwargs):
+        """Convert the collection of tables to a single pandas DataFrame"""
+        res = super().to_dataframe(ignore_category_ids=getargs('ignore_category_ids', kwargs))
+        if getargs('electrode_refs_as_objectids', kwargs):
+            res[('electrodes', 'electrode')] = [e.object_id for e in res[('electrodes', 'electrode')]]
+        if getargs('stimulus_refs_as_objectids', kwargs):
+            res[('stimuli', 'stimulus')] = [(e[0], e[1],  e[2].object_id) for e in res[('stimuli', 'stimulus')]]
+        if getargs('response_refs_as_objectids', kwargs):
+            res[('responses', 'response')] = [(e[0], e[1],  e[2].object_id) for e in res[('responses', 'response')]]
+        return res
 
 
 @register_class('SimultaneousRecordingsTable', namespace)
