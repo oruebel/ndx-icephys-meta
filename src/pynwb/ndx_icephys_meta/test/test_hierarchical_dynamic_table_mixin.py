@@ -240,6 +240,12 @@ class TestHierarchicalDynamicTableMixin(unittest.TestCase):
         self.assertEqual(len(tab), 0)
         self.assertListEqual(tab.columns.to_list(), [('level0', 'id')])
         self.assertListEqual(tab.index.names, [('level2', 'id'), ('level1', 'id')])
+        tab = self.table_level1.to_hierarchical_dataframe(flat_column_index=True)
+        self.assertEqual(len(tab), 0)
+        self.assertListEqual(tab.columns.to_list(), [('level0', 'id')])
+        tab = self.table_level2.to_hierarchical_dataframe(flat_column_index=True)
+        self.assertListEqual(tab.columns.to_list(), [('level0', 'id')])
+        self.assertListEqual(tab.index.names, [('level2', 'id'), ('level1', 'id')])
 
     def test_to_hierarchical_dataframe(self):
         """
