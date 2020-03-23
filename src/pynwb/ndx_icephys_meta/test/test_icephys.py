@@ -1426,45 +1426,6 @@ class ICEphysFileTests(unittest.TestCase):
             self.assertEqual(len(res.iloc[0]['repetitions']), 1)
             self.assertEqual(res.iloc[0]['repetitions'].index[0], 17)  # Check id of the referenced repetitions row
 
-    @unittest.skip("Test not implemented yet")
-    def test_add_intracellular_recordings_column(self):
-        """
-        TODO Test that we can add a dynamic column to the intracellular_recordings
-        via nwbfile.add_intracellular_recordings_column
-        """
-        pass
-
-    @unittest.skip("Test not implemented yet")
-    def test_add_icephys_simultaneous_recordings_column(self):
-        """
-        TODO Test that we can add a dynamic column to the simultaneous_recordings via
-        nwbfile.add_icephys_simultaneous_recordings_column
-        """
-        pass
-
-    @unittest.skip("Test not implemented yet")
-    def test_add_icephys_sweep_seqences_column(self):
-        """
-        TODO Test that we can add a dynamic column to the sequential_recordings via
-        nwbfile.add_icephys_sequential_recordings_column
-        """
-        pass
-
-    @unittest.skip("Test not implemented yet")
-    def test_add_icephys_repetitions_column(self):
-        """
-        TODO Test that we can add a dynamic column to the repetitions via nwbfile.add_icephys_repetitions_column
-        """
-        pass
-
-    @unittest.skip("Test not implemented yet")
-    def test_add_icephys_experimental_conditions_column(self):
-        """
-        TODO Test that we can add a dynamic column to the experimental_conditions
-        via nwb.add_icephys_experimental_conditions_column(...)
-        """
-        pass
-
 
 if __name__ == '__main__':
     unittest.main()
