@@ -1,11 +1,32 @@
+datasets:
+- neurodata_type_def: TimeSeriesReferenceVectorData
+  neurodata_type_inc: VectorData
+  dtype:
+  - name: idx_start
+    dtype: int32
+    doc: Start index into the TimeSeries 'data' and 'timestamp' datasets of the referenced
+      TimeSeries. The first dimension of those arrays is always time.
+  - name: count
+    dtype: int32
+    doc: Number of data samples available in this time series, during this epoch
+  - name: timeseries
+    dtype:
+      target_type: TimeSeries
+      reftype: object
+    doc: The TimeSeries that this index applies to
+  doc: Column storing references to a TimeSeries (rows). For each TimeSeries this
+    VectorData column stores the start_index and count to indicate the range in time
+    to be selected as well as an object reference to the TimeSeries.
 groups:
 - neurodata_type_def: AlignedDynamicTable
   neurodata_type_inc: DynamicTable
-  doc: Container for storing a collection of DynamicTables that are aligned by row
+  doc: DynamicTable container that subports storing a collection of subtables. Each
+    sub-table is a DynamicTable itself that is aligned with the main table by row
     index. I.e., all DynamicTables stored in this group MUST have the same number
-    of rows. This type effectively defines a 2-level table in which columns of the
-    table a grouped into categories, with eachDynamicTable respresenting a particular
-    category.
+    of rows. This type effectively defines a 2-level table in which the main data
+    is stored in the main table implementd by this typeand additional columns of the
+    table are grouped into categories, with each category beingrepresented by a separate
+    DynamicTable stored within the group.
   attributes:
   - name: categories
     dtype: text
@@ -74,20 +95,7 @@ groups:
       doc: Description of what is in this dynamic table.
     datasets:
     - name: stimulus
-      neurodata_type_inc: VectorData
-      dtype:
-      - name: idx_start
-        dtype: int32
-        doc: Start index into the TimeSeries 'data' and 'timestamp' datasets of the
-          referenced TimeSeries. The first dimension of those arrays is always time.
-      - name: count
-        dtype: int32
-        doc: Number of data samples available in this time series, during this epoch
-      - name: timeseries
-        dtype:
-          target_type: TimeSeries
-          reftype: object
-        doc: The TimeSeries that this index applies to
+      neurodata_type_inc: TimeSeriesReferenceVectorData
       doc: Column storing the reference to the recorded stimulus for the recording
         (rows)
   - neurodata_type_def: IntracellularResponsesTable
@@ -101,20 +109,7 @@ groups:
       doc: Description of what is in this dynamic table.
     datasets:
     - name: response
-      neurodata_type_inc: VectorData
-      dtype:
-      - name: idx_start
-        dtype: int32
-        doc: Start index into the TimeSeries 'data' and 'timestamp' datasets of the
-          referenced TimeSeries. The first dimension of those arrays is always time.
-      - name: count
-        dtype: int32
-        doc: Number of data samples available in this time series, during this epoch
-      - name: timeseries
-        dtype:
-          target_type: TimeSeries
-          reftype: object
-        doc: The TimeSeries that this index applies to
+      neurodata_type_inc: TimeSeriesReferenceVectorData
       doc: Column storing the reference to the recorded response for the recording
         (rows)
 - neurodata_type_def: SimultaneousRecordingsTable
