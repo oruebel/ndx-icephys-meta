@@ -674,19 +674,19 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                                  "stimulus and response pairs in an intracellular recording.")
 
         # Compile the electrodes table data
-        electrodes = popargs('electrode_metadata', kwargs)
+        electrodes = copy(popargs('electrode_metadata', kwargs))
         if electrodes is None:
             electrodes = {}
         electrodes['electrode'] = electrode
 
         # Compile the stimuli table data
-        stimuli = popargs('stimulus_metadata', kwargs)
+        stimuli = copy(popargs('stimulus_metadata', kwargs))
         if stimuli is None:
             stimuli = {}
         stimuli['stimulus'] = (stimulus_start_index, stimulus_index_count, stimulus)
 
         # Compile the reponses table data
-        responses = popargs('response_metadata', kwargs)
+        responses = copy(popargs('response_metadata', kwargs))
         if responses is None:
             responses = {}
         responses['response'] = (response_start_index, response_index_count, response)
