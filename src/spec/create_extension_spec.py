@@ -71,6 +71,52 @@ def main():
                 ]
     )
 
+    electrodes_table_spec = NWBGroupSpec(
+        neurodata_type_inc='DynamicTable',
+        neurodata_type_def='IntracellularElectrodesTable',
+        doc='Table for storing intracellular electrode related metadata',
+        attributes=[NWBAttributeSpec(name='description',
+                                     dtype='text',
+                                     doc='Description of what is in this dynamic table.',
+                                     value='Table for storing intracellular electrode related metadata')],
+        datasets=[NWBDatasetSpec(
+            name='electrode',
+            neurodata_type_inc='VectorData',
+            doc='Column for storing the reference to the intracellular electrode',
+            dtype=NWBRefSpec(target_type='IntracellularElectrode',
+                             reftype='object'))]
+    )
+
+    stimuli_table_spec = NWBGroupSpec(
+        neurodata_type_inc='DynamicTable',
+        neurodata_type_def='IntracellularStimuliTable',
+        doc='Table for storing intracellular stimulus related metadata',
+        attributes=[NWBAttributeSpec(name='description',
+                                     dtype='text',
+                                     doc='Description of what is in this dynamic table.',
+                                     value='Table for storing intracellular stimulus related metadata')],
+        datasets=[NWBDatasetSpec(
+            name='stimulus',
+            neurodata_type_inc='VectorData',
+            doc='Column storing the reference to the recorded stimulus for the recording (rows)',
+            dtype=reference_timeseries_dtype), ]
+    )
+
+    responses_table_spec = NWBGroupSpec(
+        neurodata_type_inc='DynamicTable',
+        neurodata_type_def='IntracellularResponsesTable',
+        doc='Table for storing intracellular response related metadata',
+        attributes=[NWBAttributeSpec(name='description',
+                                     dtype='text',
+                                     doc='Description of what is in this dynamic table.',
+                                     value='Table for storing intracellular response related metadata')],
+        datasets=[NWBDatasetSpec(
+            name='response',
+            neurodata_type_inc='VectorData',
+            doc='Column storing the reference to the recorded response for the recording (rows)',
+            dtype=reference_timeseries_dtype), ]
+    )
+
     # Create our table to group stimulus and response for Intracellular Electrophysiology Recordings
     icephys_recordings_table_spec = NWBGroupSpec(
         name='intracellular_recordings',
@@ -94,50 +140,23 @@ def main():
                               'and a single simultaneous recording and for storing metadata about the '
                               'intracellular recording.'),
                     ],
-        groups=[NWBGroupSpec(
-                    name='electrodes',
-                    neurodata_type_inc='DynamicTable',
-                    neurodata_type_def='IntracellularElectrodesTable',
-                    doc='Table for storing intracellular electrode related metadata',
-                    attributes=[NWBAttributeSpec(name='description',
-                                                 dtype='text',
-                                                 doc='Description of what is in this dynamic table.',
-                                                 value='Table for storing intracellular electrode related metadata')],
-                    datasets=[NWBDatasetSpec(
-                        name='electrode',
-                        neurodata_type_inc='VectorData',
-                        doc='Column for storing the reference to the intracellular electrode',
-                        dtype=NWBRefSpec(target_type='IntracellularElectrode',
-                                         reftype='object'))]),
-                NWBGroupSpec(
-                    name='stimuli',
-                    neurodata_type_inc='DynamicTable',
-                    neurodata_type_def='IntracellularStimuliTable',
-                    doc='Table for storing intracellular stimulus related metadata',
-                    attributes=[NWBAttributeSpec(name='description',
-                                                 dtype='text',
-                                                 doc='Description of what is in this dynamic table.',
-                                                 value='Table for storing intracellular stimulus related metadata')],
-                    datasets=[NWBDatasetSpec(
-                        name='stimulus',
-                        neurodata_type_inc='VectorData',
-                        doc='Column storing the reference to the recorded stimulus for the recording (rows)',
-                        dtype=reference_timeseries_dtype), ]),
-                NWBGroupSpec(
-                    name='responses',
-                    neurodata_type_inc='DynamicTable',
-                    neurodata_type_def='IntracellularResponsesTable',
-                    doc='Table for storing intracellular response related metadata',
-                    attributes=[NWBAttributeSpec(name='description',
-                                                 dtype='text',
-                                                 doc='Description of what is in this dynamic table.',
-                                                 value='Table for storing intracellular response related metadata')],
-                    datasets=[NWBDatasetSpec(
-                        name='response',
-                        neurodata_type_inc='VectorData',
-                        doc='Column storing the reference to the recorded response for the recording (rows)',
-                        dtype=reference_timeseries_dtype), ])
-                ]
+        groups=[
+            NWBGroupSpec(
+                name='electrodes',
+                neurodata_type_inc='IntracellularElectrodesTable',
+                doc='Table for storing intracellular electrode related metadata',
+            ),
+            NWBGroupSpec(
+                name='stimuli',
+                neurodata_type_inc='IntracellularStimuliTable',
+                doc='Table for storing intracellular stimulus related metadata'
+            ),
+            NWBGroupSpec(
+                name='responses',
+                neurodata_type_inc='IntracellularResponsesTable',
+                doc='Table for storing intracellular response related metadata'
+            )
+        ]
     )
 
     # Create a SimultaneousRecordingsTable (similar to trials) table to group
@@ -338,7 +357,10 @@ def main():
                       sequentialrecordings_table_spec,
                       repetitions_table_spec,
                       experimental_conditions_table_spec,
-                      icephys_file_spec]
+                      icephys_file_spec,
+                      electrodes_table_spec,
+                      stimuli_table_spec,
+                      responses_table_spec]
 
     # Export the spec
     project_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
