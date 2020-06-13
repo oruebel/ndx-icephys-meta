@@ -1,7 +1,7 @@
 """
 Unit test module for testing the AlignedDynamicTableContainer
 """
-import unittest2 as unittest
+import unittest
 import os
 import warnings
 
