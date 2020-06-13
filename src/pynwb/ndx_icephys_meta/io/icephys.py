@@ -36,3 +36,15 @@ class AlignedDynamicTableMap(DynamicTableMap):
         # By default the DynamicTables contained as sub-categories in the AlignedDynamicTable are mapped to
         # the 'dynamic_tables' class attribute. This renames the attribute to 'category_tables'
         self.map_spec('category_tables', spec.get_neurodata_type('DynamicTable'))
+
+    @DynamicTableMap.object_attr('electrodes')
+    def electrodes(self, container, manager):
+        return container.category_tables.get('electrodes', None)
+
+    @DynamicTableMap.object_attr('stimuli')
+    def stimuli(self, container, manager):
+        return container.category_tables.get('stimuli', None)
+
+    @DynamicTableMap.object_attr('responses')
+    def responses(self, container, manager):
+        return container.category_tables.get('responses', None)
