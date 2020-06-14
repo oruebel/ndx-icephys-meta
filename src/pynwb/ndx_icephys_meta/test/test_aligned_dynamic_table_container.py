@@ -439,7 +439,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
 
         # Test the to_dataframe method with default settings
         tdf = adt.to_dataframe()
-        self.assertListEqual(tdf.index.tolist(), list(range(10)))
+        self.assertListEqual(tdf.index.data.tolist(), list(range(10)))
         self.assertTupleEqual(tdf.index.name, ('test_aligned_table', 'id'))
         expected_cols = [('test_aligned_table', 'main_c1'),
                          ('test_aligned_table', 'main_c2'),
@@ -453,7 +453,7 @@ class TestAlignedDynamicTableContainer(unittest.TestCase):
 
         # test the to_dataframe method with ignore_category_ids set to True
         tdf = adt.to_dataframe(ignore_category_ids=True)
-        self.assertListEqual(tdf.index.tolist(), list(range(10)))
+        self.assertListEqual(tdf.index.data.tolist(), list(range(10)))
         self.assertTupleEqual(tdf.index.name, ('test_aligned_table', 'id'))
         expected_cols = [('test_aligned_table', 'main_c1'),
                          ('test_aligned_table', 'main_c2'),
