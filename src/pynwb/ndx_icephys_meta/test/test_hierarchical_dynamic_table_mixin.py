@@ -7,7 +7,7 @@ be tricky. If we have confirmed that the mixing is working as expected we can up
 the expected test results by enabling the test_generate_reference_testdata test function
 and running the tests.
 """
-import unittest2 as unittest
+import unittest
 import numpy as np
 from hdmf.utils import docval, popargs, get_docval, call_docval_func
 import pandas
