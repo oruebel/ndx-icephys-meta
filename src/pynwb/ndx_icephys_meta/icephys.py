@@ -16,7 +16,7 @@ from copy import copy
 namespace = 'ndx-icephys-meta'
 
 
-class HierarchicalDynamicTableMixin(object):
+class HierarchicalDynamicTableMixin:
     """
     Mixin class for defining specialized functionality for hierarchical dynamic tables.
 
@@ -722,7 +722,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
 
 
 @register_class('SimultaneousRecordingsTable', namespace)
-class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class SimultaneousRecordingsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recordings from the
     IntracellularRecordingsTable table together that were recorded simultaneously
@@ -775,7 +775,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('SequentialRecordingsTable', namespace)
-class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class SequentialRecordingsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording simultaneous_recordings from the
     SimultaneousRecordingsTable table together. This is typically used to group together simultaneous_recordings
@@ -838,7 +838,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('RepetitionsTable', namespace)
-class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class RepetitionsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording sequential recordings together.
     With each SweepSequence typically representing a particular type of stimulus, the
@@ -893,7 +893,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('ExperimentalConditionsTable', namespace)
-class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class ExperimentalConditionsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording repetitions together that
     belong to the same experimental conditions.
