@@ -618,35 +618,13 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
 
         # Compute the start and stop index if necessary
         if stimulus is not None:
-            stimulus_start_index = stimulus_start_index if stimulus_start_index >= 0 else 0
-            stimulus_num_samples = stimulus.num_samples
-            stimulus_index_count = (stimulus_index_count
-                                    if stimulus_index_count >= 0
-                                    else ((stimulus_num_samples - stimulus_start_index)
-                                          if stimulus_num_samples is not None
-                                          else None))
-            if stimulus_index_count is None:
-                raise IndexError("Invalid stimulus_index_count cannot be determined from stimulus data.")
-            if stimulus_num_samples is not None:
-                if stimulus_start_index >= stimulus_num_samples:
-                    raise IndexError("stimulus_start_index out of range")
-                if (stimulus_start_index + stimulus_index_count) > stimulus_num_samples:
-                    raise IndexError("stimulus_start_index+stimulus_index_count out of range")
+            stimulus_start_index, stimulus_index_count = self.__compute_index(stimulus_start_index,
+                                                                              stimulus_index_count,
+                                                                              stimulus, 'stimulus')
         if response is not None:
-            response_start_index = response_start_index if response_start_index >= 0 else 0
-            response_num_samples = response.num_samples
-            response_index_count = (response_index_count
-                                    if response_index_count >= 0
-                                    else ((response_num_samples - response_start_index)
-                                          if response_num_samples is not None
-                                          else None))
-            if response_index_count is None:
-                raise IndexError("Invalid response_index_count cannot be determined from stimulus data.")
-            if response_num_samples is not None:
-                if response_start_index > response_num_samples:
-                    raise IndexError("response_start_index out of range")
-                if (response_start_index + response_index_count) > response_num_samples:
-                    raise IndexError("response_start_index+response_index_count out of range")
+            response_start_index, response_index_count = self.__compute_index(response_start_index,
+                                                                              response_index_count,
+                                                                              response, 'response')
 
         # If either stimulus or response are None, then set them to the same TimeSeries to keep the I/O happy
         response = response if response is not None else stimulus
@@ -697,6 +675,23 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                             stimuli=stimuli,
                             **kwargs)
         return len(self) - 1
+
+    def __compute_index(start_index, index_count, time_series, name):
+        start_index = start_index if start_index >= 0 else 0
+        num_samples = time_series.num_samples
+        index_count = (index_count
+                       if index_count >= 0
+                       else ((num_samples - start_index)
+                             if num_samples is not None
+                             else None))
+        if index_count is None:
+            raise IndexError("Invalid %s_index_count cannot be determined from %s data." % (name, name))
+        if num_samples is not None:
+            if start_index >= num_samples:
+                raise IndexError("%s_start_index out of range" % name)
+            if (start_index + index_count) > num_samples:
+                raise IndexError("%s_start_index + %s_index_count out of range" % (name, name))
+        return start_index, index_count
 
     @docval(*get_docval(AlignedDynamicTable.to_dataframe, 'ignore_category_ids'),
             {'name': 'electrode_refs_as_objectids', 'type': bool,
