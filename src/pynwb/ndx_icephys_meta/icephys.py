@@ -225,8 +225,7 @@ class AlignedDynamicTable(DynamicTable):
     and additional columns of the table are grouped into categories, with each category being'
     represented by a separate DynamicTable stored within the group.
     """
-    __fields__ = (
-        {'name': 'category_tables', 'child': True})
+    __fields__ = ({'name': 'category_tables', 'child': True}, )
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'category_tables', 'type': list,
