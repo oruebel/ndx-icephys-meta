@@ -226,8 +226,7 @@ class AlignedDynamicTable(DynamicTable):
     represented by a separate DynamicTable stored within the group.
     """
     __fields__ = (
-        {'name': 'category_tables', 'child': True},
-        'description')
+        {'name': 'category_tables', 'child': True})
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'category_tables', 'type': list,
