@@ -227,7 +227,7 @@ class AlignedDynamicTable(DynamicTable):
     """
     __fields__ = (
         {'name': 'category_tables', 'child': True},
-        'description')
+    )
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'category_tables', 'type': list,
