@@ -291,11 +291,10 @@ class AlignedDynamicTable(DynamicTable):
 
     def __contains__(self, val):
         """
-        Check if the give value (i.e., column) exists in this table
+        Check if the given value (i.e., column) exists in this table
 
-        If the val is a string then check if the given category exists. If val is a tuple
-        of two strings (category, colname) then check for the given category if the given
-        colname exists.
+        :param val: If val is a string then check if the given category exists. If val is a tuple
+        of two strings (category, colname) then check for the given category if the given colname exists.
         """
         if isinstance(val, str):
             return val in self.category_tables or val in self.colnames
