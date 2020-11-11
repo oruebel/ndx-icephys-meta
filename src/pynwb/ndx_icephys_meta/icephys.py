@@ -227,7 +227,7 @@ class AlignedDynamicTable(DynamicTable):
     """
     __fields__ = (
         {'name': 'category_tables', 'child': True},
-        'description')
+    )
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'category_tables', 'type': list,
@@ -289,14 +289,12 @@ class AlignedDynamicTable(DynamicTable):
         # Set the self.category_tables attribute, which will set the parent/child relationships for the category_tables
         self.category_tables = dts
 
-    @docval({'name': 'val', 'type': (str, tuple), 'doc': 'The name of the category or column to check.'})
     def __contains__(self, val):
         """
-        Check if the give value (i.e., column) exists in this table
+        Check if the given value (i.e., column) exists in this table
 
-        If the val is a string then check if the given category exists. If val is a tuple
-        of two strings (category, colname) then check for the given category if the given
-        colname exists.
+        :param val: If val is a string then check if the given category exists. If val is a tuple
+        of two strings (category, colname) then check for the given category if the given colname exists.
         """
         if isinstance(val, str):
             return val in self.category_tables or val in self.colnames
@@ -304,6 +302,8 @@ class AlignedDynamicTable(DynamicTable):
             if len(val) != 2:
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
             return val[1] in self.get_category(val[0])
+        else:
+            return False
 
     @property
     def categories(self):
