@@ -24,9 +24,9 @@ groups:
     sub-table is a DynamicTable itself that is aligned with the main table by row
     index. I.e., all DynamicTables stored in this group MUST have the same number
     of rows. This type effectively defines a 2-level table in which the main data
-    is stored in the main table implementd by this typeand additional columns of the
-    table are grouped into categories, with each category beingrepresented by a separate
-    DynamicTable stored within the group.
+    is stored in the main table implemented by this type and additional columns of
+    the table are grouped into categories, with each category being represented by
+    a separate DynamicTable stored within the group.
   attributes:
   - name: categories
     dtype: text
@@ -35,13 +35,13 @@ groups:
     shape:
     - null
     doc: The names of the categories in this AlignedDynamicTable. Each category is
-      represented by one DynamicTable stored in the parent group.This attribute should
+      represented by one DynamicTable stored in the parent group. This attribute should
       be used to specify an order of categories.
   groups:
   - neurodata_type_inc: DynamicTable
     doc: A DynamicTable representing a particular category for columns in the AlignedDynamicTable
       parent container. The table MUST be aligned with (i.e., have the same number
-      of rows, as all other DynamicTables stored in the AlignedDynamicTable parent
+      of rows) as all other DynamicTables stored in the AlignedDynamicTable parent
       container. The name of the category is given by the name of the DynamicTable
       and its description by the description attribute of the DynamicTable.
     quantity: '*'
@@ -68,50 +68,15 @@ groups:
     doc: Description of the contents of this table. Inherited from AlignedDynamicTable
       and overwritten here to fix the value of the attribute
   groups:
-  - neurodata_type_def: IntracellularElectrodesTable
-    neurodata_type_inc: DynamicTable
-    name: electrodes
-    doc: Table for storing intracellular electrode related metadata
-    attributes:
-    - name: description
-      dtype: text
-      value: Table for storing intracellular electrode related metadata
-      doc: Description of what is in this dynamic table.
-    datasets:
-    - name: electrode
-      neurodata_type_inc: VectorData
-      dtype:
-        target_type: IntracellularElectrode
-        reftype: object
-      doc: Column for storing the reference to the intracellular electrode
-  - neurodata_type_def: IntracellularStimuliTable
-    neurodata_type_inc: DynamicTable
-    name: stimuli
-    doc: Table for storing intracellular stimulus related metadata
-    attributes:
-    - name: description
-      dtype: text
-      value: Table for storing intracellular stimulus related metadata
-      doc: Description of what is in this dynamic table.
-    datasets:
-    - name: stimulus
-      neurodata_type_inc: TimeSeriesReferenceVectorData
-      doc: Column storing the reference to the recorded stimulus for the recording
-        (rows)
-  - neurodata_type_def: IntracellularResponsesTable
-    neurodata_type_inc: DynamicTable
-    name: responses
-    doc: Table for storing intracellular response related metadata
-    attributes:
-    - name: description
-      dtype: text
-      value: Table for storing intracellular response related metadata
-      doc: Description of what is in this dynamic table.
-    datasets:
-    - name: response
-      neurodata_type_inc: TimeSeriesReferenceVectorData
-      doc: Column storing the reference to the recorded response for the recording
-        (rows)
+  - name: electrodes
+    neurodata_type_inc: IntracellularElectrodesTable
+    doc: Table for storing intracellular electrode related metadata.
+  - name: stimuli
+    neurodata_type_inc: IntracellularStimuliTable
+    doc: Table for storing intracellular stimulus related metadata.
+  - name: responses
+    neurodata_type_inc: IntracellularResponsesTable
+    doc: Table for storing intracellular response related metadata.
 - neurodata_type_def: SimultaneousRecordingsTable
   neurodata_type_inc: DynamicTable
   name: simultaneous_recordings
@@ -157,7 +122,7 @@ groups:
   - name: stimulus_type
     neurodata_type_inc: VectorData
     dtype: text
-    doc: The type of stimulus used for the sequential recording
+    doc: The type of stimulus used for the sequential recording.
 - neurodata_type_def: RepetitionsTable
   neurodata_type_inc: DynamicTable
   name: repetitions
@@ -205,7 +170,7 @@ groups:
   doc: 'Extension of the NWBFile class to allow placing the new icephys metadata types
     in /general/intracellular_ephys in the NWBFile NOTE: If this proposal for extension
     to NWB gets merged with the core schema, then this type would be removed and the
-    NWBFile specification updated instead'
+    NWBFile specification updated instead.'
   groups:
   - name: general
     doc: expand definition of general from NWBFile
@@ -267,3 +232,42 @@ groups:
           tabels (and corresponding SequentialRecordingsTable, RepetitionsTable and
           ExperimentalConditions tables.'
         quantity: '?'
+- neurodata_type_def: IntracellularElectrodesTable
+  neurodata_type_inc: DynamicTable
+  doc: Table for storing intracellular electrode related metadata.
+  attributes:
+  - name: description
+    dtype: text
+    value: Table for storing intracellular electrode related metadata.
+    doc: Description of what is in this dynamic table.
+  datasets:
+  - name: electrode
+    neurodata_type_inc: VectorData
+    dtype:
+      target_type: IntracellularElectrode
+      reftype: object
+    doc: Column for storing the reference to the intracellular electrode.
+- neurodata_type_def: IntracellularStimuliTable
+  neurodata_type_inc: DynamicTable
+  doc: Table for storing intracellular stimulus related metadata.
+  attributes:
+  - name: description
+    dtype: text
+    value: Table for storing intracellular stimulus related metadata.
+    doc: Description of what is in this dynamic table.
+  datasets:
+  - name: stimulus
+    neurodata_type_inc: TimeSeriesReferenceVectorData
+    doc: Column storing the reference to the recorded stimulus for the recording (rows).
+- neurodata_type_def: IntracellularResponsesTable
+  neurodata_type_inc: DynamicTable
+  doc: Table for storing intracellular response related metadata.
+  attributes:
+  - name: description
+    dtype: text
+    value: Table for storing intracellular response related metadata.
+    doc: Description of what is in this dynamic table.
+  datasets:
+  - name: response
+    neurodata_type_inc: TimeSeriesReferenceVectorData
+    doc: Column storing the reference to the recorded response for the recording (rows)

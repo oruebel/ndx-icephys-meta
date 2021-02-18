@@ -1,4 +1,4 @@
-import unittest2 as unittest
+import unittest
 import warnings
 import numpy as np
 from datetime import datetime

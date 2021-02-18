@@ -16,7 +16,7 @@ from copy import copy
 namespace = 'ndx-icephys-meta'
 
 
-class HierarchicalDynamicTableMixin(object):
+class HierarchicalDynamicTableMixin:
     """
     Mixin class for defining specialized functionality for hierarchical dynamic tables.
 
@@ -224,9 +224,7 @@ class AlignedDynamicTable(DynamicTable):
     and additional columns of the table are grouped into categories, with each category being'
     represented by a separate DynamicTable stored within the group.
     """
-    __fields__ = (
-        {'name': 'category_tables', 'child': True},
-        'description')
+    __fields__ = ({'name': 'category_tables', 'child': True}, )
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'category_tables', 'type': list,
@@ -288,14 +286,12 @@ class AlignedDynamicTable(DynamicTable):
         # Set the self.category_tables attribute, which will set the parent/child relationships for the category_tables
         self.category_tables = dts
 
-    @docval({'name': 'val', 'type': (str, tuple), 'doc': 'The name of the category or column to check.'})
     def __contains__(self, val):
         """
-        Check if the give value (i.e., column) exists in this table
+        Check if the given value (i.e., column) exists in this table
 
-        If the val is a string then check if the given category exists. If val is a tuple
-        of two strings (category, colname) then check for the given category if the given
-        colname exists.
+        :param val: If val is a string then check if the given category exists. If val is a tuple
+        of two strings (category, colname) then check for the given category if the given colname exists.
         """
         if isinstance(val, str):
             return val in self.category_tables or val in self.colnames
@@ -303,6 +299,8 @@ class AlignedDynamicTable(DynamicTable):
             if len(val) != 2:
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
             return val[1] in self.get_category(val[0])
+        else:
+            return False
 
     @property
     def categories(self):
@@ -631,35 +629,13 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
 
         # Compute the start and stop index if necessary
         if stimulus is not None:
-            stimulus_start_index = stimulus_start_index if stimulus_start_index >= 0 else 0
-            stimulus_num_samples = stimulus.num_samples
-            stimulus_index_count = (stimulus_index_count
-                                    if stimulus_index_count >= 0
-                                    else ((stimulus_num_samples - stimulus_start_index)
-                                          if stimulus_num_samples is not None
-                                          else None))
-            if stimulus_index_count is None:
-                raise IndexError("Invalid stimulus_index_count cannot be determined from stimulus data.")
-            if stimulus_num_samples is not None:
-                if stimulus_start_index >= stimulus_num_samples:
-                    raise IndexError("stimulus_start_index out of range")
-                if (stimulus_start_index + stimulus_index_count) > stimulus_num_samples:
-                    raise IndexError("stimulus_start_index+stimulus_index_count out of range")
+            stimulus_start_index, stimulus_index_count = self.__compute_index(stimulus_start_index,
+                                                                              stimulus_index_count,
+                                                                              stimulus, 'stimulus')
         if response is not None:
-            response_start_index = response_start_index if response_start_index >= 0 else 0
-            response_num_samples = response.num_samples
-            response_index_count = (response_index_count
-                                    if response_index_count >= 0
-                                    else ((response_num_samples - response_start_index)
-                                          if response_num_samples is not None
-                                          else None))
-            if response_index_count is None:
-                raise IndexError("Invalid response_index_count cannot be determined from stimulus data.")
-            if response_num_samples is not None:
-                if response_start_index > response_num_samples:
-                    raise IndexError("response_start_index out of range")
-                if (response_start_index + response_index_count) > response_num_samples:
-                    raise IndexError("response_start_index+response_index_count out of range")
+            response_start_index, response_index_count = self.__compute_index(response_start_index,
+                                                                              response_index_count,
+                                                                              response, 'response')
 
         # If either stimulus or response are None, then set them to the same TimeSeries to keep the I/O happy
         response = response if response is not None else stimulus
@@ -687,19 +663,19 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                                  "stimulus and response pairs in an intracellular recording.")
 
         # Compile the electrodes table data
-        electrodes = popargs('electrode_metadata', kwargs)
+        electrodes = copy(popargs('electrode_metadata', kwargs))
         if electrodes is None:
             electrodes = {}
         electrodes['electrode'] = electrode
 
         # Compile the stimuli table data
-        stimuli = popargs('stimulus_metadata', kwargs)
+        stimuli = copy(popargs('stimulus_metadata', kwargs))
         if stimuli is None:
             stimuli = {}
         stimuli['stimulus'] = (stimulus_start_index, stimulus_index_count, stimulus)
 
         # Compile the reponses table data
-        responses = popargs('response_metadata', kwargs)
+        responses = copy(popargs('response_metadata', kwargs))
         if responses is None:
             responses = {}
         responses['response'] = (response_start_index, response_index_count, response)
@@ -710,6 +686,23 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                             stimuli=stimuli,
                             **kwargs)
         return len(self) - 1
+
+    def __compute_index(start_index, index_count, time_series, name):
+        start_index = start_index if start_index >= 0 else 0
+        num_samples = time_series.num_samples
+        index_count = (index_count
+                       if index_count >= 0
+                       else ((num_samples - start_index)
+                             if num_samples is not None
+                             else None))
+        if index_count is None:
+            raise IndexError("Invalid %s_index_count cannot be determined from %s data." % (name, name))
+        if num_samples is not None:
+            if start_index >= num_samples:
+                raise IndexError("%s_start_index out of range" % name)
+            if (start_index + index_count) > num_samples:
+                raise IndexError("%s_start_index + %s_index_count out of range" % (name, name))
+        return start_index, index_count
 
     @docval(*get_docval(AlignedDynamicTable.to_dataframe, 'ignore_category_ids'),
             {'name': 'electrode_refs_as_objectids', 'type': bool,
@@ -735,7 +728,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
 
 
 @register_class('SimultaneousRecordingsTable', namespace)
-class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class SimultaneousRecordingsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recordings from the
     IntracellularRecordingsTable table together that were recorded simultaneously
@@ -788,7 +781,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('SequentialRecordingsTable', namespace)
-class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class SequentialRecordingsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording simultaneous_recordings from the
     SimultaneousRecordingsTable table together. This is typically used to group together simultaneous_recordings
@@ -851,7 +844,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('RepetitionsTable', namespace)
-class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class RepetitionsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording sequential recordings together.
     With each SweepSequence typically representing a particular type of stimulus, the
@@ -906,7 +899,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('ExperimentalConditionsTable', namespace)
-class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class ExperimentalConditionsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording repetitions together that
     belong to the same experimental conditions.

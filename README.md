@@ -12,7 +12,7 @@ The extension is available on pip and can be installed via:
 pip install ndx-icephys-meta
 ```
 
-The extension is also listed in the (NDX catalog)[https://nwb-extensions.github.io/]. See [here](https://github.com/nwb-extensions/ndx-icephys-meta-record) for the catalog metadata record.
+The extension is also listed in the [NDX catalog](https://nwb-extensions.github.io/). See [here](https://github.com/nwb-extensions/ndx-icephys-meta-record) for the catalog metadata record.
 
 ### developer install
 
