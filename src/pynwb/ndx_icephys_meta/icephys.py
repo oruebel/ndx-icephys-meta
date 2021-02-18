@@ -16,7 +16,7 @@ from copy import copy
 namespace = 'ndx-icephys-meta'
 
 
-class HierarchicalDynamicTableMixin(object):
+class HierarchicalDynamicTableMixin:
     """
     Mixin class for defining specialized functionality for hierarchical dynamic tables.
 
@@ -225,9 +225,7 @@ class AlignedDynamicTable(DynamicTable):
     and additional columns of the table are grouped into categories, with each category being'
     represented by a separate DynamicTable stored within the group.
     """
-    __fields__ = (
-        {'name': 'category_tables', 'child': True},
-        'description')
+    __fields__ = ({'name': 'category_tables', 'child': True}, )
 
     @docval(*get_docval(DynamicTable.__init__),
             {'name': 'category_tables', 'type': list,
@@ -289,14 +287,12 @@ class AlignedDynamicTable(DynamicTable):
         # Set the self.category_tables attribute, which will set the parent/child relationships for the category_tables
         self.category_tables = dts
 
-    @docval({'name': 'val', 'type': (str, tuple), 'doc': 'The name of the category or column to check.'})
     def __contains__(self, val):
         """
-        Check if the give value (i.e., column) exists in this table
+        Check if the given value (i.e., column) exists in this table
 
-        If the val is a string then check if the given category exists. If val is a tuple
-        of two strings (category, colname) then check for the given category if the given
-        colname exists.
+        :param val: If val is a string then check if the given category exists. If val is a tuple
+        of two strings (category, colname) then check for the given category if the given colname exists.
         """
         if isinstance(val, str):
             return val in self.category_tables or val in self.colnames
@@ -304,6 +300,8 @@ class AlignedDynamicTable(DynamicTable):
             if len(val) != 2:
                 raise ValueError("Expected tuple of strings of length 2 got tuple of length %i" % len(val))
             return val[1] in self.get_category(val[0])
+        else:
+            return False
 
     @property
     def categories(self):
@@ -717,7 +715,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
 
 
 @register_class('SimultaneousRecordingsTable', namespace)
-class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class SimultaneousRecordingsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recordings from the
     IntracellularRecordingsTable table together that were recorded simultaneously
@@ -770,7 +768,7 @@ class SimultaneousRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('SequentialRecordingsTable', namespace)
-class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class SequentialRecordingsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording simultaneous_recordings from the
     SimultaneousRecordingsTable table together. This is typically used to group together simultaneous_recordings
@@ -833,7 +831,7 @@ class SequentialRecordingsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('RepetitionsTable', namespace)
-class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class RepetitionsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording sequential recordings together.
     With each SweepSequence typically representing a particular type of stimulus, the
@@ -888,7 +886,7 @@ class RepetitionsTable(DynamicTable, HierarchicalDynamicTableMixin):
 
 
 @register_class('ExperimentalConditionsTable', namespace)
-class ExperimentalConditionsTable(DynamicTable, HierarchicalDynamicTableMixin):
+class ExperimentalConditionsTable(HierarchicalDynamicTableMixin, DynamicTable):
     """
     A table for grouping different intracellular recording repetitions together that
     belong to the same experimental conditions.

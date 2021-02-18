@@ -27,7 +27,7 @@ except ImportError:
     from ndx_icephys_meta.icephys import HierarchicalDynamicTableMixin
 
 
-class HierarchicalTableLevel(DynamicTable, HierarchicalDynamicTableMixin):
+class HierarchicalTableLevel(HierarchicalDynamicTableMixin, DynamicTable):
     """Test table class that references another table"""
     __columns__ = (
         {'name': 'child_table_refs',
