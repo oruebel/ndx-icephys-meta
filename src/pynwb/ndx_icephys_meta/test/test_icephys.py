@@ -588,7 +588,8 @@ class IntracellularRecordingsTableTests(ICEphysMetaTestBase):
             incon = io.read()
             self.assertListEqual(incon.categories, curr.categories)
             for n in curr.categories:
-                assert_frame_equal(incon[n], curr[n])
+                # empty columns from file have dtype int64 or float64 but empty in-memory columns have dtype object
+                assert_frame_equal(incon[n], curr[n], check_dtype=False, check_index_type=False)
 
     def test_write_with_stimulus_template(self):
         """
