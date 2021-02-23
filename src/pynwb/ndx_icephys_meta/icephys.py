@@ -492,7 +492,7 @@ class IntracellularStimuliTable(DynamicTable):
          'required': True,
          'index': False,
          'table': False,
-         'col_cls': TimeSeriesReferenceVectorData},
+         'class': TimeSeriesReferenceVectorData},
     )
 
     @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
@@ -515,7 +515,7 @@ class IntracellularResponsesTable(DynamicTable):
          'required': True,
          'index': False,
          'table': False,
-         'col_cls': TimeSeriesReferenceVectorData},
+         'class': TimeSeriesReferenceVectorData},
     )
 
     @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
