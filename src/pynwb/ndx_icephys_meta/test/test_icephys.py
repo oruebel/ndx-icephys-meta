@@ -1213,10 +1213,14 @@ class ICEphysFileTests(unittest.TestCase):
                                             stimulus=stimulus,
                                             response=response,
                                             id=np.int64(10))
+        nwbfile.add_intracellular_recording(electrode=electrode,
+                                            stimulus=stimulus,
+                                            response=response,
+                                            id=np.int64(11))
         # Check that the table has been created
         self.assertIsNotNone(nwbfile.intracellular_recordings)
         # Check that the values in our row are correct
-        self.assertEqual(len(nwbfile.intracellular_recordings), 1)
+        self.assertEqual(len(nwbfile.intracellular_recordings), 2)
         res = nwbfile.intracellular_recordings[0]
         # Check the ID
         self.assertEqual(res.index[0], 10)
@@ -1233,18 +1237,18 @@ class ICEphysFileTests(unittest.TestCase):
         # Confirm that our SimultaneousRecordingsTable table does not yet exist
         self.assertIsNone(nwbfile.icephys_simultaneous_recordings)
         # Add a sweep
-        nwbfile.add_icephys_simultaneous_recording(recordings=[0], id=np.int64(12))
+        nwbfile.add_icephys_simultaneous_recording(recordings=[0, 1], id=np.int64(12))
         # Check that the SimultaneousRecordingsTable table has been added
         self.assertIsNotNone(nwbfile.icephys_simultaneous_recordings)
         # Check that the values for our icephys_simultaneous_recordings table are correct
         self.assertListEqual(nwbfile.icephys_simultaneous_recordings.id[:], [12])
-        self.assertListEqual(nwbfile.icephys_simultaneous_recordings['recordings'].data, [1])
-        self.assertListEqual(nwbfile.icephys_simultaneous_recordings['recordings'].target.data[:], [0])
+        self.assertListEqual(nwbfile.icephys_simultaneous_recordings['recordings'].data, [2])
+        self.assertListEqual(nwbfile.icephys_simultaneous_recordings['recordings'].target.data[:], [0, 1])
         res = nwbfile.icephys_simultaneous_recordings[0]
         # check the id value
         self.assertEqual(res.index[0], 12)
-        # Check that our sweep contains 1 IntracellularRecording
-        self.assertEqual(len(res), 1)
+        # Check that our sweep contains 2 IntracellularRecording
+        self.assertEqual(len(res['recordings_id']), 2)
 
         #############################################
         #  Test adding a SweepSequence
@@ -1262,7 +1266,7 @@ class ICEphysFileTests(unittest.TestCase):
         # check the id value
         self.assertEqual(res.index[0], 15)
         # Check that our sweep contains 1 IntracellularRecording
-        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res['simultaneous_recordings_id']), 1)
 
         #############################################
         #  Test adding a Run
@@ -1278,7 +1282,7 @@ class ICEphysFileTests(unittest.TestCase):
         # check the id value
         self.assertEqual(res.index[0], 17)
         # Check that our repetition contains 1 SweepSequence
-        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res['sequential_recordings_id']), 1)
 
         #############################################
         #  Test adding a Condition
@@ -1294,7 +1298,7 @@ class ICEphysFileTests(unittest.TestCase):
         # check the id value
         self.assertEqual(res.index[0], 19)
         # Check that our repetition contains 1 repetition
-        self.assertEqual(len(res), 1)
+        self.assertEqual(len(res['repetitions_id']), 1)
 
         #############################################
         #  Test writing the file to disk
@@ -1390,7 +1394,7 @@ class ICEphysFileTests(unittest.TestCase):
             res = infile.icephys_simultaneous_recordings[0]
             # Check the ID and len of the intracellular_recordings column
             self.assertEqual(res.index[0], 12)
-            self.assertEqual(len(res), 1)
+            self.assertEqual(len(res['recordings_id']), 1)
             self.assertEqual(res.iloc[0]['recordings_id'], 10)  # Check id of the references recordings row
 
             ############################################################################
@@ -1401,7 +1405,7 @@ class ICEphysFileTests(unittest.TestCase):
             res = infile.icephys_sequential_recordings[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 15)
-            self.assertEqual(len(res), 1)
+            self.assertEqual(len(res['simultaneous_recordings_id']), 1)
             # Check id of the references simultaneous_recordings row
             self.assertEqual(res.iloc[0]['simultaneous_recordings_id'], 12)
 
@@ -1413,7 +1417,7 @@ class ICEphysFileTests(unittest.TestCase):
             res = infile.icephys_repetitions[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 17)
-            self.assertEqual(len(res), 1)
+            self.assertEqual(len(res['sequential_recordings_id']), 1)
             self.assertEqual(res.iloc[0]['sequential_recordings_id'], 15)  # Check id of the sweep_sequence row
 
             ############################################################################
@@ -1424,7 +1428,7 @@ class ICEphysFileTests(unittest.TestCase):
             res = infile.icephys_experimental_conditions[0]
             # Check the ID and len of the simultaneous_recordings column
             self.assertEqual(res.index[0], 19)
-            self.assertEqual(len(res), 1)
+            self.assertEqual(len(res['repetitions_id']), 1)
             self.assertEqual(res.iloc[0]['repetitions_id'], 17)  # Check id of the referenced repetitions row
 
 
