@@ -27,20 +27,28 @@ def main():
                                               'None',
                                               'ajtritt@lbl.gov'])
 
-    # Create a generic compound datatype for referencing a patch clamp series
-    reference_timeseries_dtype = [
-        NWBDtypeSpec(name='idx_start',
-                     dtype='int32',
-                     doc="Start index into the TimeSeries 'data' and 'timestamp' datasets of the "
-                          "referenced TimeSeries. The first dimension of those arrays is always time."),
-        NWBDtypeSpec(name='count',
-                     dtype='int32',
-                     doc="Number of data samples available in this time series, during this epoch"),
-        NWBDtypeSpec(name='timeseries',
-                     dtype=NWBRefSpec(target_type='TimeSeries',
-                                      reftype='object'),
-                     doc='The TimeSeries that this index applies to')
+    # Create a vector-data column that references a range in a time series. I/e., a VectorData column
+    # with a compound data type storing the start_index, count, and TimeSeries reference
+    reference_timeseries_vectordata = NWBDatasetSpec(
+        neurodata_type_inc='VectorData',
+        neurodata_type_def='TimeSeriesReferenceVectorData',
+        doc='Column storing references to a TimeSeries (rows). For each TimeSeries this VectorData '
+            'column stores the start_index and count to indicate the range in time to be selected '
+            'as well as an object reference to the TimeSeries.',
+        dtype=[
+            NWBDtypeSpec(name='idx_start',
+                         dtype='int32',
+                         doc="Start index into the TimeSeries 'data' and 'timestamp' datasets of the "
+                              "referenced TimeSeries. The first dimension of those arrays is always time."),
+            NWBDtypeSpec(name='count',
+                         dtype='int32',
+                         doc="Number of data samples available in this time series, during this epoch"),
+            NWBDtypeSpec(name='timeseries',
+                         dtype=NWBRefSpec(target_type='TimeSeries',
+                                          reftype='object'),
+                         doc='The TimeSeries that this index applies to')
         ]
+    )
 
     # Create a collection of aligned dynamic tables
     aligned_dynamic_tables_spec = NWBGroupSpec(
@@ -99,9 +107,8 @@ def main():
                                      value='Table for storing intracellular stimulus related metadata.')],
         datasets=[NWBDatasetSpec(
             name='stimulus',
-            neurodata_type_inc='VectorData',
-            doc='Column storing the reference to the recorded stimulus for the recording (rows).',
-            dtype=reference_timeseries_dtype),
+            neurodata_type_inc='TimeSeriesReferenceVectorData',
+            doc='Column storing the reference to the recorded stimulus for the recording (rows).'),
         ]
     )
 
@@ -115,9 +122,8 @@ def main():
                                      value='Table for storing intracellular response related metadata.')],
         datasets=[NWBDatasetSpec(
             name='response',
-            neurodata_type_inc='VectorData',
-            doc='Column storing the reference to the recorded response for the recording (rows).',
-            dtype=reference_timeseries_dtype),
+            neurodata_type_inc='TimeSeriesReferenceVectorData',
+            doc='Column storing the reference to the recorded response for the recording (rows)'),
         ]
     )
 
@@ -356,6 +362,7 @@ def main():
 
     # Add our new data types to this list
     new_data_types = [aligned_dynamic_tables_spec,
+                      reference_timeseries_vectordata,
                       icephys_recordings_table_spec,
                       simultaneous_recordings_table_spec,
                       sequentialrecordings_table_spec,

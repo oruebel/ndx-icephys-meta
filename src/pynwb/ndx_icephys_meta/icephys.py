@@ -4,7 +4,7 @@ from pynwb.icephys import IntracellularElectrode, PatchClampSeries
 from pynwb.base import TimeSeries
 import numpy as np
 try:
-    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex   # pragma: no cover
+    from pynwb.core import DynamicTable, DynamicTableRegion, VectorIndex, VectorData   # pragma: no cover
 except ImportError:                                                        # pragma: no cover
     from hdmf.common import DynamicTable, DynamicTableRegion, VectorIndex  # pragma: no cover
 from hdmf.utils import docval, popargs, getargs, call_docval_func, get_docval, fmt_docval_args
@@ -19,7 +19,6 @@ namespace = 'ndx-icephys-meta'
 class HierarchicalDynamicTableMixin:
     """
     Mixin class for defining specialized functionality for hierarchical dynamic tables.
-
 
     Assumptions:
 
@@ -447,6 +446,19 @@ class AlignedDynamicTable(DynamicTable):
                 raise ValueError("Expected tuple of length 2 or 3 with (category, column, row) as value.")
 
 
+@register_class('TimeSeriesReferenceVectorData', namespace)
+class TimeSeriesReferenceVectorData(VectorData):
+    """
+    Column storing references to a TimeSeries (rows). For each TimeSeries this VectorData
+    column stores the start_index and count to indicate the range in time to be selected
+    as well as an object reference to the TimeSeries.
+    """
+
+    @docval(*get_docval(VectorData.__init__))
+    def __init__(self, **kwargs):
+        call_docval_func(super().__init__, kwargs)
+
+
 @register_class('IntracellularElectrodesTable', namespace)
 class IntracellularElectrodesTable(DynamicTable):
     """
@@ -479,7 +491,8 @@ class IntracellularStimuliTable(DynamicTable):
          'description': 'Column storing the reference to the recorded stimulus for the recording (rows)',
          'required': True,
          'index': False,
-         'table': False},
+         'table': False,
+         'class': TimeSeriesReferenceVectorData},
     )
 
     @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
@@ -501,7 +514,8 @@ class IntracellularResponsesTable(DynamicTable):
          'description': 'Column storing the reference to the recorded response for the recording (rows)',
          'required': True,
          'index': False,
-         'table': False},
+         'table': False,
+         'class': TimeSeriesReferenceVectorData},
     )
 
     @docval(*get_docval(DynamicTable.__init__, 'id', 'columns', 'colnames'))
@@ -674,6 +688,7 @@ class IntracellularRecordingsTable(AlignedDynamicTable):
                             **kwargs)
         return len(self) - 1
 
+    @staticmethod
     def __compute_index(start_index, index_count, time_series, name):
         start_index = start_index if start_index >= 0 else 0
         num_samples = time_series.num_samples
