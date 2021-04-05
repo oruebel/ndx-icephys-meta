@@ -778,10 +778,7 @@ class ICEphysFile(NWBFile):
         icephys_sequential_recordings = kwargs.pop('icephys_sequential_recordings', None)
         icephys_repetitions = kwargs.pop('icephys_repetitions', None)
         icephys_experimental_conditions = kwargs.pop('icephys_experimental_conditions', None)
-        if kwargs.get('sweep_table') is not None:
-            warnings.warn("Use of SweepTable is deprecated. Use the intracellular_recordings, "
-                          "simultaneous_recordings, sequential_recordings, repetitions and/or "
-                          "experimental_conditions table(s) instead.", DeprecationWarning)
+
         # Initialize the NWBFile parent class
         pargs, pkwargs = fmt_docval_args(super().__init__, kwargs)
         super().__init__(*pargs, **pkwargs)

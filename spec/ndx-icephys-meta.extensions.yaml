@@ -198,13 +198,7 @@ groups:
         doc: A table for grouping different intracellular recording repetitions together
           that belong to the same experimental experimental_conditions.
         quantity: '?'
-      - name: sweep_table
-        neurodata_type_inc: SweepTable
-        doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
-          is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
-          tabels (and corresponding SequentialRecordingsTable, RepetitionsTable and
-          ExperimentalConditions tables.'
-        quantity: '?'
+
 - neurodata_type_def: IntracellularElectrodesTable
   neurodata_type_inc: DynamicTable
   doc: Table for storing intracellular electrode related metadata.
