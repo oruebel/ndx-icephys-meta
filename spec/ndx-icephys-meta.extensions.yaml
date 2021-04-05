@@ -18,33 +18,6 @@ datasets:
     VectorData column stores the start_index and count to indicate the range in time
     to be selected as well as an object reference to the TimeSeries.
 groups:
-- neurodata_type_def: AlignedDynamicTable
-  neurodata_type_inc: DynamicTable
-  doc: DynamicTable container that subports storing a collection of subtables. Each
-    sub-table is a DynamicTable itself that is aligned with the main table by row
-    index. I.e., all DynamicTables stored in this group MUST have the same number
-    of rows. This type effectively defines a 2-level table in which the main data
-    is stored in the main table implemented by this type and additional columns of
-    the table are grouped into categories, with each category being represented by
-    a separate DynamicTable stored within the group.
-  attributes:
-  - name: categories
-    dtype: text
-    dims:
-    - num_categories
-    shape:
-    - null
-    doc: The names of the categories in this AlignedDynamicTable. Each category is
-      represented by one DynamicTable stored in the parent group. This attribute should
-      be used to specify an order of categories.
-  groups:
-  - neurodata_type_inc: DynamicTable
-    doc: A DynamicTable representing a particular category for columns in the AlignedDynamicTable
-      parent container. The table MUST be aligned with (i.e., have the same number
-      of rows) as all other DynamicTables stored in the AlignedDynamicTable parent
-      container. The name of the category is given by the name of the DynamicTable
-      and its description by the description attribute of the DynamicTable.
-    quantity: '*'
 - neurodata_type_def: IntracellularRecordingsTable
   neurodata_type_inc: AlignedDynamicTable
   name: intracellular_recordings
@@ -225,13 +198,7 @@ groups:
         doc: A table for grouping different intracellular recording repetitions together
           that belong to the same experimental experimental_conditions.
         quantity: '?'
-      - name: sweep_table
-        neurodata_type_inc: SweepTable
-        doc: '[DEPRACATED] Table used to group different PatchClampSeries.SweepTable
-          is being replaced by IntracellularRecordingsTable and SimultaneousRecordingsTable
-          tabels (and corresponding SequentialRecordingsTable, RepetitionsTable and
-          ExperimentalConditions tables.'
-        quantity: '?'
+
 - neurodata_type_def: IntracellularElectrodesTable
   neurodata_type_inc: DynamicTable
   doc: Table for storing intracellular electrode related metadata.
