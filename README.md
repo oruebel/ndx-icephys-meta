@@ -19,9 +19,6 @@ The extension is also listed in the [NDX catalog](https://nwb-extensions.github.
 ```
 python setup.py develop
 ```
-**NOTE:** The development version requires:
-* [NeurodataWithoutBorders/pynwb#1200](https://github.com/NeurodataWithoutBorders/pynwb/pull/1200)
-* [hdmf-dev/hdmf#301](https://github.com/hdmf-dev/hdmf/pull/301)
 
 ## Building the spec documentation
 
