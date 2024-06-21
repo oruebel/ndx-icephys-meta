@@ -3,8 +3,9 @@ Module with ObjectMapper classes for the icephys-meta Container classes/neurodat
 """
 from pynwb import register_map
 from pynwb.io.file import NWBFileMap
-from hdmf.common.io.table import DynamicTableMap
-from ndx_icephys_meta.icephys import ICEphysFile, AlignedDynamicTable
+from hdmf.common.io.table import DynamicTableMap, AlignedDynamicTableMap
+from ndx_icephys_meta.icephys import ICEphysFile, IntracellularRecordingsTable
+
 
 
 @register_map(ICEphysFile)
@@ -26,16 +27,13 @@ class ICEphysFileMap(NWBFileMap):
         self.map_spec('ic_filtering', icephys_spec.get_dataset('filtering'))
 
 
-@register_map(AlignedDynamicTable)
-class AlignedDynamicTableMap(DynamicTableMap):
+@register_map(IntracellularRecordingsTable)
+class IntracellularRecordingsTableMap(AlignedDynamicTableMap):
     """
     Customize the mapping for AlignedDynamicTable
     """
     def __init__(self, spec):
         super().__init__(spec)
-        # By default the DynamicTables contained as sub-categories in the AlignedDynamicTable are mapped to
-        # the 'dynamic_tables' class attribute. This renames the attribute to 'category_tables'
-        self.map_spec('category_tables', spec.get_neurodata_type('DynamicTable'))
 
     @DynamicTableMap.object_attr('electrodes')
     def electrodes(self, container, manager):

@@ -50,35 +50,6 @@ def main():
         ]
     )
 
-    # Create a collection of aligned dynamic tables
-    aligned_dynamic_tables_spec = NWBGroupSpec(
-        neurodata_type_inc='DynamicTable',
-        neurodata_type_def='AlignedDynamicTable',
-        doc='DynamicTable container that subports storing a collection of subtables. Each sub-table is a '
-            'DynamicTable itself that is aligned with the main table by row index. I.e., all '
-            'DynamicTables stored in this group MUST have the same number of rows. This type effectively '
-            'defines a 2-level table in which the main data is stored in the main table implemented by this type '
-            'and additional columns of the table are grouped into categories, with each category being '
-            'represented by a separate DynamicTable stored within the group.',
-        attributes=[NWBAttributeSpec(name='categories',
-                                     dtype='text',
-                                     dims=['num_categories'],
-                                     doc='The names of the categories in this AlignedDynamicTable. Each '
-                                         'category is represented by one DynamicTable stored in the parent group. '
-                                         'This attribute should be used to specify an order of categories.',
-                                     shape=[None])
-                    ],
-        groups=[NWBGroupSpec(neurodata_type_inc='DynamicTable',
-                             doc='A DynamicTable representing a particular category for columns in the '
-                                 'AlignedDynamicTable parent container. The table MUST be aligned '
-                                 'with (i.e., have the same number of rows) as all other DynamicTables '
-                                 'stored in the AlignedDynamicTable parent container. The name of '
-                                 'the category is given by the name of the DynamicTable and its description '
-                                 'by the description attribute of the DynamicTable.',
-                             quantity='*')
-                ]
-    )
-
     electrodes_table_spec = NWBGroupSpec(
         neurodata_type_inc='DynamicTable',
         neurodata_type_def='IntracellularElectrodesTable',
@@ -351,6 +322,7 @@ def main():
     include_core_types = ['Container',
                           'DynamicTable',
                           'DynamicTableRegion',
+                          'AlignedDynamicTable'
                           'VectorData',
                           'VectorIndex',
                           'PatchClampSeries',
@@ -361,8 +333,7 @@ def main():
         ns_builder.include_type(type_name, namespace='core')
 
     # Add our new data types to this list
-    new_data_types = [aligned_dynamic_tables_spec,
-                      reference_timeseries_vectordata,
+    new_data_types = [reference_timeseries_vectordata,
                       icephys_recordings_table_spec,
                       simultaneous_recordings_table_spec,
                       sequentialrecordings_table_spec,

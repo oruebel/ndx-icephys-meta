@@ -20,7 +20,7 @@ namespaces:
     - Container
     - DynamicTable
     - DynamicTableRegion
-    - VectorData
+    - AlignedDynamicTableVectorData
     - VectorIndex
     - PatchClampSeries
     - IntracellularElectrode
